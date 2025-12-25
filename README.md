@@ -203,4 +203,4 @@ io.Fonts->AddFontFromFileTTF("fa-solid-900.ttf", 16.0f, &config, iconRanges);
 
 ## License
 
-MIT License - See LICENSE file for details.
+GNU General Public License v3.0 - See LICENSE file for details.
