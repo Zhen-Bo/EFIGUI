@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 namespace EFIGUI
 {
@@ -29,7 +30,7 @@ namespace EFIGUI
         flags |= ImGuiWindowFlags_NoTitleBar;
         flags |= ImGuiWindowFlags_NoCollapse;
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(500, 300), ImVec2(FLT_MAX, FLT_MAX));
+        ImGui::SetNextWindowSizeConstraints(ImVec2(Theme::WindowMinWidth, Theme::WindowMinHeight), ImVec2(FLT_MAX, FLT_MAX));
 
         if (!ImGui::Begin(name, p_open, flags))
         {
@@ -156,7 +157,7 @@ namespace EFIGUI
     // Borderless Window
     // =============================================
 
-    bool BeginBorderlessWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    bool BeginBorderlessWindow(const char* name, bool* p_open, ImGuiWindowFlags flags, std::optional<uint8_t> overlayAlpha)
     {
         flags |= ImGuiWindowFlags_NoTitleBar;
         flags |= ImGuiWindowFlags_NoCollapse;
@@ -182,6 +183,9 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
         ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 windowSize = ImGui::GetWindowSize();
+
+        // Determine overlay alpha (nullopt = use Theme default)
+        uint8_t effectiveOverlayAlpha = overlayAlpha.value_or(Theme::DefaultOverlayAlpha);
 
         // Try to use blurred background for glassmorphism effect
         void* blurredBg = GetBlurResult();
@@ -209,7 +213,7 @@ namespace EFIGUI
             draw->AddRectFilled(
                 windowPos,
                 ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y),
-                IM_COL32(10, 10, 20, 200),  // Semi-transparent dark overlay
+                IM_COL32(10, 10, 20, effectiveOverlayAlpha),
                 Theme::WindowRounding
             );
         }
@@ -247,7 +251,7 @@ namespace EFIGUI
     // =============================================
 
     bool NavbarHeader(const char* title, const char* iconExpanded, const char* iconCollapsed,
-                      bool collapsed, float width, bool* closeClicked)
+                      bool collapsed, float width, bool* closeClicked, std::optional<ImU32> glowColor)
     {
         ImGuiID id = ImGui::GetID("##NavbarHeader");
         Animation::WidgetState& state = Animation::GetState(id);
@@ -258,6 +262,10 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        // Get effective glow color
+        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
+        auto glowRGB = Theme::ExtractRGB(effectiveGlowColor);
+
         // Header background (gradient)
         Draw::RectGradientH(pos, ImVec2(pos.x + size.x, pos.y + size.y),
                            Theme::TitleBarLeft, Theme::TitleBarRight, Theme::NavItemRounding);
@@ -266,7 +274,7 @@ namespace EFIGUI
         draw->AddLine(
             ImVec2(pos.x, pos.y + size.y),
             ImVec2(pos.x + size.x, pos.y + size.y),
-            Theme::AccentCyan,
+            effectiveGlowColor,
             1.0f
         );
 
@@ -291,25 +299,25 @@ namespace EFIGUI
             ImU32 iconColor;
             if (headerHovered)
             {
-                // Bright cyan when hovered
-                iconColor = Theme::AccentCyan;
+                // Bright color when hovered
+                iconColor = effectiveGlowColor;
             }
             else
             {
                 // Pulsing glow effect
-                int glowAlpha = (int)(180 + glowAnim * 75);
-                iconColor = IM_COL32(0, 245, 255, glowAlpha);
+                int glowAlpha = (int)(Theme::DefaultGlowBaseAlpha + glowAnim * Theme::DefaultGlowMaxAlpha);
+                iconColor = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, glowAlpha);
             }
 
             // Draw glow behind icon
             if (!headerHovered)
             {
                 float glowRadius = 4.0f + glowAnim * 2.0f;
-                ImU32 glowColor = IM_COL32(0, 245, 255, (int)(glowAnim * 60));
+                ImU32 glowColorWithAlpha = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(glowAnim * 60));
                 draw->AddCircleFilled(
                     ImVec2(iconX + iconSize * 0.5f, iconY + iconSize * 0.5f),
                     glowRadius + iconSize * 0.5f,
-                    glowColor
+                    glowColorWithAlpha
                 );
             }
 
@@ -332,7 +340,7 @@ namespace EFIGUI
             float iconX = pos.x + 8.0f;
 
             // Brand icon
-            draw->AddText(ImVec2(iconX, contentY), Theme::AccentCyan, iconExpanded);
+            draw->AddText(ImVec2(iconX, contentY), effectiveGlowColor, iconExpanded);
 
             // Title text
             float textX = iconX + ImGui::GetFontSize() + 8.0f;
@@ -347,7 +355,7 @@ namespace EFIGUI
             bool collapseHovered = ImGui::IsItemHovered();
             bool collapseClicked = ImGui::IsItemClicked();
 
-            ImU32 collapseColor = collapseHovered ? Theme::AccentCyan : Theme::TextSecondary;
+            ImU32 collapseColor = collapseHovered ? effectiveGlowColor : Theme::TextSecondary;
             Draw::IconCentered(
                 ImVec2(collapseX, btnY),
                 ImVec2(collapseX + btnSize, btnY + btnSize),
@@ -366,7 +374,7 @@ namespace EFIGUI
     // Glass Panel
     // =============================================
 
-    void BeginGlassPanel(const char* id, ImVec2 size, bool border)
+    void BeginGlassPanel(const char* id, ImVec2 size, bool border, std::optional<uint8_t> bgAlpha, std::optional<ImU32> glowColor)
     {
         ImGui::PushID(id);
 
@@ -377,11 +385,17 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        // Determine alpha to use (nullopt = use Theme default)
+        uint8_t alpha = bgAlpha.value_or((Theme::BackgroundContent >> 24) & 0xFF);
+
+        // Extract RGB from Theme color and apply custom alpha
+        ImU32 bgColor = (Theme::BackgroundContent & 0x00FFFFFF) | ((ImU32)alpha << 24);
+
         // Simple solid background (blur effect is on main window only)
         draw->AddRectFilled(
             pos,
             ImVec2(pos.x + size.x, pos.y + size.y),
-            Theme::BackgroundContent,
+            bgColor,
             Theme::FrameRounding
         );
 
@@ -397,13 +411,15 @@ namespace EFIGUI
                 1.0f
             );
 
-            // Glow effect on top edge
+            // Glow effect on top edge - use custom or theme color
+            ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
             float glowIntensity = Animation::Breathe(1.0f) * 0.3f + 0.2f;
-            ImU32 glowColor = IM_COL32(0, 245, 255, (int)(glowIntensity * 80));
+            auto glowRGB = Theme::ExtractRGB(effectiveGlowColor);
+            ImU32 glowColorWithAlpha = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(glowIntensity * 80));
             draw->AddLine(
                 ImVec2(pos.x + Theme::FrameRounding, pos.y),
                 ImVec2(pos.x + size.x - Theme::FrameRounding, pos.y),
-                glowColor,
+                glowColorWithAlpha,
                 2.0f
             );
         }
@@ -428,7 +444,7 @@ namespace EFIGUI
     // Navigation
     // =============================================
 
-    bool NavItem(const char* icon, const char* label, bool selected, float width, bool collapsed)
+    bool NavItem(const char* icon, const char* label, bool selected, float width, bool collapsed, std::optional<ImU32> accentColor)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -444,11 +460,16 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        // Get effective accent color (use custom or theme default)
+        ImU32 effectiveAccent = accentColor.value_or(Theme::AccentCyan);
+        auto accentRGB = Theme::ExtractRGB(effectiveAccent);
+        ImU32 effectiveAccentGlow = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, 80);
+
         // Background
         float bgAlpha = state.hoverAnim * 0.3f + state.selectedAnim * 0.4f;
         if (bgAlpha > 0.01f)
         {
-            ImU32 bgColor = IM_COL32(0, 245, 255, (int)(bgAlpha * 60));
+            ImU32 bgColor = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, (int)(bgAlpha * 60));
             draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding);
         }
 
@@ -459,11 +480,10 @@ namespace EFIGUI
             float barHeight = size.y * 0.6f * state.selectedAnim;
             float barY = pos.y + (size.y - barHeight) * 0.5f;
 
-            ImU32 barColor = Theme::AccentCyan;
             draw->AddRectFilled(
                 ImVec2(pos.x, barY),
                 ImVec2(pos.x + barWidth, barY + barHeight),
-                barColor,
+                effectiveAccent,
                 barWidth * 0.5f
             );
 
@@ -471,7 +491,7 @@ namespace EFIGUI
             Draw::RectGlow(
                 ImVec2(pos.x, barY),
                 ImVec2(pos.x + barWidth, barY + barHeight),
-                Theme::AccentCyanGlow,
+                effectiveAccentGlow,
                 state.selectedAnim,
                 4.0f
             );
@@ -488,7 +508,7 @@ namespace EFIGUI
         float iconLerpFactor = state.selectedAnim > hoverContrib ? state.selectedAnim : hoverContrib;
         ImU32 iconColor = Animation::LerpColorU32(
             Theme::TextSecondary,
-            Theme::AccentCyan,
+            effectiveAccent,
             iconLerpFactor
         );
 
@@ -590,7 +610,7 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
-    bool GlowButton(const char* label, ImVec2 size, ImU32 glowColor, bool forceHover)
+    bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -616,9 +636,12 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        // Get effective glow color
+        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
+
         // Glow effect (outer glow when hovered or forceHover)
         float glowIntensity = forceHover ? 0.6f : (state.hoverAnim * 0.6f + state.activeAnim * 0.4f);
-        Draw::GlowLayers(pos, size, glowColor, glowIntensity, 5, 2.0f, Theme::ButtonRounding, true);
+        Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, 5, 2.0f, Theme::ButtonRounding, true);
 
         // Glassmorphism background
         float effectiveHoverAnim = forceHover ? 1.0f : state.hoverAnim;
@@ -626,7 +649,7 @@ namespace EFIGUI
 
         // Marquee border
         float sweepPos = Animation::Sweep(0.12f);
-        Draw::MarqueeBorder(pos, size, glowColor, sweepPos, 0.22f, Theme::ButtonRounding, 1.5f, effectiveHoverAnim, true);
+        Draw::MarqueeBorder(pos, size, effectiveGlowColor, sweepPos, 0.22f, Theme::ButtonRounding, 1.5f, effectiveHoverAnim, true);
 
         // Text
         ImVec2 textSize = ImGui::CalcTextSize(label);
@@ -639,7 +662,7 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool IconButton(const char* icon, ImVec2 size, ImU32 color)
+    bool IconButton(const char* icon, ImVec2 size, std::optional<ImU32> color, std::optional<uint8_t> bgAlpha)
     {
         ImGuiID id = ImGui::GetID(icon);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -654,15 +677,19 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        // Get effective color
+        ImU32 effectiveColor = color.value_or(Theme::TextSecondary);
+        uint8_t effectiveBgAlpha = bgAlpha.value_or(Theme::DefaultBgAlpha);
+
         // Background on hover
         if (state.hoverAnim > 0.01f)
         {
-            ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * 30));
+            ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * effectiveBgAlpha));
             draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
         }
 
         // Icon
-        ImU32 iconColor = Animation::LerpColorU32(color, Theme::AccentCyan, state.hoverAnim);
+        ImU32 iconColor = Animation::LerpColorU32(effectiveColor, Theme::AccentCyan, state.hoverAnim);
         Draw::IconCentered(pos, ImVec2(pos.x + size.x, pos.y + size.y), icon, iconColor);
 
         return clicked;
@@ -674,7 +701,7 @@ namespace EFIGUI
         return GlowButton(label, size, Theme::StatusError, true);
     }
 
-    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor)
+    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -699,9 +726,11 @@ namespace EFIGUI
         float rounding = Theme::ButtonRounding;
 
         // Extract RGB from border color
-        int r = (borderColor >> 0) & 0xFF;
-        int g = (borderColor >> 8) & 0xFF;
-        int b = (borderColor >> 16) & 0xFF;
+        auto borderRGB = Theme::ExtractRGB(borderColor);
+
+        // Get effective background alpha (if provided, override default)
+        uint8_t baseBgAlpha = bgAlpha.value_or(Theme::DefaultButtonBgAlpha);
+        uint8_t hoverBgAlpha = bgAlpha.value_or(Theme::DefaultButtonHoverAlpha);
 
         // Alpha multiplier for disabled state
         float alphaMult = isDisabled ? 0.35f : 1.0f;
@@ -713,21 +742,21 @@ namespace EFIGUI
         }
 
         // Background - slightly tinted with border color
-        ImU32 bgBase = IM_COL32(r / 8 + 20, g / 8 + 20, b / 8 + 30, (int)(200 * alphaMult));
-        ImU32 bgHover = IM_COL32(r / 6 + 30, g / 6 + 30, b / 6 + 45, (int)(220 * alphaMult));
+        ImU32 bgBase = IM_COL32(borderRGB.r / 8 + 20, borderRGB.g / 8 + 20, borderRGB.b / 8 + 30, (int)(baseBgAlpha * alphaMult));
+        ImU32 bgHover = IM_COL32(borderRGB.r / 6 + 30, borderRGB.g / 6 + 30, borderRGB.b / 6 + 45, (int)(hoverBgAlpha * alphaMult));
         ImU32 bgColor = isDisabled ? bgBase : Animation::LerpColorU32(bgBase, bgHover, state.hoverAnim);
         if (active && !isDisabled)
         {
-            bgColor = IM_COL32(r / 4 + 20, g / 4 + 20, b / 4 + 35, 240);
+            bgColor = IM_COL32(borderRGB.r / 4 + 20, borderRGB.g / 4 + 20, borderRGB.b / 4 + 35, 240);
         }
         draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, rounding);
 
         // Always show colored border (no marquee animation)
         int borderAlpha = isDisabled ? 80 : (180 + (int)(state.hoverAnim * 75));
         ImU32 finalBorderColor = IM_COL32(
-            (int)(r * alphaMult),
-            (int)(g * alphaMult),
-            (int)(b * alphaMult),
+            (int)(borderRGB.r * alphaMult),
+            (int)(borderRGB.g * alphaMult),
+            (int)(borderRGB.b * alphaMult),
             borderAlpha
         );
         draw->AddRect(pos, ImVec2(pos.x + size.x, pos.y + size.y), finalBorderColor, rounding, 0, 1.5f);
@@ -807,9 +836,7 @@ namespace EFIGUI
             );
 
             // Extract RGB from glow color for edge effect
-            int r = (glowColor >> 0) & 0xFF;
-            int g = (glowColor >> 8) & 0xFF;
-            int b = (glowColor >> 16) & 0xFF;
+            auto glowRGB = Theme::ExtractRGB(glowColor);
 
             // Flowing light effect on the right edge of cooldown (the boundary)
             float sweepPos = Animation::Sweep(0.5f);
@@ -824,15 +851,15 @@ namespace EFIGUI
                     draw->AddRectFilled(
                         ImVec2(edgeX, pos.y),
                         ImVec2(edgeX + glowWidth, pos.y + size.y),
-                        IM_COL32(r, g, b, (int)(alpha * 255)),
+                        IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(alpha * 255)),
                         0
                     );
                 }
 
                 // Flowing light particles along the edge
                 float particleY = pos.y + size.y * sweepPos;
-                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 3.0f, IM_COL32(r, g, b, 220));
-                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 6.0f, IM_COL32(r, g, b, 100));
+                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 3.0f, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, 220));
+                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 6.0f, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, 100));
             }
         }
 
@@ -908,11 +935,9 @@ namespace EFIGUI
         );
 
         // Apply alpha for disabled state
-        int tr = (trackColorBase >> 0) & 0xFF;
-        int tg = (trackColorBase >> 8) & 0xFF;
-        int tb = (trackColorBase >> 16) & 0xFF;
+        auto trackRGB = Theme::ExtractRGB(trackColorBase);
         int ta = (int)(((trackColorBase >> 24) & 0xFF) * alphaMultiplier);
-        ImU32 trackColor = IM_COL32(tr, tg, tb, ta);
+        ImU32 trackColor = IM_COL32(trackRGB.r, trackRGB.g, trackRGB.b, ta);
 
         draw->AddRectFilled(
             pos,
@@ -1460,12 +1485,16 @@ namespace EFIGUI
     // Combo / Dropdown
     // =============================================
 
-    bool ModernCombo(const char* label, int* current_item, const char* const items[], int items_count)
+    bool ModernCombo(const char* label, int* current_item, const char* const items[], int items_count, std::optional<uint8_t> popupBgAlpha)
     {
+        // Determine alpha to use (nullopt = use Theme default)
+        uint8_t alpha = popupBgAlpha.value_or((Theme::BackgroundPanel >> 24) & 0xFF);
+        ImU32 popupBgColor = (Theme::BackgroundPanel & 0x00FFFFFF) | ((ImU32)alpha << 24);
+
         ImGui::PushStyleColor(ImGuiCol_FrameBg, Theme::ToVec4(Theme::ButtonDefault));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Theme::ToVec4(Theme::ButtonHover));
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Theme::ToVec4(Theme::ButtonHover));
-        ImGui::PushStyleColor(ImGuiCol_PopupBg, Theme::ToVec4(Theme::BackgroundPanel));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, Theme::ToVec4(popupBgColor));
         ImGui::PushStyleColor(ImGuiCol_Header, Theme::ToVec4(Theme::AccentCyan));
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(0, 245, 255, 80));
         ImGui::PushStyleColor(ImGuiCol_Border, Theme::ToVec4(Theme::BorderDefault));
@@ -1538,41 +1567,37 @@ namespace EFIGUI
         ImGui::Dummy(ImVec2(size.x, size.y + (overlay ? 20.0f : 0.0f)));
     }
 
-    void StatusIndicator(const char* label, ImU32 color, bool pulse)
+    void StatusIndicator(const char* label, ImU32 color, bool pulse, std::optional<float> dotSize)
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
-        float dotSize = 8.0f;
+        float effectiveDotSize = dotSize.value_or(Theme::DefaultDotSize);
         float alpha = pulse ? (Animation::Pulse(2.0f) * 0.5f + 0.5f) : 1.0f;
 
-        ImU32 dotColor = IM_COL32(
-            (color >> 0) & 0xFF,
-            (color >> 8) & 0xFF,
-            (color >> 16) & 0xFF,
-            (int)(alpha * 255)
-        );
+        auto colorRGB = Theme::ExtractRGB(color);
+        ImU32 dotColor = IM_COL32(colorRGB.r, colorRGB.g, colorRGB.b, (int)(alpha * 255));
 
         draw->AddCircleFilled(
-            ImVec2(pos.x + dotSize * 0.5f, pos.y + ImGui::GetFontSize() * 0.5f),
-            dotSize * 0.5f,
+            ImVec2(pos.x + effectiveDotSize * 0.5f, pos.y + ImGui::GetFontSize() * 0.5f),
+            effectiveDotSize * 0.5f,
             dotColor
         );
 
         draw->AddText(
-            ImVec2(pos.x + dotSize + 8.0f, pos.y),
+            ImVec2(pos.x + effectiveDotSize + 8.0f, pos.y),
             Theme::TextPrimary,
             label
         );
 
-        ImGui::Dummy(ImVec2(ImGui::CalcTextSize(label).x + dotSize + 8.0f, ImGui::GetFontSize()));
+        ImGui::Dummy(ImVec2(ImGui::CalcTextSize(label).x + effectiveDotSize + 8.0f, ImGui::GetFontSize()));
     }
 
     // =============================================
     // Cards / Sections
     // =============================================
 
-    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled)
+    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha)
     {
         ImGuiID id = ImGui::GetID(name);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -1625,10 +1650,20 @@ namespace EFIGUI
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
-        // Background
+        // Background with optional alpha override
+        ImU32 bgBase = Theme::ButtonDefault;
+        ImU32 bgHoverTarget = Theme::ButtonHover;
+
+        // Apply custom alpha if specified (nullopt = use Theme default)
+        if (bgAlpha.has_value())
+        {
+            bgBase = (bgBase & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
+            bgHoverTarget = (bgHoverTarget & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
+        }
+
         ImU32 bgColor = Animation::LerpColorU32(
-            Theme::ButtonDefault,
-            Theme::ButtonHover,
+            bgBase,
+            bgHoverTarget,
             state.hoverAnim
         );
         draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
@@ -1701,14 +1736,16 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool SectionHeader(const char* label, bool* collapsed)
+    bool SectionHeader(const char* label, bool* collapsed, std::optional<ImU32> accentColor)
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
+        ImU32 effectiveAccentColor = accentColor.value_or(Theme::TextAccent);
+
         draw->AddText(
             ImVec2(pos.x, pos.y),
-            Theme::TextAccent,
+            effectiveAccentColor,
             label
         );
 
@@ -1760,15 +1797,17 @@ namespace EFIGUI
         ImGui::Dummy(ImVec2(0, height));
     }
 
-    void Separator()
+    void Separator(std::optional<ImU32> color)
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         float width = ImGui::GetContentRegionAvail().x;
 
+        ImU32 effectiveColor = color.value_or(Theme::BorderDefault);
+
         ImGui::GetWindowDrawList()->AddLine(
             ImVec2(pos.x, pos.y + 4.0f),
             ImVec2(pos.x + width, pos.y + 4.0f),
-            Theme::BorderDefault
+            effectiveColor
         );
 
         ImGui::Dummy(ImVec2(0, 8.0f));

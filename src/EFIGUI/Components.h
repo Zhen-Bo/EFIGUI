@@ -3,16 +3,20 @@
 #include "Theme.h"
 #include "Animation.h"
 #include <string>
+#include <cstdint>
+#include <optional>
 
 namespace EFIGUI
 {
+
     // =============================================
     // Custom Window (Borderless with navbar)
     // =============================================
 
     // Begin a borderless window with integrated navbar
     // Returns true if window is open
-    bool BeginBorderlessWindow(const char* name, bool* p_open, ImGuiWindowFlags flags = 0);
+    // overlayAlpha: glassmorphism overlay alpha (omit = use default, 0-255 = custom alpha)
+    bool BeginBorderlessWindow(const char* name, bool* p_open, ImGuiWindowFlags flags = 0, std::optional<uint8_t> overlayAlpha = std::nullopt);
     void EndBorderlessWindow();
 
     // =============================================
@@ -30,15 +34,19 @@ namespace EFIGUI
 
     // Navbar header with title and collapse button
     // Returns true if collapse button was clicked
+    // glowColor: icon glow color when collapsed (omit = use Theme::AccentCyan)
     bool NavbarHeader(const char* title, const char* iconExpanded, const char* iconCollapsed,
-                      bool collapsed, float width, bool* closeClicked = nullptr);
+                      bool collapsed, float width, bool* closeClicked = nullptr, std::optional<ImU32> glowColor = std::nullopt);
 
     // =============================================
     // Glass Panel
     // =============================================
 
     // Begin a glass-effect panel (semi-transparent with blur background)
-    void BeginGlassPanel(const char* id, ImVec2 size = ImVec2(0, 0), bool border = true);
+    // bgAlpha: background alpha (omit = use Theme default, 0-255 = custom alpha)
+    // glowColor: top edge glow color (omit = use Theme::AccentCyan)
+    void BeginGlassPanel(const char* id, ImVec2 size = ImVec2(0, 0), bool border = true,
+                         std::optional<uint8_t> bgAlpha = std::nullopt, std::optional<ImU32> glowColor = std::nullopt);
     void EndGlassPanel();
 
     // =============================================
@@ -48,7 +56,9 @@ namespace EFIGUI
     // Left sidebar navigation item with icon
     // Returns true if clicked
     // collapsed: if true, only show icon (no label)
-    bool NavItem(const char* icon, const char* label, bool selected, float width = Theme::NavbarWidth, bool collapsed = false);
+    // accentColor: selected/hover accent color (omit = use Theme::AccentCyan)
+    bool NavItem(const char* icon, const char* label, bool selected, float width = Theme::NavbarWidth,
+                 bool collapsed = false, std::optional<ImU32> accentColor = std::nullopt);
 
     // Navigation section header
     void NavSectionHeader(const char* label);
@@ -62,16 +72,18 @@ namespace EFIGUI
 
     // Glowing button with neon effect
     // forceHover: if true, always show hover animation (marquee border)
-    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), ImU32 glowColor = Theme::AccentCyan, bool forceHover = false);
+    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false);
 
     // Icon button (just an icon, no label)
-    bool IconButton(const char* icon, ImVec2 size = ImVec2(28, 28), ImU32 color = Theme::TextPrimary);
+    // bgAlpha: background alpha on hover (omit = use default)
+    bool IconButton(const char* icon, ImVec2 size = ImVec2(28, 28), std::optional<ImU32> color = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Danger button (red glow, always shows hover effect with marquee)
     bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0));
 
     // Colored button - always shows colored border, no marquee effect
-    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor);
+    // bgAlpha: background alpha (omit = use default)
+    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Cooldown button - shows a cooldown progress overlay
     // cooldownProgress: 0.0 = no cooldown, 1.0 = full cooldown (just started)
@@ -116,7 +128,8 @@ namespace EFIGUI
     // =============================================
 
     // Modern dropdown
-    bool ModernCombo(const char* label, int* current_item, const char* const items[], int items_count);
+    // popupBgAlpha: popup background alpha (omit = Theme default, 0-255 = custom alpha)
+    bool ModernCombo(const char* label, int* current_item, const char* const items[], int items_count, std::optional<uint8_t> popupBgAlpha = std::nullopt);
 
     // =============================================
     // Progress / Status
@@ -126,17 +139,20 @@ namespace EFIGUI
     void ModernProgressBar(float fraction, ImVec2 size = ImVec2(-1, 0), const char* overlay = nullptr);
 
     // Status indicator (colored dot + text)
-    void StatusIndicator(const char* label, ImU32 color, bool pulse = false);
+    // dotSize: size of the dot (omit = Theme::DefaultDotSize)
+    void StatusIndicator(const char* label, ImU32 color, bool pulse = false, std::optional<float> dotSize = std::nullopt);
 
     // =============================================
     // Cards / Sections
     // =============================================
 
     // Feature card (for feature toggles with icon)
-    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled);
+    // bgAlpha: background alpha (omit = Theme default, 0-255 = custom alpha)
+    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Section header with optional collapse
-    bool SectionHeader(const char* label, bool* collapsed = nullptr);
+    // accentColor: header text color (omit = Theme::TextAccent)
+    bool SectionHeader(const char* label, bool* collapsed = nullptr, std::optional<ImU32> accentColor = std::nullopt);
 
     // =============================================
     // Tooltip
@@ -153,6 +169,6 @@ namespace EFIGUI
     // =============================================
 
     void Spacing(float height = Theme::ItemSpacing);
-    void Separator();
+    void Separator(std::optional<ImU32> color = std::nullopt);  // omit = Theme::BorderDefault
     void SameLine(float offset = 0.0f, float spacing = -1.0f);
 }
