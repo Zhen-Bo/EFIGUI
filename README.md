@@ -86,7 +86,7 @@ EFIGUI::Shutdown();
 - `GlowButton`, `IconButton`, `DangerButton`, `ColoredButton`, `CooldownButton`
 
 ### Input
-- `ModernToggle`, `ModernInputText`, `ModernSliderFloat`, `ModernSliderInt`, `ModernCombo`
+- `ModernToggle`, `ModernInputText`, `ModernSliderFloat`, `ModernSliderInt`, `ModernCombo`, `NumericInput`
 
 ### Display
 - `ModernProgressBar`, `StatusIndicator`, `FeatureCard`, `SectionHeader`, `ModernTooltip`, `HelpMarker`
