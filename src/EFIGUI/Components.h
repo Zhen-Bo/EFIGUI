@@ -122,6 +122,27 @@ namespace EFIGUI
     bool ModernInputTextMultiline(const char* label, std::string* str, ImVec2 size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0);
 
     // =============================================
+    // NumericInput
+    // =============================================
+
+    // Configuration for NumericInput
+    struct NumericInputConfig
+    {
+        float min = 0.0f;
+        float max = 100.0f;
+        int precision = 2;
+        float width = 55.0f;
+    };
+
+    // Standalone editable numeric value display box
+    // Returns true if value was changed
+    // layer: rendering layer for glow effects (omit = use LayerConfig default)
+    bool NumericInput(const char* label, float* value, const NumericInputConfig& config, std::optional<Layer> layer = std::nullopt);
+
+    // Cleanup stale numeric input buffers (called automatically from BeginFrame)
+    void PruneNumericInputBuffers(int maxIdleFrames = 60);
+
+    // =============================================
     // Slider
     // =============================================
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2025-12-27
+
+### Fixed
+- **Button transparency stacking**: Fixed issue where multiple semi-transparent layers would accumulate, causing buttons to appear more transparent than intended. Added opaque base layer (`GlassBaseLayer`) to ensure consistent alpha 200 appearance.
+- **Slider input focus**: Completely refactored slider value input to fix focus management issues. Removed `InvisibleButton` that was blocking `InputText` focus.
+
+### Added
+- **NumericInput component**: New standalone editable numeric value display box. Can be used independently or as part of slider components.
+  - `NumericInputConfig` struct for configuration (min, max, precision, width)
+  - `NumericInput()` function with glow effects and smooth animations
+  - `PruneNumericInputBuffers()` for cleanup
+
+### Changed
+- **Slider architecture refactored**: Decoupled slider into independent components for better maintainability.
+  - `SliderTrack` (internal) - Handles track, knob, and drag interaction
+  - `NumericInput` (public) - Standalone value input box
+  - `ModernSliderFloat` now composes these two components
+  - Removed ~150 lines of complex state machine code
+  - Value synchronization through shared pointer (no explicit sync logic needed)
+- **GlassmorphismBg constants**: Adjusted overlay alpha values (180→255, 160→250, 180→252) to work with new base layer.
+
+---
+
 ## [0.2.4] - 2025-12-27
 
 ### Fixed

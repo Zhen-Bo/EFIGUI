@@ -315,6 +315,10 @@ namespace EFIGUI
             void* blurredBg = GetBlurResult();
             if (blurredBg)
             {
+                // Draw opaque base layer to prevent transparency stacking
+                // This ensures consistent alpha 200 appearance regardless of layers below
+                draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), GlassBaseLayer, rounding);
+
                 // Calculate UV coordinates for button region
                 ImGuiIO& io = ImGui::GetIO();
                 float screenW = io.DisplaySize.x;
@@ -333,7 +337,7 @@ namespace EFIGUI
                     rounding
                 );
 
-                // Semi-transparent dark overlay for better contrast
+                // Overlay for color tinting (now nearly opaque since base layer handles transparency)
                 ImU32 overlayColor = isActive ? GlassOverlayActive :
                                      Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
                 draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), overlayColor, rounding);
