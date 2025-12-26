@@ -8,49 +8,169 @@
 namespace EFIGUI
 {
     // =============================================
+    // Card Helper Functions
+    // =============================================
+
+    // Layout information for a feature card
+    struct CardLayout
+    {
+        float iconX;
+        float textX;
+        float availableTextWidth;
+        bool needsWrap;
+        float cardHeight;
+        ImVec2 size;
+    };
+
+    // Calculate layout dimensions for a feature card
+    static CardLayout CalculateCardLayout(ImVec2 pos, const char* description)
+    {
+        using namespace CardConstants;
+
+        CardLayout layout;
+
+        layout.iconX = pos.x + IconPadding;
+        layout.textX = layout.iconX + IconSize + IconPadding;
+
+        float togglePadding = IconPadding;
+        float cardWidth = ImGui::GetContentRegionAvail().x;
+
+        // Calculate available width for description text
+        layout.availableTextWidth = cardWidth - (layout.textX - pos.x) - Theme::ToggleWidth - togglePadding;
+
+        // Check if description needs wrapping
+        ImVec2 descSize = ImGui::CalcTextSize(description);
+        layout.needsWrap = descSize.x > layout.availableTextWidth;
+
+        // Calculate card height based on whether text wraps
+        layout.cardHeight = BaseHeight;
+
+        if (layout.needsWrap && layout.availableTextWidth > MinTextWidth)
+        {
+            ImVec2 wrappedSize = ImGui::CalcTextSize(description, nullptr, false, layout.availableTextWidth);
+            float extraHeight = wrappedSize.y - ImGui::GetFontSize();
+            if (extraHeight > 0)
+            {
+                layout.cardHeight = BaseHeight + extraHeight;
+            }
+        }
+
+        layout.size = ImVec2(cardWidth, layout.cardHeight);
+        return layout;
+    }
+
+    // Draw card background with hover animation
+    static void DrawCardBackground(
+        ImDrawList* draw,
+        ImVec2 pos,
+        ImVec2 size,
+        float hoverAnim,
+        std::optional<uint8_t> bgAlpha)
+    {
+        ImU32 bgBase = Theme::ButtonDefault;
+        ImU32 bgHoverTarget = Theme::ButtonHover;
+
+        // Apply custom alpha if specified
+        if (bgAlpha.has_value())
+        {
+            bgBase = (bgBase & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
+            bgHoverTarget = (bgHoverTarget & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
+        }
+
+        ImU32 bgColor = Animation::LerpColorU32(bgBase, bgHoverTarget, hoverAnim);
+        draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
+    }
+
+    // Draw wrapped description text
+    static void DrawWrappedDescription(
+        ImDrawList* draw,
+        const char* description,
+        float textX,
+        float startY,
+        float availableWidth)
+    {
+        const char* textStart = description;
+        const char* textEnd = description + strlen(description);
+        float lineY = startY;
+        float lineHeight = ImGui::GetFontSize();
+
+        while (textStart < textEnd)
+        {
+            const char* lineEnd = ImGui::GetFont()->CalcWordWrapPositionA(
+                1.0f, textStart, textEnd, availableWidth);
+
+            if (lineEnd == textStart)
+                lineEnd = textStart + 1;
+
+            draw->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+                ImVec2(textX, lineY), Theme::TextMuted, textStart, lineEnd);
+
+            lineY += lineHeight;
+            textStart = lineEnd;
+
+            while (textStart < textEnd && *textStart == ' ')
+                textStart++;
+        }
+    }
+
+    // Draw inline toggle switch for card
+    static void DrawCardToggle(
+        ImDrawList* draw,
+        ImVec2 pos,
+        ImVec2 size,
+        float slideAnim)
+    {
+        using namespace CardConstants;
+
+        float toggleX = pos.x + size.x - ToggleRightMargin;
+        float toggleY = pos.y + (size.y - ToggleHeight) * 0.5f;
+
+        // Toggle track
+        ImU32 toggleColor = Animation::LerpColorU32(
+            Theme::ButtonDefault,
+            Theme::AccentCyan,
+            slideAnim
+        );
+        draw->AddRectFilled(
+            ImVec2(toggleX, toggleY),
+            ImVec2(toggleX + ToggleWidth, toggleY + ToggleHeight),
+            toggleColor,
+            ToggleRounding
+        );
+
+        // Toggle knob
+        float knobX = toggleX + KnobPadding + slideAnim * KnobTravel;
+        draw->AddCircleFilled(
+            ImVec2(knobX + KnobRadius, toggleY + ToggleHeight * 0.5f),
+            KnobRadius,
+            Theme::TextPrimary
+        );
+    }
+
+    // =============================================
     // Cards / Sections
     // =============================================
 
     bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha)
     {
+        using namespace CardConstants;
+
         ImGuiID id = ImGui::GetID(name);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-
-        // Calculate layout dimensions
-        float iconSize = 32.0f;
-        float iconX = pos.x + 12.0f;
-        float textX = iconX + iconSize + 12.0f;
-        float toggleWidth = Theme::ToggleWidth;
-        float togglePadding = 12.0f;
-        float cardWidth = ImGui::GetContentRegionAvail().x;
-
-        // Calculate available width for description text
-        float availableTextWidth = cardWidth - (textX - pos.x) - toggleWidth - togglePadding;
-
-        // Check if description needs wrapping
-        ImVec2 descSize = ImGui::CalcTextSize(description);
-        bool needsWrap = descSize.x > availableTextWidth;
-
-        // Calculate card height based on whether text wraps
-        float baseHeight = 56.0f;
-        float cardHeight = baseHeight;
-
-        if (needsWrap && availableTextWidth > 50.0f)
+        // Sync initial state on first frame to avoid visual transition
+        bool isOn = enabled ? *enabled : false;
+        if (state.lastUpdateFrame == 0)
         {
-            // Calculate wrapped text height
-            ImVec2 wrappedSize = ImGui::CalcTextSize(description, nullptr, false, availableTextWidth);
-            float extraHeight = wrappedSize.y - ImGui::GetFontSize();
-            if (extraHeight > 0)
-            {
-                cardHeight = baseHeight + extraHeight;
-            }
+            state.slideAnim = isOn ? 1.0f : 0.0f;
+            state.selectedAnim = isOn ? 1.0f : 0.0f;
         }
 
-        ImVec2 size = ImVec2(cardWidth, cardHeight);
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        CardLayout layout = CalculateCardLayout(pos, description);
 
-        ImGui::InvisibleButton(name, size);
+        // Interaction
+        ImGui::InvisibleButton(name, layout.size);
         bool clicked = ImGui::IsItemClicked();
         bool hovered = ImGui::IsItemHovered();
 
@@ -59,99 +179,43 @@ namespace EFIGUI
             *enabled = !*enabled;
         }
 
-        bool isOn = enabled ? *enabled : false;
+        isOn = enabled ? *enabled : false;
         Animation::UpdateWidgetState(state, hovered, false, isOn);
+        state.slideAnim = Animation::Lerp(state.slideAnim, isOn ? 1.0f : 0.0f, ToggleAnimSpeed);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
-        // Background with optional alpha override
-        ImU32 bgBase = Theme::ButtonDefault;
-        ImU32 bgHoverTarget = Theme::ButtonHover;
-
-        // Apply custom alpha if specified (nullopt = use Theme default)
-        if (bgAlpha.has_value())
-        {
-            bgBase = (bgBase & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
-            bgHoverTarget = (bgHoverTarget & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
-        }
-
-        ImU32 bgColor = Animation::LerpColorU32(
-            bgBase,
-            bgHoverTarget,
-            state.hoverAnim
-        );
-        draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
+        // Background
+        DrawCardBackground(draw, pos, layout.size, state.hoverAnim, bgAlpha);
 
         // Icon
-        float iconY = pos.y + (size.y - iconSize) * 0.5f;
+        float iconY = pos.y + (layout.size.y - IconSize) * 0.5f;
         ImU32 iconColor = isOn ? Theme::AccentCyan : Theme::TextMuted;
-        draw->AddText(ImVec2(iconX + 6.0f, iconY + 6.0f), iconColor, icon);
+        draw->AddText(ImVec2(layout.iconX + IconTextOffset, iconY + IconTextOffset), iconColor, icon);
 
         // Name
-        draw->AddText(ImVec2(textX, pos.y + 10.0f), Theme::TextPrimary, name);
+        draw->AddText(ImVec2(layout.textX, pos.y + NameOffsetY), Theme::TextPrimary, name);
 
-        // Description - with automatic wrapping if needed
-        if (needsWrap && availableTextWidth > 50.0f)
+        // Description
+        if (layout.needsWrap && layout.availableTextWidth > MinTextWidth)
         {
-            const char* textStart = description;
-            const char* textEnd = description + strlen(description);
-            float lineY = pos.y + 28.0f;
-            float lineHeight = ImGui::GetFontSize();
-
-            while (textStart < textEnd)
-            {
-                const char* lineEnd = ImGui::GetFont()->CalcWordWrapPositionA(
-                    1.0f, textStart, textEnd, availableTextWidth);
-
-                if (lineEnd == textStart)
-                    lineEnd = textStart + 1;
-
-                draw->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-                    ImVec2(textX, lineY), Theme::TextMuted, textStart, lineEnd);
-
-                lineY += lineHeight;
-                textStart = lineEnd;
-
-                while (textStart < textEnd && *textStart == ' ')
-                    textStart++;
-            }
+            DrawWrappedDescription(draw, description, layout.textX, pos.y + DescOffsetY, layout.availableTextWidth);
         }
         else
         {
-            draw->AddText(ImVec2(textX, pos.y + 28.0f), Theme::TextMuted, description);
+            draw->AddText(ImVec2(layout.textX, pos.y + DescOffsetY), Theme::TextMuted, description);
         }
 
-        // Toggle indicator on right (vertically centered)
-        float toggleX = pos.x + size.x - 48.0f;
-        float toggleY = pos.y + (size.y - 24.0f) * 0.5f;
-
-        // Simple toggle visual
-        state.slideAnim = Animation::Lerp(state.slideAnim, isOn ? 1.0f : 0.0f, 12.0f);
-
-        ImU32 toggleColor = Animation::LerpColorU32(
-            Theme::ButtonDefault,
-            Theme::AccentCyan,
-            state.slideAnim
-        );
-        draw->AddRectFilled(
-            ImVec2(toggleX, toggleY),
-            ImVec2(toggleX + 40.0f, toggleY + 24.0f),
-            toggleColor,
-            12.0f
-        );
-
-        float knobX = toggleX + 3.0f + state.slideAnim * 16.0f;
-        draw->AddCircleFilled(
-            ImVec2(knobX + 9.0f, toggleY + 12.0f),
-            9.0f,
-            Theme::TextPrimary
-        );
+        // Toggle
+        DrawCardToggle(draw, pos, layout.size, state.slideAnim);
 
         return clicked;
     }
 
     bool SectionHeader(const char* label, bool* collapsed, std::optional<ImU32> accentColor)
     {
+        using namespace CardConstants;
+
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
@@ -164,14 +228,14 @@ namespace EFIGUI
         );
 
         // Line under header
-        float lineY = pos.y + ImGui::GetFontSize() + 4.0f;
+        float lineY = pos.y + ImGui::GetFontSize() + SectionLineOffset;
         draw->AddLine(
             ImVec2(pos.x, lineY),
             ImVec2(pos.x + ImGui::GetContentRegionAvail().x, lineY),
             Theme::BorderDefault
         );
 
-        ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + 12.0f));
+        ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + SectionSpacing));
 
         return collapsed ? !*collapsed : true;
     }

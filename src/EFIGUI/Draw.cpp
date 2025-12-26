@@ -9,18 +9,156 @@ namespace EFIGUI
 {
     namespace Draw
     {
+        // =============================================
+        // Helper Functions
+        // =============================================
+
+        // Calculate path points along a rounded rectangle perimeter
+        // Returns points in clockwise order starting from top-left corner
+        static void CalculateRoundedRectPath(
+            ImVec2 pos,
+            ImVec2 size,
+            float rounding,
+            int numSegments,
+            int cornerSegments,
+            std::vector<ImVec2>& outPoints)
+        {
+            using namespace DrawConstants;
+
+            float straightW = size.x - 2 * rounding;
+            float straightH = size.y - 2 * rounding;
+            float cornerArc = Pi * rounding * 0.5f;
+            float perimeter = 2 * straightW + 2 * straightH + 4 * cornerArc;
+
+            outPoints.clear();
+            outPoints.reserve(numSegments + 1);
+
+            // Top edge (left to right)
+            int topSegments = (int)(numSegments * straightW / perimeter);
+            if (topSegments < MarqueeMinEdgeSegments) topSegments = MarqueeMinEdgeSegments;
+            for (int i = 0; i <= topSegments; i++)
+            {
+                float t = (float)i / topSegments;
+                outPoints.push_back(ImVec2(pos.x + rounding + t * straightW, pos.y));
+            }
+
+            // Top-right corner
+            for (int i = 1; i <= cornerSegments; i++)
+            {
+                float angle = -Pi * 0.5f + (float)i / cornerSegments * Pi * 0.5f;
+                outPoints.push_back(ImVec2(
+                    pos.x + size.x - rounding + cosf(angle) * rounding,
+                    pos.y + rounding + sinf(angle) * rounding));
+            }
+
+            // Right edge (top to bottom)
+            int rightSegments = (int)(numSegments * straightH / perimeter);
+            if (rightSegments < MarqueeMinEdgeSegments) rightSegments = MarqueeMinEdgeSegments;
+            for (int i = 1; i <= rightSegments; i++)
+            {
+                float t = (float)i / rightSegments;
+                outPoints.push_back(ImVec2(pos.x + size.x, pos.y + rounding + t * straightH));
+            }
+
+            // Bottom-right corner
+            for (int i = 1; i <= cornerSegments; i++)
+            {
+                float angle = (float)i / cornerSegments * Pi * 0.5f;
+                outPoints.push_back(ImVec2(
+                    pos.x + size.x - rounding + cosf(angle) * rounding,
+                    pos.y + size.y - rounding + sinf(angle) * rounding));
+            }
+
+            // Bottom edge (right to left)
+            for (int i = 1; i <= topSegments; i++)
+            {
+                float t = (float)i / topSegments;
+                outPoints.push_back(ImVec2(pos.x + size.x - rounding - t * straightW, pos.y + size.y));
+            }
+
+            // Bottom-left corner
+            for (int i = 1; i <= cornerSegments; i++)
+            {
+                float angle = Pi * 0.5f + (float)i / cornerSegments * Pi * 0.5f;
+                outPoints.push_back(ImVec2(
+                    pos.x + rounding + cosf(angle) * rounding,
+                    pos.y + size.y - rounding + sinf(angle) * rounding));
+            }
+
+            // Left edge (bottom to top)
+            for (int i = 1; i <= rightSegments; i++)
+            {
+                float t = (float)i / rightSegments;
+                outPoints.push_back(ImVec2(pos.x, pos.y + size.y - rounding - t * straightH));
+            }
+
+            // Top-left corner
+            for (int i = 1; i <= cornerSegments; i++)
+            {
+                float angle = Pi + (float)i / cornerSegments * Pi * 0.5f;
+                outPoints.push_back(ImVec2(
+                    pos.x + rounding + cosf(angle) * rounding,
+                    pos.y + rounding + sinf(angle) * rounding));
+            }
+        }
+
+        // Draw marquee segments with alpha falloff based on sweep position
+        static void DrawMarqueeSegments(
+            Layer targetLayer,
+            const std::vector<ImVec2>& pathPoints,
+            int r, int g, int b,
+            float sweepPos,
+            float sweepLengthFrac,
+            float lineThickness,
+            float hoverAnim)
+        {
+            using namespace DrawConstants;
+
+            int totalPoints = (int)pathPoints.size();
+            for (int i = 0; i < totalPoints; i++)
+            {
+                float segPos = (float)i / totalPoints;
+
+                // Calculate distance from sweep position (wrapping around)
+                float dist1 = fabsf(segPos - sweepPos);
+                float dist2 = fabsf(segPos - sweepPos + 1.0f);
+                float dist3 = fabsf(segPos - sweepPos - 1.0f);
+                float dist = dist1;
+                if (dist2 < dist) dist = dist2;
+                if (dist3 < dist) dist = dist3;
+
+                // Convert distance to alpha with quadratic falloff
+                float normalizedDist = dist / sweepLengthFrac;
+                float alpha = 1.0f - normalizedDist;
+                if (alpha < 0.0f) alpha = 0.0f;
+                alpha = alpha * alpha;
+
+                int finalAlpha = (int)(alpha * 255 * hoverAnim);
+                if (finalAlpha < MarqueeMinAlpha) finalAlpha = (int)(MarqueeMinAlpha * hoverAnim);
+
+                ImU32 segColor = IM_COL32(r, g, b, finalAlpha);
+
+                int nextIdx = (i + 1) % totalPoints;
+                Layers().AddLine(targetLayer, pathPoints[i], pathPoints[nextIdx], segColor, lineThickness);
+            }
+        }
+
+        // =============================================
+        // Basic Glow Effects
+        // =============================================
+
         void RectGlow(ImVec2 min, ImVec2 max, ImU32 color, float intensity, float radius)
         {
-            if (intensity < 0.01f) return;
+            using namespace DrawConstants;
+
+            if (intensity < GlowMinIntensity) return;
 
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
-            // Multiple layers for glow effect
-            int layers = 4;
-            for (int i = layers; i >= 1; i--)
+            for (int i = GlowLayerCount; i >= 1; i--)
             {
-                float expand = radius * (float)i / layers;
-                float alpha = intensity * 0.2f * (1.0f - (float)i / layers);
+                float expand = radius * (float)i / GlowLayerCount;
+                float alpha = intensity * GlowAlphaMultiplier * (1.0f - (float)i / GlowLayerCount);
 
                 ImU32 layerColor = IM_COL32(
                     (color >> 0) & 0xFF,
@@ -35,7 +173,7 @@ namespace EFIGUI
                     layerColor,
                     Theme::FrameRounding + expand,
                     0,
-                    2.0f
+                    GlowLineThickness
                 );
             }
         }
@@ -64,10 +202,12 @@ namespace EFIGUI
 
         void NeonBorder(ImVec2 min, ImVec2 max, ImU32 color, float thickness, float rounding)
         {
+            using namespace DrawConstants;
+
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
             // Glow layers
-            RectGlow(min, max, color, 0.5f, 4.0f);
+            RectGlow(min, max, color, NeonGlowIntensity, NeonGlowRadius);
 
             // Main border
             draw->AddRect(min, max, color, rounding, 0, thickness);
@@ -86,7 +226,9 @@ namespace EFIGUI
 
         void GlowLayers(ImVec2 pos, ImVec2 size, ImU32 color, float intensity, int layerCount, float expandBase, float rounding, std::optional<Layer> layer)
         {
-            if (intensity < 0.01f) return;
+            using namespace DrawConstants;
+
+            if (intensity < GlowMinIntensity) return;
 
             // Extract RGB from color
             int r = (color >> 0) & 0xFF;
@@ -100,7 +242,7 @@ namespace EFIGUI
             for (int i = layerCount; i >= 1; i--)
             {
                 float expand = (float)i * expandBase;
-                float layerAlpha = intensity * 0.1f * (1.0f - (float)i / (layerCount + 1.0f));
+                float layerAlpha = intensity * GlowLayersAlphaMultiplier * (1.0f - (float)i / (layerCount + 1.0f));
                 ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
                 float layerRounding = rounding + expand;
 
@@ -113,7 +255,9 @@ namespace EFIGUI
 
         void GlowLayersCircle(ImVec2 center, float baseRadius, ImU32 color, float intensity, int layerCount, float expandBase, std::optional<Layer> layer)
         {
-            if (intensity < 0.01f) return;
+            using namespace DrawConstants;
+
+            if (intensity < GlowMinIntensity) return;
 
             // Extract RGB from color
             int r = (color >> 0) & 0xFF;
@@ -127,7 +271,7 @@ namespace EFIGUI
             for (int i = layerCount; i >= 1; i--)
             {
                 float layerRadius = baseRadius + (float)i * expandBase;
-                float layerAlpha = intensity * 0.15f * (1.0f - (float)i / (layerCount + 1.0f));
+                float layerAlpha = intensity * GlowLayersCircleAlphaMultiplier * (1.0f - (float)i / (layerCount + 1.0f));
                 ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
 
                 Layers().AddCircleFilled(targetLayer, center, layerRadius, layerColor);
@@ -136,10 +280,12 @@ namespace EFIGUI
 
         void MarqueeBorder(ImVec2 pos, ImVec2 size, ImU32 color, float sweepPos, float sweepLengthFrac, float rounding, float lineThickness, float hoverAnim, std::optional<Layer> layer)
         {
+            using namespace DrawConstants;
+
             // Determine target layer
             Layer targetLayer = layer.value_or(Layers().GetConfig().defaultMarqueeBorder);
 
-            if (hoverAnim < 0.1f)
+            if (hoverAnim < MarqueeHoverThreshold)
             {
                 // Static border when not hovered
                 Layers().AddRect(targetLayer, pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault, rounding, 0, 1.0f);
@@ -152,101 +298,17 @@ namespace EFIGUI
             int b = (color >> 16) & 0xFF;
 
             // Build path points along rounded rect
-            int numSegments = 80;
-            int cornerSegments = 8;
-            float straightW = size.x - 2 * rounding;
-            float straightH = size.y - 2 * rounding;
-            float cornerArc = 3.14159f * rounding * 0.5f;
-            float perimeter = 2 * straightW + 2 * straightH + 4 * cornerArc;
-            float PI = 3.14159265f;
-
             std::vector<ImVec2> pathPoints;
-            pathPoints.reserve(numSegments + 1);
+            CalculateRoundedRectPath(pos, size, rounding, MarqueeNumSegments, MarqueeCornerSegments, pathPoints);
 
-            // Top edge (left to right)
-            int topSegments = (int)(numSegments * straightW / perimeter);
-            if (topSegments < 2) topSegments = 2;
-            for (int i = 0; i <= topSegments; i++) {
-                float t = (float)i / topSegments;
-                pathPoints.push_back(ImVec2(pos.x + rounding + t * straightW, pos.y));
-            }
-
-            // Top-right corner
-            for (int i = 1; i <= cornerSegments; i++) {
-                float angle = -PI * 0.5f + (float)i / cornerSegments * PI * 0.5f;
-                pathPoints.push_back(ImVec2(pos.x + size.x - rounding + cosf(angle) * rounding, pos.y + rounding + sinf(angle) * rounding));
-            }
-
-            // Right edge (top to bottom)
-            int rightSegments = (int)(numSegments * straightH / perimeter);
-            if (rightSegments < 2) rightSegments = 2;
-            for (int i = 1; i <= rightSegments; i++) {
-                float t = (float)i / rightSegments;
-                pathPoints.push_back(ImVec2(pos.x + size.x, pos.y + rounding + t * straightH));
-            }
-
-            // Bottom-right corner
-            for (int i = 1; i <= cornerSegments; i++) {
-                float angle = 0 + (float)i / cornerSegments * PI * 0.5f;
-                pathPoints.push_back(ImVec2(pos.x + size.x - rounding + cosf(angle) * rounding, pos.y + size.y - rounding + sinf(angle) * rounding));
-            }
-
-            // Bottom edge (right to left)
-            for (int i = 1; i <= topSegments; i++) {
-                float t = (float)i / topSegments;
-                pathPoints.push_back(ImVec2(pos.x + size.x - rounding - t * straightW, pos.y + size.y));
-            }
-
-            // Bottom-left corner
-            for (int i = 1; i <= cornerSegments; i++) {
-                float angle = PI * 0.5f + (float)i / cornerSegments * PI * 0.5f;
-                pathPoints.push_back(ImVec2(pos.x + rounding + cosf(angle) * rounding, pos.y + size.y - rounding + sinf(angle) * rounding));
-            }
-
-            // Left edge (bottom to top)
-            for (int i = 1; i <= rightSegments; i++) {
-                float t = (float)i / rightSegments;
-                pathPoints.push_back(ImVec2(pos.x, pos.y + size.y - rounding - t * straightH));
-            }
-
-            // Top-left corner
-            for (int i = 1; i <= cornerSegments; i++) {
-                float angle = PI + (float)i / cornerSegments * PI * 0.5f;
-                pathPoints.push_back(ImVec2(pos.x + rounding + cosf(angle) * rounding, pos.y + rounding + sinf(angle) * rounding));
-            }
-
-            // Draw line segments with varying alpha using deferred drawing
-            int totalPoints = (int)pathPoints.size();
-            for (int i = 0; i < totalPoints; i++)
-            {
-                float segPos = (float)i / totalPoints;
-
-                // Calculate distance from sweep position (wrapping around)
-                float dist1 = fabsf(segPos - sweepPos);
-                float dist2 = fabsf(segPos - sweepPos + 1.0f);
-                float dist3 = fabsf(segPos - sweepPos - 1.0f);
-                float dist = dist1;
-                if (dist2 < dist) dist = dist2;
-                if (dist3 < dist) dist = dist3;
-
-                // Convert distance to alpha
-                float normalizedDist = dist / sweepLengthFrac;
-                float alpha = 1.0f - normalizedDist;
-                if (alpha < 0.0f) alpha = 0.0f;
-                alpha = alpha * alpha;  // Quadratic falloff
-
-                int finalAlpha = (int)(alpha * 255 * hoverAnim);
-                if (finalAlpha < 25) finalAlpha = (int)(25 * hoverAnim);
-
-                ImU32 segColor = IM_COL32(r, g, b, finalAlpha);
-
-                int nextIdx = (i + 1) % totalPoints;
-                Layers().AddLine(targetLayer, pathPoints[i], pathPoints[nextIdx], segColor, lineThickness);
-            }
+            // Draw marquee segments with alpha falloff
+            DrawMarqueeSegments(targetLayer, pathPoints, r, g, b, sweepPos, sweepLengthFrac, lineThickness, hoverAnim);
         }
 
         bool GlassmorphismBg(ImVec2 pos, ImVec2 size, float rounding, float hoverAnim, bool isActive)
         {
+            using namespace DrawConstants;
+
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
             // Try to use blurred background for glassmorphism effect
@@ -267,17 +329,13 @@ namespace EFIGUI
                     pos,
                     ImVec2(pos.x + size.x, pos.y + size.y),
                     uv0, uv1,
-                    IM_COL32(255, 255, 255, 200),  // Slightly transparent
+                    IM_COL32(255, 255, 255, GlassBlurAlpha),
                     rounding
                 );
 
                 // Semi-transparent dark overlay for better contrast
-                ImU32 overlayColor = isActive ? IM_COL32(30, 30, 50, 180) :
-                                     Animation::LerpColorU32(
-                                         IM_COL32(20, 20, 35, 160),
-                                         IM_COL32(30, 30, 55, 180),
-                                         hoverAnim
-                                     );
+                ImU32 overlayColor = isActive ? GlassOverlayActive :
+                                     Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
                 draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), overlayColor, rounding);
                 return true;
             }

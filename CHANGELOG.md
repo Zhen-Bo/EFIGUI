@@ -7,7 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.3] - 2025-12-26
+## [Unreleased]
+
+### Changed
+- **Internal refactoring**: Extracted magic numbers to centralized constant namespaces for improved maintainability.
+  - `CardConstants` (19 constants) - Card and section header rendering
+  - `NavConstants` (12 constants) - Navigation item rendering
+  - `ToggleConstants` (6 constants) - Toggle switch rendering
+- **Card.cpp**: Refactored `FeatureCard` from ~146 lines into focused helper functions:
+  - `CalculateCardLayout()` - Layout dimension calculation
+  - `DrawCardBackground()` - Background rendering with alpha override
+  - `DrawWrappedDescription()` - Multi-line text wrapping
+  - `DrawCardToggle()` - Inline toggle switch rendering
+- **Navigation.cpp**: Updated `NavItem`, `NavCollapseButton`, `NavSectionHeader` to use `NavConstants`.
+- **Toggle.cpp**: Updated `ModernToggle`, `ModernToggleWithDesc` to use `ToggleConstants`.
+
+---
+
+## [0.2.4] - 2025-12-27
+
+### Fixed
+- **Slider input state machine**: Replaced implicit state tracking with explicit three-state enum (`Idle → WaitingForFocus → Editing`) for reliable focus management.
+- **IconButton ID collision**: Added optional `uniqueId` parameter to avoid ID collisions when using the same icon multiple times.
+- **FeatureCard initial state sync**: Fixed visual transition on first render when `enabled=true` by syncing animation state on first frame.
+
+### Added
+- **Animation state cleanup**: Added `PruneStaleStates()` to automatically clean up unused widget animation states (called every ~1 second).
+- **Slider input buffer cleanup**: Added `PruneSliderInputBuffers()` to prevent memory growth from stale slider input buffers.
+- **Frame lifecycle validation**: Added debug assertions in `BeginFrame()`/`EndFrame()` to detect missing calls during development.
+
+### Changed
+- `WidgetState` now tracks `lastUpdateFrame` for pruning stale entries.
+- `SliderInputData` struct now stores both buffer content and last update frame.
+- Periodic cleanup runs in `BeginFrame()` every 60 frames (~1 second at 60fps).
+
+---
+
+## [0.2.3] - 2025-12-26 [`856db2e`]
 
 ### Fixed
 - **Slider input focus issue**: Fixed bug where clicking the value input box next to a slider would briefly enter edit mode but immediately exit, making it impossible to type values manually.

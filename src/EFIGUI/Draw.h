@@ -6,6 +6,43 @@
 
 namespace EFIGUI
 {
+    // =============================================
+    // Draw Constants
+    // =============================================
+    // Centralized constants for drawing functions.
+    // Avoids magic numbers and enables easy tuning.
+
+    namespace DrawConstants
+    {
+        // RectGlow constants
+        constexpr float GlowMinIntensity = 0.01f;       // Threshold below which glow is not drawn
+        constexpr int GlowLayerCount = 4;               // Number of glow layers
+        constexpr float GlowAlphaMultiplier = 0.2f;     // Base alpha multiplier for glow
+        constexpr float GlowLineThickness = 2.0f;       // Line thickness for glow borders
+
+        // NeonBorder constants
+        constexpr float NeonGlowIntensity = 0.5f;       // Glow intensity for neon effect
+        constexpr float NeonGlowRadius = 4.0f;          // Glow radius for neon effect
+
+        // GlowLayers constants
+        constexpr float GlowLayersAlphaMultiplier = 0.1f;   // Alpha multiplier for rect glow layers
+        constexpr float GlowLayersCircleAlphaMultiplier = 0.15f; // Alpha multiplier for circle glow layers
+
+        // MarqueeBorder constants
+        constexpr int MarqueeNumSegments = 80;          // Total number of path segments
+        constexpr int MarqueeCornerSegments = 8;        // Segments per corner arc
+        constexpr int MarqueeMinEdgeSegments = 2;       // Minimum segments for straight edges
+        constexpr int MarqueeMinAlpha = 25;             // Minimum alpha for border visibility
+        constexpr float MarqueeHoverThreshold = 0.1f;   // Threshold for hover animation
+        constexpr float Pi = 3.14159265f;               // Pi constant for angle calculations
+
+        // GlassmorphismBg constants
+        constexpr int GlassBlurAlpha = 200;             // Alpha for blurred background
+        constexpr ImU32 GlassOverlayActive = IM_COL32(30, 30, 50, 180);
+        constexpr ImU32 GlassOverlayDefault = IM_COL32(20, 20, 35, 160);
+        constexpr ImU32 GlassOverlayHover = IM_COL32(30, 30, 55, 180);
+    }
+
     namespace Draw
     {
         // =============================================

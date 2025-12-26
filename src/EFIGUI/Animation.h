@@ -18,6 +18,7 @@ namespace EFIGUI
             float glowPhase = 0.0f;      // For pulsing glow effect
             float clickAnim = 0.0f;      // For click ripple effect
             float slideAnim = 0.0f;      // For toggle slide
+            int lastUpdateFrame = 0;     // Frame number when last updated (for pruning)
         };
 
         // Get or create widget state for a given ID
@@ -25,6 +26,10 @@ namespace EFIGUI
 
         // Clear all cached states (call on frame start if needed)
         void ClearStates();
+
+        // Prune stale widget states that haven't been updated recently
+        // maxIdleFrames: Number of frames after which unused states are pruned
+        void PruneStaleStates(int maxIdleFrames = 60);
 
         // =============================================
         // Easing Functions
