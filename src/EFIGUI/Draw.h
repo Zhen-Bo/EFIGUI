@@ -1,6 +1,8 @@
 #pragma once
 #include "imgui.h"
+#include "Layer.h"
 #include <vector>
+#include <optional>
 
 namespace EFIGUI
 {
@@ -30,6 +32,7 @@ namespace EFIGUI
         // =============================================
 
         // Draw multiple expanding glow layers (rectangle)
+        // layer: Target layer for deferred drawing (nullopt = use LayerConfig default)
         void GlowLayers(
             ImVec2 pos,
             ImVec2 size,
@@ -38,10 +41,11 @@ namespace EFIGUI
             int layerCount = 5,
             float expandBase = 3.0f,
             float rounding = 8.0f,
-            bool useForeground = false
+            std::optional<Layer> layer = std::nullopt
         );
 
         // Draw multiple expanding glow layers (circle)
+        // layer: Target layer for deferred drawing (nullopt = use LayerConfig default)
         void GlowLayersCircle(
             ImVec2 center,
             float baseRadius,
@@ -49,7 +53,7 @@ namespace EFIGUI
             float intensity = 0.6f,
             int layerCount = 5,
             float expandBase = 3.0f,
-            bool useForeground = false
+            std::optional<Layer> layer = std::nullopt
         );
 
         // =============================================
@@ -60,6 +64,7 @@ namespace EFIGUI
         // sweepPos: 0.0 to 1.0 position of the bright spot along perimeter
         // sweepLengthFrac: fraction of perimeter that is lit up
         // hoverAnim: 0.0 = static border, 1.0 = full animation
+        // layer: Target layer for deferred drawing (nullopt = use LayerConfig default)
         void MarqueeBorder(
             ImVec2 pos,
             ImVec2 size,
@@ -69,7 +74,7 @@ namespace EFIGUI
             float rounding = 8.0f,
             float lineThickness = 2.0f,
             float hoverAnim = 1.0f,
-            bool useForeground = false
+            std::optional<Layer> layer = std::nullopt
         );
 
         // =============================================

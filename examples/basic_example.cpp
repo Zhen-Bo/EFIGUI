@@ -12,6 +12,9 @@ void RenderEFIGUIDemo()
     // Example: Complete Window with Navigation
     // =============================================
 
+    // Begin EFIGUI frame (required for Layer System deferred drawing)
+    EFIGUI::BeginFrame();
+
     static int selectedNav = 0;
     static bool windowOpen = true;
 
@@ -67,6 +70,9 @@ void RenderEFIGUIDemo()
         ImGui::EndChild();
     }
     EFIGUI::EndCustomWindow();
+
+    // End EFIGUI frame (flushes all deferred drawing commands in layer order)
+    EFIGUI::EndFrame();
 }
 
 void RenderDashboard()
@@ -196,6 +202,12 @@ int main()
     // Initialize EFIGUI with DX11 blur backend
     EFIGUI::Initialize(EFIGUI::BackendType::DX11, pDevice, windowWidth, windowHeight);
 
+    // Optional: Configure Layer System defaults
+    // EFIGUI::LayerConfig config;
+    // config.defaultWidgetGlow = EFIGUI::Layer::Widget;  // Lower glow layer
+    // config.autoElevateInPopup = true;                   // Auto-elevate in popups
+    // EFIGUI::GetLayerManager().SetConfig(config);
+
     // Main loop
     while (running)
     {
@@ -204,6 +216,12 @@ int main()
         ImGui::NewFrame();
 
         // Render EFIGUI demo
+        // Note: RenderEFIGUIDemo() calls BeginFrame/EndFrame internally
+        // If rendering multiple EFIGUI windows, call BeginFrame/EndFrame once:
+        //   EFIGUI::BeginFrame();
+        //   RenderWindow1();
+        //   RenderWindow2();
+        //   EFIGUI::EndFrame();
         RenderEFIGUIDemo();
 
         // End ImGui frame

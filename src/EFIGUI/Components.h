@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "Theme.h"
 #include "Animation.h"
+#include "Layer.h"
 #include <string>
 #include <cstdint>
 #include <optional>
@@ -72,22 +73,26 @@ namespace EFIGUI
 
     // Glowing button with neon effect
     // forceHover: if true, always show hover animation (marquee border)
-    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false);
+    // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
+    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false, std::optional<Layer> layer = std::nullopt);
 
     // Icon button (just an icon, no label)
     // bgAlpha: background alpha on hover (omit = use default)
     bool IconButton(const char* icon, ImVec2 size = ImVec2(28, 28), std::optional<ImU32> color = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Danger button (red glow, always shows hover effect with marquee)
-    bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0));
+    // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
+    bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<Layer> layer = std::nullopt);
 
     // Colored button - always shows colored border, no marquee effect
     // bgAlpha: background alpha (omit = use default)
-    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha = std::nullopt);
+    // layer: rendering layer for glow effects (omit = use LayerConfig default)
+    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha = std::nullopt, std::optional<Layer> layer = std::nullopt);
 
     // Cooldown button - shows a cooldown progress overlay
     // cooldownProgress: 0.0 = no cooldown, 1.0 = full cooldown (just started)
-    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress);
+    // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
+    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer = std::nullopt);
 
     // =============================================
     // Toggle / Checkbox
@@ -120,8 +125,9 @@ namespace EFIGUI
     // =============================================
 
     // Modern slider with glow
-    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format = "%.1f");
-    bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format = "%d");
+    // layer: rendering layer for knob and input box glow effects (omit = use LayerConfig default)
+    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format = "%.1f", std::optional<Layer> layer = std::nullopt);
+    bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format = "%d", std::optional<Layer> layer = std::nullopt);
 
     // =============================================
     // Combo / Dropdown
@@ -136,7 +142,8 @@ namespace EFIGUI
     // =============================================
 
     // Modern progress bar with glow
-    void ModernProgressBar(float fraction, ImVec2 size = ImVec2(-1, 0), const char* overlay = nullptr);
+    // layer: rendering layer for progress bar glow effects (omit = use LayerConfig default)
+    void ModernProgressBar(float fraction, ImVec2 size = ImVec2(-1, 0), const char* overlay = nullptr, std::optional<Layer> layer = std::nullopt);
 
     // Status indicator (colored dot + text)
     // dotSize: size of the dot (omit = Theme::DefaultDotSize)

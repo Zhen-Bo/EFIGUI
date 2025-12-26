@@ -153,6 +153,27 @@ namespace EFIGUI
         constexpr float   DefaultGlowBaseAlpha      = 180.0f;   // Glow animation base alpha
 
         // =============================================
+        // Glow Effect Parameters
+        // =============================================
+
+        // GlowButton / CooldownButton glow settings
+        constexpr int   ButtonGlowLayers            = 5;        // Number of glow layers for buttons
+        constexpr float ButtonGlowExpand            = 2.0f;     // Expansion per layer (pixels)
+
+        // ColoredButton glow settings (more subtle)
+        constexpr int   ColoredButtonGlowLayers     = 4;        // Fewer layers for subtle effect
+        constexpr float ColoredButtonGlowExpand     = 1.5f;     // Smaller expansion
+
+        // Slider glow settings
+        constexpr int   SliderGlowLayers            = 4;        // Layers for slider knob/input box
+        constexpr float SliderKnobGlowExpand        = 2.0f;     // Knob glow expansion
+        constexpr float SliderInputGlowExpand       = 1.5f;     // Input box glow expansion
+
+        // Progress bar glow settings
+        constexpr int   ProgressGlowLayers          = 4;        // Layers for progress bar
+        constexpr float ProgressGlowExpand          = 1.5f;     // Progress bar glow expansion
+
+        // =============================================
         // Color Utilities
         // =============================================
 

@@ -1,4 +1,5 @@
 #include "EFIGUI.h"
+#include "Layer.h"
 #include "Backend/IBlurBackend.h"
 
 #ifdef _WIN32
@@ -92,12 +93,23 @@ namespace EFIGUI
 
     void BeginFrame()
     {
-        // Reserved for future use (e.g., animation state cleanup)
+        // Clear deferred drawing commands from previous frame
+        LayerManager::Get().BeginFrame();
     }
 
-    void EndFrame()
+    void EndFrame(ImDrawList* targetDrawList)
     {
-        // Reserved for future use
+        // Flush all deferred drawing commands in layer order
+        LayerManager::Get().Flush(targetDrawList);
+    }
+
+    // =============================================
+    // Layer System
+    // =============================================
+
+    LayerManager& GetLayerManager()
+    {
+        return LayerManager::Get();
     }
 
     // =============================================

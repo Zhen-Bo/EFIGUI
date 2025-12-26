@@ -610,7 +610,7 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
-    bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover)
+    bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -641,7 +641,7 @@ namespace EFIGUI
 
         // Glow effect (outer glow when hovered or forceHover)
         float glowIntensity = forceHover ? 0.6f : (state.hoverAnim * 0.6f + state.activeAnim * 0.4f);
-        Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, 5, 2.0f, Theme::ButtonRounding, true);
+        Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, Theme::ButtonGlowLayers, Theme::ButtonGlowExpand, Theme::ButtonRounding, layer);
 
         // Glassmorphism background
         float effectiveHoverAnim = forceHover ? 1.0f : state.hoverAnim;
@@ -649,7 +649,7 @@ namespace EFIGUI
 
         // Marquee border
         float sweepPos = Animation::Sweep(0.12f);
-        Draw::MarqueeBorder(pos, size, effectiveGlowColor, sweepPos, 0.22f, Theme::ButtonRounding, 1.5f, effectiveHoverAnim, true);
+        Draw::MarqueeBorder(pos, size, effectiveGlowColor, sweepPos, 0.22f, Theme::ButtonRounding, 1.5f, effectiveHoverAnim, layer);
 
         // Text
         ImVec2 textSize = ImGui::CalcTextSize(label);
@@ -695,13 +695,13 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool DangerButton(const char* label, ImVec2 size)
+    bool DangerButton(const char* label, ImVec2 size, std::optional<Layer> layer)
     {
         // DangerButton always shows hover effect (forceHover = true)
-        return GlowButton(label, size, Theme::StatusError, true);
+        return GlowButton(label, size, Theme::StatusError, true, layer);
     }
 
-    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha)
+    bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -738,7 +738,7 @@ namespace EFIGUI
         // Subtle glow effect on hover only (not when disabled)
         if (!isDisabled)
         {
-            Draw::GlowLayers(pos, size, borderColor, state.hoverAnim * 0.8f, 4, 1.5f, rounding, true);
+            Draw::GlowLayers(pos, size, borderColor, state.hoverAnim * 0.8f, Theme::ColoredButtonGlowLayers, Theme::ColoredButtonGlowExpand, rounding, layer);
         }
 
         // Background - slightly tinted with border color
@@ -773,7 +773,7 @@ namespace EFIGUI
         return clicked && !isDisabled;
     }
 
-    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress)
+    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -807,7 +807,7 @@ namespace EFIGUI
         // Glow effect (outer glow when hovered, NOT on cooldown)
         if (!isOnCooldown)
         {
-            Draw::GlowLayers(pos, size, glowColor, state.hoverAnim, 5, 2.0f, rounding, true);
+            Draw::GlowLayers(pos, size, glowColor, state.hoverAnim, Theme::ButtonGlowLayers, Theme::ButtonGlowExpand, rounding, layer);
         }
 
         // Glassmorphism background (skip when on cooldown for simpler look)
@@ -867,7 +867,7 @@ namespace EFIGUI
         if (!isOnCooldown)
         {
             float sweepPos = Animation::Sweep(0.12f);
-            Draw::MarqueeBorder(pos, size, glowColor, sweepPos, 0.22f, rounding, 1.5f, state.hoverAnim, true);
+            Draw::MarqueeBorder(pos, size, glowColor, sweepPos, 0.22f, rounding, 1.5f, state.hoverAnim, layer);
         }
 
         // Text
@@ -1104,7 +1104,7 @@ namespace EFIGUI
     static std::unordered_map<ImGuiID, std::string> s_sliderInputBuffers;
     static ImGuiID s_activeSliderInputId = 0;
 
-    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format)
+    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format, std::optional<Layer> layer)
     {
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -1250,7 +1250,7 @@ namespace EFIGUI
         if (state.hoverAnim > 0.1f || sliderActive)
         {
             float glowIntensity = sliderActive ? 0.8f : state.hoverAnim * 0.5f;
-            Draw::GlowLayersCircle(ImVec2(knobX, knobY), knobRadius + 2.0f, Theme::AccentCyan, glowIntensity, 4, 2.0f, true);
+            Draw::GlowLayersCircle(ImVec2(knobX, knobY), knobRadius + 2.0f, Theme::AccentCyan, glowIntensity, Theme::SliderGlowLayers, Theme::SliderKnobGlowExpand, layer);
         }
 
         ImU32 knobColor = sliderActive ? Theme::AccentCyan : Theme::TextPrimary;
@@ -1300,7 +1300,7 @@ namespace EFIGUI
         {
             float glowIntensity = isEditingThisSlider ? 0.7f : displayState.hoverAnim * 0.5f;
             ImVec2 boxSize = ImVec2(valueInputWidth, valueInputHeight);
-            Draw::GlowLayers(inputBoxMin, boxSize, Theme::AccentCyan, glowIntensity, 4, 1.5f, inputRounding, true);
+            Draw::GlowLayers(inputBoxMin, boxSize, Theme::AccentCyan, glowIntensity, Theme::SliderGlowLayers, Theme::SliderInputGlowExpand, inputRounding, layer);
         }
 
         // Draw the display box background
@@ -1453,7 +1453,7 @@ namespace EFIGUI
         return changed;
     }
 
-    bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format)
+    bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format, std::optional<Layer> layer)
     {
         int originalValue = value ? *value : 0;
 
@@ -1465,7 +1465,7 @@ namespace EFIGUI
         }
 
         float floatValue = value ? (float)*value : 0.0f;
-        bool changed = ModernSliderFloat(label, &floatValue, (float)min, (float)max, "%.0f");
+        bool changed = ModernSliderFloat(label, &floatValue, (float)min, (float)max, "%.0f", layer);
 
         if (value)
         {
@@ -1515,7 +1515,7 @@ namespace EFIGUI
     // Progress / Status
     // =============================================
 
-    void ModernProgressBar(float fraction, ImVec2 size, const char* overlay)
+    void ModernProgressBar(float fraction, ImVec2 size, const char* overlay, std::optional<Layer> layer)
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         if (size.x <= 0) size.x = ImGui::GetContentRegionAvail().x;
@@ -1543,14 +1543,9 @@ namespace EFIGUI
                 size.y * 0.5f
             );
 
-            // Glow
-            Draw::RectGlow(
-                pos,
-                ImVec2(pos.x + fillWidth, pos.y + size.y),
-                Theme::AccentCyanGlow,
-                0.5f,
-                4.0f
-            );
+            // Glow effect using layer system
+            ImVec2 fillSize = ImVec2(fillWidth, size.y);
+            Draw::GlowLayers(pos, fillSize, Theme::AccentCyan, 0.5f, Theme::ProgressGlowLayers, Theme::ProgressGlowExpand, size.y * 0.5f, layer);
         }
 
         // Overlay text

@@ -1,6 +1,7 @@
 #include "Draw.h"
 #include "Theme.h"
 #include "Animation.h"
+#include "Layer.h"
 #include "EFIGUI.h"
 #include <cmath>
 
@@ -83,7 +84,7 @@ namespace EFIGUI
             draw->AddText(pos, color, icon);
         }
 
-        void GlowLayers(ImVec2 pos, ImVec2 size, ImU32 color, float intensity, int layerCount, float expandBase, float rounding, bool useForeground)
+        void GlowLayers(ImVec2 pos, ImVec2 size, ImU32 color, float intensity, int layerCount, float expandBase, float rounding, std::optional<Layer> layer)
         {
             if (intensity < 0.01f) return;
 
@@ -92,23 +93,25 @@ namespace EFIGUI
             int g = (color >> 8) & 0xFF;
             int b = (color >> 16) & 0xFF;
 
-            ImDrawList* draw = useForeground ? ImGui::GetForegroundDrawList() : ImGui::GetWindowDrawList();
+            // Determine target layer
+            Layer targetLayer = layer.value_or(Layers().GetConfig().defaultWidgetGlow);
 
-            // Draw glow layers from outer to inner
+            // Draw glow layers from outer to inner using deferred drawing
             for (int i = layerCount; i >= 1; i--)
             {
                 float expand = (float)i * expandBase;
                 float layerAlpha = intensity * 0.1f * (1.0f - (float)i / (layerCount + 1.0f));
-                draw->AddRectFilled(
-                    ImVec2(pos.x - expand, pos.y - expand),
-                    ImVec2(pos.x + size.x + expand, pos.y + size.y + expand),
-                    IM_COL32(r, g, b, (int)(layerAlpha * 255)),
-                    rounding + expand
-                );
+                ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
+                float layerRounding = rounding + expand;
+
+                ImVec2 min(pos.x - expand, pos.y - expand);
+                ImVec2 max(pos.x + size.x + expand, pos.y + size.y + expand);
+
+                Layers().AddRectFilled(targetLayer, min, max, layerColor, layerRounding);
             }
         }
 
-        void GlowLayersCircle(ImVec2 center, float baseRadius, ImU32 color, float intensity, int layerCount, float expandBase, bool useForeground)
+        void GlowLayersCircle(ImVec2 center, float baseRadius, ImU32 color, float intensity, int layerCount, float expandBase, std::optional<Layer> layer)
         {
             if (intensity < 0.01f) return;
 
@@ -117,24 +120,29 @@ namespace EFIGUI
             int g = (color >> 8) & 0xFF;
             int b = (color >> 16) & 0xFF;
 
-            ImDrawList* draw = useForeground ? ImGui::GetForegroundDrawList() : ImGui::GetWindowDrawList();
+            // Determine target layer
+            Layer targetLayer = layer.value_or(Layers().GetConfig().defaultWidgetGlow);
 
-            // Draw glow layers from outer to inner
+            // Draw glow layers from outer to inner using deferred drawing
             for (int i = layerCount; i >= 1; i--)
             {
                 float layerRadius = baseRadius + (float)i * expandBase;
                 float layerAlpha = intensity * 0.15f * (1.0f - (float)i / (layerCount + 1.0f));
-                draw->AddCircleFilled(center, layerRadius, IM_COL32(r, g, b, (int)(layerAlpha * 255)));
+                ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
+
+                Layers().AddCircleFilled(targetLayer, center, layerRadius, layerColor);
             }
         }
 
-        void MarqueeBorder(ImVec2 pos, ImVec2 size, ImU32 color, float sweepPos, float sweepLengthFrac, float rounding, float lineThickness, float hoverAnim, bool useForeground)
+        void MarqueeBorder(ImVec2 pos, ImVec2 size, ImU32 color, float sweepPos, float sweepLengthFrac, float rounding, float lineThickness, float hoverAnim, std::optional<Layer> layer)
         {
+            // Determine target layer
+            Layer targetLayer = layer.value_or(Layers().GetConfig().defaultMarqueeBorder);
+
             if (hoverAnim < 0.1f)
             {
                 // Static border when not hovered
-                ImDrawList* draw = useForeground ? ImGui::GetForegroundDrawList() : ImGui::GetWindowDrawList();
-                draw->AddRect(pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault, rounding, 0, 1.0f);
+                Layers().AddRect(targetLayer, pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault, rounding, 0, 1.0f);
                 return;
             }
 
@@ -207,8 +215,7 @@ namespace EFIGUI
                 pathPoints.push_back(ImVec2(pos.x + rounding + cosf(angle) * rounding, pos.y + rounding + sinf(angle) * rounding));
             }
 
-            // Draw line segments with varying alpha
-            ImDrawList* borderDraw = useForeground ? ImGui::GetForegroundDrawList() : ImGui::GetWindowDrawList();
+            // Draw line segments with varying alpha using deferred drawing
             int totalPoints = (int)pathPoints.size();
             for (int i = 0; i < totalPoints; i++)
             {
@@ -234,7 +241,7 @@ namespace EFIGUI
                 ImU32 segColor = IM_COL32(r, g, b, finalAlpha);
 
                 int nextIdx = (i + 1) % totalPoints;
-                borderDraw->AddLine(pathPoints[i], pathPoints[nextIdx], segColor, lineThickness);
+                Layers().AddLine(targetLayer, pathPoints[i], pathPoints[nextIdx], segColor, lineThickness);
             }
         }
 
