@@ -81,7 +81,19 @@ Add these files to your Visual Studio project (right-click project → Add → E
 | `EFIGUI/Layer.h` | Yes |
 | `EFIGUI/Layer.cpp` | Yes |
 | `EFIGUI/Components.h` | Yes |
-| `EFIGUI/Components.cpp` | Yes |
+| `EFIGUI/Components/Internal.h` | Yes |
+| `EFIGUI/Components/Window.cpp` | Yes |
+| `EFIGUI/Components/Panel.cpp` | Yes |
+| `EFIGUI/Components/Navigation.cpp` | Yes |
+| `EFIGUI/Components/Button.cpp` | Yes |
+| `EFIGUI/Components/Toggle.cpp` | Yes |
+| `EFIGUI/Components/Input.cpp` | Yes |
+| `EFIGUI/Components/Slider.cpp` | Yes |
+| `EFIGUI/Components/Combo.cpp` | Yes |
+| `EFIGUI/Components/Progress.cpp` | Yes |
+| `EFIGUI/Components/Card.cpp` | Yes |
+| `EFIGUI/Components/Tooltip.cpp` | Yes |
+| `EFIGUI/Components/Layout.cpp` | Yes |
 | `EFIGUI/Draw.h` | Yes |
 | `EFIGUI/Draw.cpp` | Yes |
 | `EFIGUI/Backend/IBlurBackend.h` | Only if using blur |
