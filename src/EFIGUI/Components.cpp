@@ -1,6 +1,5 @@
 #include "Components.h"
 #include "Draw.h"
-#include "Icons.h"
 #include "EFIGUI.h"
 #include "imgui_internal.h"
 #include <algorithm>
@@ -89,7 +88,7 @@ namespace EFIGUI
         Draw::IconCentered(
             ImVec2(closeX, btnY),
             ImVec2(closeX + btnSize, btnY + btnSize),
-            Icons::Xmark,
+            Icons::Close,
             closeColor
         );
 
@@ -108,7 +107,7 @@ namespace EFIGUI
         Draw::IconCentered(
             ImVec2(minX, btnY),
             ImVec2(minX + btnSize, btnY + btnSize),
-            Icons::Minus,
+            Icons::Minimize,
             minColor
         );
 
@@ -352,7 +351,7 @@ namespace EFIGUI
             Draw::IconCentered(
                 ImVec2(collapseX, btnY),
                 ImVec2(collapseX + btnSize, btnY + btnSize),
-                Icons::AnglesLeft,
+                Icons::Collapse,
                 collapseColor
             );
 

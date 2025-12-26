@@ -15,12 +15,15 @@ void RenderEFIGUIDemo()
     static int selectedNav = 0;
     static bool windowOpen = true;
 
-    if (EFIGUI::BeginCustomWindow("EFIGUI Demo", &windowOpen, ImVec2(900, 650)))
+    if (EFIGUI::BeginCustomWindow("EFIGUI Demo", &windowOpen))
     {
         // Left navbar
         ImGui::BeginChild("Navbar", ImVec2(EFIGUI::Theme::NavbarWidth, 0), false);
         {
-            EFIGUI::NavbarHeader("Navigation", EFIGUI::Icons::Bars);
+            static bool navCollapsed = false;
+            if (EFIGUI::NavbarHeader("Navigation", EFIGUI::Icons::Expand, EFIGUI::Icons::Collapse,
+                                      navCollapsed, EFIGUI::Theme::NavbarWidth))
+                navCollapsed = !navCollapsed;
 
             if (EFIGUI::NavItem(EFIGUI::Icons::Home, "Dashboard", selectedNav == 0))
                 selectedNav = 0;
@@ -73,13 +76,17 @@ void RenderDashboard()
     // Feature cards
     ImGui::Columns(3, nullptr, false);
 
-    EFIGUI::FeatureCard(EFIGUI::Icons::Eye, "Visual", "Enhanced visuals", true);
+    static bool featureVisual = true;
+    static bool featureProtection = false;
+    static bool featurePerformance = true;
+
+    EFIGUI::FeatureCard(EFIGUI::Icons::Eye, "Visual", "Enhanced visuals", &featureVisual);
     ImGui::NextColumn();
 
-    EFIGUI::FeatureCard(EFIGUI::Icons::Shield, "Protection", "Anti-detection", false);
+    EFIGUI::FeatureCard(EFIGUI::Icons::Shield, "Protection", "Anti-detection", &featureProtection);
     ImGui::NextColumn();
 
-    EFIGUI::FeatureCard(EFIGUI::Icons::Bolt, "Performance", "Optimized", true);
+    EFIGUI::FeatureCard(EFIGUI::Icons::Bolt, "Performance", "Optimized", &featurePerformance);
 
     ImGui::Columns(1);
 
@@ -88,15 +95,15 @@ void RenderDashboard()
     // Status indicators
     EFIGUI::SectionHeader("Status");
 
-    EFIGUI::StatusIndicator("System", EFIGUI::Theme::StatusSuccess, "Online");
-    EFIGUI::StatusIndicator("Network", EFIGUI::Theme::StatusWarning, "Limited");
-    EFIGUI::StatusIndicator("Updates", EFIGUI::Theme::StatusInfo, "Available");
+    EFIGUI::StatusIndicator("System", EFIGUI::Theme::StatusSuccess, true);
+    EFIGUI::StatusIndicator("Network", EFIGUI::Theme::StatusWarning, false);
+    EFIGUI::StatusIndicator("Updates", EFIGUI::Theme::StatusInfo, true);
 
     EFIGUI::Spacing();
 
     // Progress bar
     static float progress = 0.65f;
-    EFIGUI::ModernProgressBar("Loading Progress", progress);
+    EFIGUI::ModernProgressBar(progress, ImVec2(-1, 0), "Loading Progress");
 }
 
 void RenderSettings()

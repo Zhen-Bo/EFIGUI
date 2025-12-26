@@ -18,8 +18,9 @@
 #include "Draw.h"
 #include "Components.h"
 
-// Note: Icons.h is not included by default.
-// Users should provide their own icon definitions or include a separate Icons.h
+// Icons are configurable via EFIGUI::Icons namespace in Theme.h
+// Users can override the default icons before calling EFIGUI functions:
+//   EFIGUI::Icons::Close = "\xef\x80\x8d";  // Font Awesome xmark
 
 // Backend headers (include separately as needed)
 // #include "Backend/IBlurBackend.h"
@@ -92,7 +93,7 @@ namespace EFIGUI
 
     // Convert a Unicode codepoint to UTF-8 string
     // Usage: ImGui::Text("%s Home", EFIGUI::Icon(0xf015));
-    // This allows using icons without defining an Icons.h file
+    // Alternative: set icons directly via EFIGUI::Icons namespace in Theme.h
     const char* Icon(uint32_t codepoint);
 
     // =============================================
