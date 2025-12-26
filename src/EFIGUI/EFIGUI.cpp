@@ -1,6 +1,7 @@
 #include "EFIGUI.h"
 #include "Layer.h"
 #include "Backend/IBlurBackend.h"
+#include "Components/Internal.h"
 
 #ifdef _WIN32
 #include "Backend/BlurBackendDX11.h"
@@ -16,6 +17,10 @@ namespace EFIGUI
 
     static bool s_initialized = false;
     static std::unique_ptr<IBlurBackend> s_blurBackend = nullptr;
+
+    // Frame lifecycle tracking for debug validation
+    static int s_lastBeginFrameCount = -1;
+    static int s_lastEndFrameCount = -1;
 
     // =============================================
     // Initialization
@@ -93,12 +98,41 @@ namespace EFIGUI
 
     void BeginFrame()
     {
+        int currentFrame = ImGui::GetFrameCount();
+
+        // Debug validation: warn if EndFrame was not called last frame
+        if (s_lastBeginFrameCount >= 0 && s_lastEndFrameCount < s_lastBeginFrameCount)
+        {
+            IM_ASSERT(false && "EFIGUI::EndFrame() was not called! Layer commands from previous frame were lost.");
+        }
+
+        s_lastBeginFrameCount = currentFrame;
+
         // Clear deferred drawing commands from previous frame
         LayerManager::Get().BeginFrame();
+
+        // Periodically prune stale cached state (every ~1 second at 60fps)
+        static int s_pruneCounter = 0;
+        if (++s_pruneCounter >= 60)
+        {
+            s_pruneCounter = 0;
+            Animation::PruneStaleStates(60);
+            PruneSliderInputBuffers(60);
+        }
     }
 
     void EndFrame(ImDrawList* targetDrawList)
     {
+        int currentFrame = ImGui::GetFrameCount();
+
+        // Debug validation: warn if BeginFrame was not called this frame
+        if (s_lastBeginFrameCount != currentFrame)
+        {
+            IM_ASSERT(false && "EFIGUI::BeginFrame() was not called this frame!");
+        }
+
+        s_lastEndFrameCount = currentFrame;
+
         // Flush all deferred drawing commands in layer order
         LayerManager::Get().Flush(targetDrawList);
     }

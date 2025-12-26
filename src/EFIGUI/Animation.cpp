@@ -18,6 +18,22 @@ namespace EFIGUI
             s_widgetStates.clear();
         }
 
+        void PruneStaleStates(int maxIdleFrames)
+        {
+            int currentFrame = ImGui::GetFrameCount();
+            for (auto it = s_widgetStates.begin(); it != s_widgetStates.end(); )
+            {
+                if (currentFrame - it->second.lastUpdateFrame > maxIdleFrames)
+                {
+                    it = s_widgetStates.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+        }
+
         // =============================================
         // Interpolation
         // =============================================
@@ -145,6 +161,9 @@ namespace EFIGUI
         {
             float dt = GetDeltaTime();
             float t = 1.0f - std::pow(0.5f, dt * speed);
+
+            // Track when this state was last updated
+            state.lastUpdateFrame = ImGui::GetFrameCount();
 
             // Update hover
             float targetHover = isHovered ? 1.0f : 0.0f;

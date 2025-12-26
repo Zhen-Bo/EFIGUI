@@ -46,14 +46,49 @@ namespace EFIGUI
     // =============================================
     // Slider Input Editing State
     // =============================================
-    // State machine for slider value input:
-    // - Idle: s_activeSliderInputId == 0
-    // - WaitingForFocus: s_activeSliderInputId != 0 && s_pendingFocusAcquisition == true
-    // - Editing: s_activeSliderInputId != 0 && s_pendingFocusAcquisition == false
+    // Explicit three-state machine for reliable focus management.
+    // This avoids timing issues with ImGui's focus system where
+    // IsItemActive() may not be true immediately after SetKeyboardFocusHere().
 
-    static std::unordered_map<ImGuiID, std::string> s_sliderInputBuffers;
-    static ImGuiID s_activeSliderInputId = 0;
-    static bool s_pendingFocusAcquisition = false;
+    enum class SliderInputState : uint8_t
+    {
+        Idle,             // Not editing, showing display value
+        WaitingForFocus,  // Clicked, waiting for InputText to become active
+        Editing           // InputText is active, user is typing
+    };
+
+    struct SliderInputData
+    {
+        std::string buffer;
+        int lastUpdateFrame = 0;
+    };
+
+    static std::unordered_map<ImGuiID, SliderInputData> s_sliderInputBuffers;
+    static std::unordered_map<ImGuiID, SliderInputState> s_sliderInputStates;
+
+    static SliderInputState GetSliderInputState(ImGuiID id)
+    {
+        auto it = s_sliderInputStates.find(id);
+        return (it != s_sliderInputStates.end()) ? it->second : SliderInputState::Idle;
+    }
+
+    static void SetSliderInputState(ImGuiID id, SliderInputState state)
+    {
+        if (state == SliderInputState::Idle)
+        {
+            s_sliderInputStates.erase(id);
+        }
+        else
+        {
+            s_sliderInputStates[id] = state;
+        }
+    }
+
+    static bool IsSliderInputEditing(ImGuiID id)
+    {
+        SliderInputState state = GetSliderInputState(id);
+        return state == SliderInputState::WaitingForFocus || state == SliderInputState::Editing;
+    }
 
     // =============================================
     // Slider Helper Functions
@@ -87,20 +122,26 @@ namespace EFIGUI
     // Apply slider input value and reset editing state
     static bool ApplySliderInputValue(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
     {
-        try
+        auto it = s_sliderInputBuffers.find(id);
+        if (it != s_sliderInputBuffers.end())
         {
-            float newVal = std::stof(s_sliderInputBuffers[id]);
-            newVal = std::clamp(newVal, min, max);
-            if (value && newVal != *value)
+            try
             {
-                *value = newVal;
-                changed = true;
+                float newVal = std::stof(it->second.buffer);
+                newVal = std::clamp(newVal, min, max);
+                if (value && newVal != *value)
+                {
+                    *value = newVal;
+                    changed = true;
+                }
             }
+            catch (...) { /* Invalid input, ignore */ }
         }
-        catch (...) { /* Invalid input, ignore */ }
 
-        s_sliderInputBuffers[id] = FormatSliderValue(value ? *value : 0.0f, precision);
-        s_activeSliderInputId = 0;
+        auto& data = s_sliderInputBuffers[id];
+        data.buffer = FormatSliderValue(value ? *value : 0.0f, precision);
+        data.lastUpdateFrame = ImGui::GetFrameCount();
+        SetSliderInputState(id, SliderInputState::Idle);
         return changed;
     }
 
@@ -108,14 +149,20 @@ namespace EFIGUI
     static void SyncSliderInputBuffer(ImGuiID id, float* value, int precision, bool isEditing)
     {
         std::string expectedValue = FormatSliderValue(value ? *value : 0.0f, precision);
+        int currentFrame = ImGui::GetFrameCount();
 
-        if (s_sliderInputBuffers.find(id) == s_sliderInputBuffers.end())
+        auto it = s_sliderInputBuffers.find(id);
+        if (it == s_sliderInputBuffers.end())
         {
-            s_sliderInputBuffers[id] = expectedValue;
+            s_sliderInputBuffers[id] = { expectedValue, currentFrame };
         }
-        else if (!isEditing && value && s_sliderInputBuffers[id] != expectedValue)
+        else
         {
-            s_sliderInputBuffers[id] = expectedValue;
+            it->second.lastUpdateFrame = currentFrame;
+            if (!isEditing && value && it->second.buffer != expectedValue)
+            {
+                it->second.buffer = expectedValue;
+            }
         }
     }
 
@@ -135,7 +182,9 @@ namespace EFIGUI
         if (newValue != *value)
         {
             *value = newValue;
-            s_sliderInputBuffers[id] = FormatSliderValue(*value, precision);
+            auto& data = s_sliderInputBuffers[id];
+            data.buffer = FormatSliderValue(*value, precision);
+            data.lastUpdateFrame = ImGui::GetFrameCount();
             return true;
         }
         return false;
@@ -244,20 +293,12 @@ namespace EFIGUI
 
     static void BeginSliderInputEditing(ImGuiID id)
     {
-        s_activeSliderInputId = id;
-        s_pendingFocusAcquisition = true;
+        SetSliderInputState(id, SliderInputState::WaitingForFocus);
     }
 
     static void EndSliderInputEditing(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
     {
         ApplySliderInputValue(id, value, min, max, precision, changed);
-        s_pendingFocusAcquisition = false;
-    }
-
-    static void OnFocusAcquired(ImGuiID id)
-    {
-        s_pendingFocusAcquisition = false;
-        s_activeSliderInputId = id;
     }
 
     // =============================================
@@ -265,9 +306,9 @@ namespace EFIGUI
     // =============================================
 
     // Request focus if we're still waiting for InputText to become active
-    static void RequestFocusIfPending()
+    static void RequestFocusIfNeeded(ImGuiID id)
     {
-        if (s_pendingFocusAcquisition)
+        if (GetSliderInputState(id) == SliderInputState::WaitingForFocus)
         {
             ImGui::SetKeyboardFocusHere();
         }
@@ -277,27 +318,41 @@ namespace EFIGUI
     // Returns true if editing should continue, false if editing ended
     static bool UpdateEditingState(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
     {
+        SliderInputState currentState = GetSliderInputState(id);
+
         if (ImGui::IsItemActive())
         {
-            OnFocusAcquired(id);
+            // InputText is now active - transition to Editing state
+            if (currentState == SliderInputState::WaitingForFocus)
+            {
+                SetSliderInputState(id, SliderInputState::Editing);
+            }
             return true;
         }
 
-        if (s_pendingFocusAcquisition)
+        if (currentState == SliderInputState::WaitingForFocus)
         {
-            // Still waiting for focus - maintain editing state regardless of frame count
-            s_activeSliderInputId = id;
+            // Still waiting for focus - keep waiting (may take multiple frames)
             return true;
         }
 
         if (ImGui::IsItemDeactivated())
         {
-            // User explicitly left the input
+            // User left the input (clicked elsewhere, pressed Tab, etc.)
             EndSliderInputEditing(id, value, min, max, precision, changed);
             return false;
         }
 
-        // Abnormal state - exit gracefully
+        if (currentState == SliderInputState::Editing)
+        {
+            // We were editing but IsItemActive is now false
+            // This can happen when focus is lost unexpectedly
+            // Only exit if we also got a deactivation signal (handled above)
+            // Otherwise keep the editing state to handle edge cases
+            return true;
+        }
+
+        // Fallback: shouldn't reach here, but clean up gracefully
         EndSliderInputEditing(id, value, min, max, precision, changed);
         return false;
     }
@@ -307,7 +362,7 @@ namespace EFIGUI
                                          const char* label, ImVec2 inputBoxMin, float valueInputWidth,
                                          float valueInputHeight, float inputRounding, bool& changed)
     {
-        RequestFocusIfPending();
+        RequestFocusIfNeeded(id);
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
@@ -321,18 +376,17 @@ namespace EFIGUI
         ImGui::SetNextItemWidth(valueInputWidth);
 
         char inputBuf[32];
-        strncpy(inputBuf, s_sliderInputBuffers[id].c_str(), sizeof(inputBuf) - 1);
+        strncpy(inputBuf, s_sliderInputBuffers[id].buffer.c_str(), sizeof(inputBuf) - 1);
         inputBuf[sizeof(inputBuf) - 1] = '\0';
 
         std::string inputId = std::string("##") + label + "_input";
         bool enterPressed = ImGui::InputText(inputId.c_str(), inputBuf, sizeof(inputBuf),
             ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
 
-        s_sliderInputBuffers[id] = inputBuf;
+        s_sliderInputBuffers[id].buffer = inputBuf;
 
         if (enterPressed)
         {
-            s_pendingFocusAcquisition = false;
             ApplySliderInputValue(id, value, min, max, precision, changed);
         }
         else
@@ -351,7 +405,7 @@ namespace EFIGUI
                                   float valueInputWidth, float valueInputHeight,
                                   const Animation::WidgetState& displayState)
     {
-        const std::string& displayValue = s_sliderInputBuffers[id];
+        const std::string& displayValue = s_sliderInputBuffers[id].buffer;
         ImVec2 valTextSize = ImGui::CalcTextSize(displayValue.c_str());
         ImVec2 textPos = ImVec2(
             inputBoxMin.x + (valueInputWidth - valTextSize.x) * 0.5f,
@@ -394,7 +448,7 @@ namespace EFIGUI
         sliderWidth = std::max(sliderWidth, SliderLayout::MinSliderWidth);
 
         bool changed = false;
-        bool isEditingThisSlider = (s_activeSliderInputId == id);
+        bool isEditingThisSlider = IsSliderInputEditing(id);
 
         // Draw label
         if (!labelHidden)
@@ -505,5 +559,27 @@ namespace EFIGUI
             changed = (newValue != originalValue);
         }
         return changed;
+    }
+
+    // =============================================
+    // Cleanup Functions
+    // =============================================
+
+    void PruneSliderInputBuffers(int maxIdleFrames)
+    {
+        int currentFrame = ImGui::GetFrameCount();
+        for (auto it = s_sliderInputBuffers.begin(); it != s_sliderInputBuffers.end(); )
+        {
+            if (currentFrame - it->second.lastUpdateFrame > maxIdleFrames)
+            {
+                // Also clean up the editing state if present
+                s_sliderInputStates.erase(it->first);
+                it = s_sliderInputBuffers.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
     }
 }

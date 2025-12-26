@@ -13,6 +13,8 @@ namespace EFIGUI
 
     bool ModernToggle(const char* label, bool* value)
     {
+        using namespace ToggleConstants;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
@@ -43,14 +45,14 @@ namespace EFIGUI
 
         // Update slide animation
         float targetSlide = isOn ? 1.0f : 0.0f;
-        state.slideAnim = Animation::Lerp(state.slideAnim, targetSlide, 12.0f);
+        state.slideAnim = Animation::Lerp(state.slideAnim, targetSlide, AnimSpeed);
 
         Animation::UpdateWidgetState(state, hovered && !isDisabled, false, isOn);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Apply disabled alpha multiplier
-        float alphaMultiplier = isDisabled ? 0.4f : 1.0f;
+        float alphaMultiplier = isDisabled ? DisabledAlpha : 1.0f;
 
         // Track background
         ImU32 trackColorBase = Animation::LerpColorU32(
@@ -72,14 +74,14 @@ namespace EFIGUI
         );
 
         // Glow when on (skip when disabled)
-        if (!isDisabled && state.slideAnim > 0.1f)
+        if (!isDisabled && state.slideAnim > GlowThreshold)
         {
             Draw::RectGlow(
                 pos,
                 ImVec2(pos.x + toggleWidth, pos.y + toggleHeight),
                 Theme::AccentCyanGlow,
                 state.slideAnim * 0.5f,
-                4.0f
+                GlowRadius
             );
         }
 
@@ -113,14 +115,15 @@ namespace EFIGUI
 
     bool ModernToggleWithDesc(const char* label, const char* description, bool* value)
     {
+        using namespace ToggleConstants;
+
         bool result = ModernToggle(label, value);
 
         // Description below with text wrapping
-        float descOffsetX = 60.0f;
-        float availableWidth = ImGui::GetContentRegionAvail().x - descOffsetX;
+        float availableWidth = ImGui::GetContentRegionAvail().x - DescOffsetX;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + descOffsetX);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + DescOffsetX);
 
         // Use TextWrapped for automatic line breaking
         ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
@@ -129,7 +132,7 @@ namespace EFIGUI
         ImGui::PopStyleColor();
         ImGui::PopTextWrapPos();
 
-        ImGui::Dummy(ImVec2(0, 4.0f));
+        ImGui::Dummy(ImVec2(0, DescSpacingY));
 
         return result;
     }

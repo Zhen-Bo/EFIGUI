@@ -77,8 +77,9 @@ namespace EFIGUI
     bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false, std::optional<Layer> layer = std::nullopt);
 
     // Icon button (just an icon, no label)
+    // uniqueId: unique ID to avoid collision when same icon used multiple times (omit = use icon as ID)
     // bgAlpha: background alpha on hover (omit = use default)
-    bool IconButton(const char* icon, ImVec2 size = ImVec2(28, 28), std::optional<ImU32> color = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
+    bool IconButton(const char* icon, ImVec2 size = ImVec2(28, 28), std::optional<ImU32> color = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt, const char* uniqueId = nullptr);
 
     // Danger button (red glow, always shows hover effect with marquee)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)

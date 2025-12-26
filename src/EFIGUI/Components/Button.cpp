@@ -8,16 +8,72 @@
 namespace EFIGUI
 {
     // =============================================
+    // Helper Functions
+    // =============================================
+
+    // Draw cooldown overlay with edge glow and flowing particles
+    static void DrawCooldownOverlay(
+        ImDrawList* draw,
+        ImVec2 pos,
+        ImVec2 size,
+        float progress,
+        float rounding,
+        ImU32 glowColor,
+        float sweepPos)
+    {
+        using namespace ButtonConstants;
+
+        float cooldownWidth = size.x * progress;
+
+        // Dark overlay for cooldown portion (on the LEFT side)
+        draw->AddRectFilled(
+            pos,
+            ImVec2(pos.x + cooldownWidth, pos.y + size.y),
+            IM_COL32(0, 0, 0, CooldownOverlayAlpha),
+            rounding,
+            cooldownWidth >= size.x - rounding ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft
+        );
+
+        // Extract RGB from glow color for edge effect
+        auto glowRGB = Theme::ExtractRGB(glowColor);
+
+        // Flowing light effect on the right edge of cooldown (the boundary)
+        float edgeX = pos.x + cooldownWidth;
+        if (edgeX > pos.x + rounding && edgeX < pos.x + size.x - rounding)
+        {
+            // Vertical gradient line with glow
+            for (int i = EdgeGlowLayers - 1; i >= 0; i--)
+            {
+                float glowWidth = EdgeGlowBaseWidth + (float)i * EdgeGlowExpandStep;
+                float alpha = EdgeGlowBaseAlpha * (1.0f - (float)i / EdgeGlowLayers);
+                draw->AddRectFilled(
+                    ImVec2(edgeX, pos.y),
+                    ImVec2(edgeX + glowWidth, pos.y + size.y),
+                    IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(alpha * 255)),
+                    0
+                );
+            }
+
+            // Flowing light particles along the edge
+            float particleY = pos.y + size.y * sweepPos;
+            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), ParticleRadiusSmall, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, ParticleAlphaBright));
+            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), ParticleRadiusLarge, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, ParticleAlphaDim));
+        }
+    }
+
+    // =============================================
     // Buttons
     // =============================================
 
     bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer)
     {
+        using namespace ButtonConstants;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + 32.0f;
-        if (size.y <= 0) size.y = 36.0f;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
+        if (size.y <= 0) size.y = DefaultButtonHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -41,7 +97,7 @@ namespace EFIGUI
         ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
 
         // Glow effect (outer glow when hovered or forceHover)
-        float glowIntensity = forceHover ? 0.6f : (state.hoverAnim * 0.6f + state.activeAnim * 0.4f);
+        float glowIntensity = forceHover ? GlowIntensityBase : (state.hoverAnim * GlowIntensityBase + state.activeAnim * GlowIntensityActive);
         Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, Theme::ButtonGlowLayers, Theme::ButtonGlowExpand, Theme::ButtonRounding, layer);
 
         // Glassmorphism background
@@ -63,14 +119,16 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool IconButton(const char* icon, ImVec2 size, std::optional<ImU32> color, std::optional<uint8_t> bgAlpha)
+    bool IconButton(const char* icon, ImVec2 size, std::optional<ImU32> color, std::optional<uint8_t> bgAlpha, const char* uniqueId)
     {
-        ImGuiID id = ImGui::GetID(icon);
+        // Use uniqueId if provided, otherwise fall back to icon for ID
+        const char* idStr = uniqueId ? uniqueId : icon;
+        ImGuiID id = ImGui::GetID(idStr);
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
-        ImGui::InvisibleButton(icon, size);
+        ImGui::InvisibleButton(idStr, size);
         bool clicked = ImGui::IsItemClicked();
         bool hovered = ImGui::IsItemHovered();
 
@@ -104,11 +162,13 @@ namespace EFIGUI
 
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
     {
+        using namespace ButtonConstants;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + 32.0f;
-        if (size.y <= 0) size.y = 36.0f;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
+        if (size.y <= 0) size.y = DefaultButtonHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -176,16 +236,18 @@ namespace EFIGUI
 
     bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer)
     {
+        using namespace ButtonConstants;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + 32.0f;
-        if (size.y <= 0) size.y = 36.0f;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
+        if (size.y <= 0) size.y = DefaultButtonHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
         // Button is disabled during cooldown
-        bool isOnCooldown = cooldownProgress > 0.01f;
+        bool isOnCooldown = cooldownProgress > CooldownThreshold;
         if (isOnCooldown) ImGui::BeginDisabled();
 
         ImGui::InvisibleButton(label, size);
@@ -222,46 +284,11 @@ namespace EFIGUI
             draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::ButtonDefault, rounding);
         }
 
-        // Cooldown overlay - fills from LEFT to RIGHT as cooldown progresses
+        // Cooldown overlay with edge glow and particles
         if (isOnCooldown)
         {
-            float cooldownWidth = size.x * cooldownProgress;
-
-            // Dark overlay for cooldown portion (on the LEFT side)
-            draw->AddRectFilled(
-                pos,
-                ImVec2(pos.x + cooldownWidth, pos.y + size.y),
-                IM_COL32(0, 0, 0, 180),
-                rounding,
-                cooldownWidth >= size.x - rounding ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft
-            );
-
-            // Extract RGB from glow color for edge effect
-            auto glowRGB = Theme::ExtractRGB(glowColor);
-
-            // Flowing light effect on the right edge of cooldown (the boundary)
             float sweepPos = Animation::Sweep(0.5f);
-            float edgeX = pos.x + cooldownWidth;
-            if (edgeX > pos.x + rounding && edgeX < pos.x + size.x - rounding)
-            {
-                // Vertical gradient line with glow
-                for (int i = 3; i >= 0; i--)
-                {
-                    float glowWidth = 2.0f + (float)i * 3.0f;
-                    float alpha = 0.4f * (1.0f - (float)i / 4.0f);
-                    draw->AddRectFilled(
-                        ImVec2(edgeX, pos.y),
-                        ImVec2(edgeX + glowWidth, pos.y + size.y),
-                        IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(alpha * 255)),
-                        0
-                    );
-                }
-
-                // Flowing light particles along the edge
-                float particleY = pos.y + size.y * sweepPos;
-                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 3.0f, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, 220));
-                draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), 6.0f, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, 100));
-            }
+            DrawCooldownOverlay(draw, pos, size, cooldownProgress, rounding, glowColor, sweepPos);
         }
 
         // Marquee border (only when not on cooldown)

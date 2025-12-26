@@ -8,34 +8,23 @@
 namespace EFIGUI
 {
     // =============================================
-    // Custom Title Bar
+    // Helper Functions
     // =============================================
 
-    bool BeginCustomWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    // Draw title bar gradient background
+    static void DrawTitleBarBackground(
+        ImDrawList* draw,
+        ImVec2 windowPos,
+        ImVec2 windowSize,
+        float titleHeight)
     {
-        // Add flags for no title bar (we draw our own)
-        flags |= ImGuiWindowFlags_NoTitleBar;
-        flags |= ImGuiWindowFlags_NoCollapse;
-
-        ImGui::SetNextWindowSizeConstraints(ImVec2(Theme::WindowMinWidth, Theme::WindowMinHeight), ImVec2(FLT_MAX, FLT_MAX));
-
-        if (!ImGui::Begin(name, p_open, flags))
-        {
-            ImGui::End();
-            return false;
-        }
-
-        ImDrawList* draw = ImGui::GetWindowDrawList();
-        ImVec2 windowPos = ImGui::GetWindowPos();
-        ImVec2 windowSize = ImGui::GetWindowSize();
-        float titleHeight = Theme::TitleBarHeight;
-
-        // Title bar background (gradient)
         ImVec2 titleMin = windowPos;
         ImVec2 titleMax = ImVec2(windowPos.x + windowSize.x, windowPos.y + titleHeight);
+
+        // Gradient background
         Draw::RectGradientH(titleMin, titleMax, Theme::TitleBarLeft, Theme::TitleBarRight, Theme::WindowRounding);
 
-        // Only round top corners
+        // Only round top corners - fill the rest
         draw->AddRectFilled(
             ImVec2(titleMin.x, titleMin.y + Theme::WindowRounding),
             ImVec2(titleMax.x, titleMax.y),
@@ -49,22 +38,29 @@ namespace EFIGUI
             Theme::AccentCyan,
             1.0f
         );
+    }
 
-        // Title text
-        ImVec2 textPos = ImVec2(windowPos.x + 16.0f, windowPos.y + (titleHeight - ImGui::GetFontSize()) * 0.5f);
-        draw->AddText(textPos, Theme::TextPrimary, name);
+    // Draw window control buttons (close, minimize) and handle their interaction
+    // Returns the X position of the leftmost button (for drag area calculation)
+    static float DrawWindowControls(
+        ImDrawList* draw,
+        ImVec2 windowPos,
+        ImVec2 windowSize,
+        float titleHeight,
+        bool* p_open)
+    {
+        using namespace WindowConstants;
+
+        float btnY = windowPos.y + (titleHeight - TitleButtonSize) * 0.5f;
+        float closeX = windowPos.x + windowSize.x - TitleButtonSize - TitleButtonMargin;
 
         // Close button
-        float btnSize = 24.0f;
-        float btnY = windowPos.y + (titleHeight - btnSize) * 0.5f;
-        float closeX = windowPos.x + windowSize.x - btnSize - 12.0f;
-
         ImGui::SetCursorScreenPos(ImVec2(closeX, btnY));
         ImGui::PushID("##close");
 
         bool closeHovered = ImGui::IsMouseHoveringRect(
             ImVec2(closeX, btnY),
-            ImVec2(closeX + btnSize, btnY + btnSize)
+            ImVec2(closeX + TitleButtonSize, btnY + TitleButtonSize)
         );
 
         ImU32 closeColor = closeHovered ? Theme::StatusError : Theme::TextSecondary;
@@ -75,7 +71,7 @@ namespace EFIGUI
 
         Draw::IconCentered(
             ImVec2(closeX, btnY),
-            ImVec2(closeX + btnSize, btnY + btnSize),
+            ImVec2(closeX + TitleButtonSize, btnY + TitleButtonSize),
             Icons::Close,
             closeColor
         );
@@ -83,26 +79,36 @@ namespace EFIGUI
         ImGui::PopID();
 
         // Minimize button
-        float minX = closeX - btnSize - 8.0f;
+        float minX = closeX - TitleButtonSize - TitleButtonSpacing;
         ImGui::PushID("##minimize");
 
         bool minHovered = ImGui::IsMouseHoveringRect(
             ImVec2(minX, btnY),
-            ImVec2(minX + btnSize, btnY + btnSize)
+            ImVec2(minX + TitleButtonSize, btnY + TitleButtonSize)
         );
 
         ImU32 minColor = minHovered ? Theme::AccentCyan : Theme::TextSecondary;
         Draw::IconCentered(
             ImVec2(minX, btnY),
-            ImVec2(minX + btnSize, btnY + btnSize),
+            ImVec2(minX + TitleButtonSize, btnY + TitleButtonSize),
             Icons::Minimize,
             minColor
         );
 
         ImGui::PopID();
 
-        // Title bar dragging
-        bool inTitleBar = ImGui::IsMouseHoveringRect(titleMin, ImVec2(minX - 8.0f, titleMax.y));
+        return minX;
+    }
+
+    // Handle title bar dragging logic
+    static void HandleTitleBarDrag(
+        ImVec2 windowPos,
+        ImVec2 titleMin,
+        ImVec2 titleMax)
+    {
+        using namespace WindowConstants;
+
+        bool inTitleBar = ImGui::IsMouseHoveringRect(titleMin, titleMax);
 
         bool& isDragging = GetIsDraggingTitleBar();
         ImVec2& dragOffset = GetDragOffset();
@@ -131,6 +137,47 @@ namespace EFIGUI
                 isDragging = false;
             }
         }
+    }
+
+    // =============================================
+    // Custom Title Bar
+    // =============================================
+
+    bool BeginCustomWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    {
+        using namespace WindowConstants;
+
+        // Add flags for no title bar (we draw our own)
+        flags |= ImGuiWindowFlags_NoTitleBar;
+        flags |= ImGuiWindowFlags_NoCollapse;
+
+        ImGui::SetNextWindowSizeConstraints(ImVec2(Theme::WindowMinWidth, Theme::WindowMinHeight), ImVec2(FLT_MAX, FLT_MAX));
+
+        if (!ImGui::Begin(name, p_open, flags))
+        {
+            ImGui::End();
+            return false;
+        }
+
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        float titleHeight = Theme::TitleBarHeight;
+
+        // Draw title bar background
+        DrawTitleBarBackground(draw, windowPos, windowSize, titleHeight);
+
+        // Title text
+        ImVec2 textPos = ImVec2(windowPos.x + TitleTextPadding, windowPos.y + (titleHeight - ImGui::GetFontSize()) * 0.5f);
+        draw->AddText(textPos, Theme::TextPrimary, name);
+
+        // Draw window controls and get leftmost button position
+        float leftmostBtnX = DrawWindowControls(draw, windowPos, windowSize, titleHeight, p_open);
+
+        // Handle title bar dragging (drag area ends before buttons)
+        ImVec2 titleMin = windowPos;
+        ImVec2 titleMax = ImVec2(leftmostBtnX - TitleButtonSpacing, windowPos.y + titleHeight);
+        HandleTitleBarDrag(windowPos, titleMin, titleMax);
 
         // Set cursor below title bar for content
         ImGui::SetCursorPosY(titleHeight);
@@ -243,6 +290,8 @@ namespace EFIGUI
     bool NavbarHeader(const char* title, const char* iconExpanded, const char* iconCollapsed,
                       bool collapsed, float width, bool* closeClicked, std::optional<ImU32> glowColor)
     {
+        using namespace WindowConstants;
+
         ImGuiID id = ImGui::GetID("##NavbarHeader");
         Animation::WidgetState& state = Animation::GetState(id);
 
@@ -268,7 +317,6 @@ namespace EFIGUI
             1.0f
         );
 
-        float btnSize = 20.0f;
         float contentY = pos.y + (headerHeight - ImGui::GetFontSize()) * 0.5f;
 
         if (collapsed)
@@ -302,8 +350,8 @@ namespace EFIGUI
             // Draw glow behind icon
             if (!headerHovered)
             {
-                float glowRadius = 4.0f + glowAnim * 2.0f;
-                ImU32 glowColorWithAlpha = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(glowAnim * 60));
+                float glowRadius = GlowRadiusBase + glowAnim * GlowRadiusExpand;
+                ImU32 glowColorWithAlpha = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, (int)(glowAnim * GlowAnimAlpha));
                 draw->AddCircleFilled(
                     ImVec2(iconX + iconSize * 0.5f, iconY + iconSize * 0.5f),
                     glowRadius + iconSize * 0.5f,
@@ -320,41 +368,41 @@ namespace EFIGUI
             }
 
             // Advance cursor
-            ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + headerHeight + 8.0f));
+            ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + headerHeight + ContentSpacingY));
 
             return headerClicked;
         }
         else
         {
             // Expanded: show icon + title + << button
-            float iconX = pos.x + 8.0f;
+            float iconX = pos.x + NavbarIconPadding;
 
             // Brand icon
             draw->AddText(ImVec2(iconX, contentY), effectiveGlowColor, iconExpanded);
 
             // Title text
-            float textX = iconX + ImGui::GetFontSize() + 8.0f;
+            float textX = iconX + ImGui::GetFontSize() + NavbarIconPadding;
             draw->AddText(ImVec2(textX, contentY), Theme::TextPrimary, title);
 
             // Collapse button on far right
-            float collapseX = pos.x + size.x - btnSize - 4.0f;
-            float btnY = pos.y + (headerHeight - btnSize) * 0.5f;
+            float collapseX = pos.x + size.x - NavbarButtonSize - NavbarButtonPadding;
+            float btnY = pos.y + (headerHeight - NavbarButtonSize) * 0.5f;
 
             ImGui::SetCursorScreenPos(ImVec2(collapseX, btnY));
-            ImGui::InvisibleButton("##collapse", ImVec2(btnSize, btnSize));
+            ImGui::InvisibleButton("##collapse", ImVec2(NavbarButtonSize, NavbarButtonSize));
             bool collapseHovered = ImGui::IsItemHovered();
             bool collapseClicked = ImGui::IsItemClicked();
 
             ImU32 collapseColor = collapseHovered ? effectiveGlowColor : Theme::TextSecondary;
             Draw::IconCentered(
                 ImVec2(collapseX, btnY),
-                ImVec2(collapseX + btnSize, btnY + btnSize),
+                ImVec2(collapseX + NavbarButtonSize, btnY + NavbarButtonSize),
                 Icons::Collapse,
                 collapseColor
             );
 
             // Advance cursor
-            ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + headerHeight + 8.0f));
+            ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + headerHeight + ContentSpacingY));
 
             return collapseClicked;
         }
