@@ -23,10 +23,13 @@ EFIGUI::Initialize();
 EFIGUI::Initialize(EFIGUI::BackendType::DX11, pDevice, width, height);
 
 // In your render loop
-if (EFIGUI::BeginCustomWindow("My Window", nullptr, ImVec2(800, 600)))
+if (EFIGUI::BeginCustomWindow("My Window", nullptr))
 {
     // Navbar
-    EFIGUI::NavbarHeader("Menu", EFIGUI::Icons::Bars);
+    static bool navCollapsed = false;
+    if (EFIGUI::NavbarHeader("Menu", EFIGUI::Icons::Expand, EFIGUI::Icons::Collapse,
+                              navCollapsed, EFIGUI::Theme::NavbarWidth))
+        navCollapsed = !navCollapsed;
 
     if (EFIGUI::NavItem(EFIGUI::Icons::Home, "Home", selected == 0))
         selected = 0;
@@ -173,24 +176,30 @@ target_link_libraries(EFIGUI PUBLIC imgui)
 - DirectX 11 SDK (for DX11 blur backend, Windows only)
 - d3dcompiler_47.dll (runtime shader compilation)
 
-## Font Awesome Icons
+## Customizing Icons
 
-EFIGUI includes pre-defined Font Awesome 6 icon constants:
+EFIGUI provides default text icons that work without any font setup. You can customize icons by overriding the values in `EFIGUI::Icons` namespace before calling EFIGUI functions:
 
 ```cpp
-// Use icons directly
-ImGui::Text("%s Settings", EFIGUI::Icons::Cog);
+// Use Font Awesome icons (requires loading the font)
+EFIGUI::Icons::Close       = "\xef\x80\x8d";  // FA xmark
+EFIGUI::Icons::Home        = "\xef\x80\x95";  // FA home
+EFIGUI::Icons::Cog         = "\xef\x80\x93";  // FA cog
+EFIGUI::Icons::User        = "\xef\x80\x87";  // FA user
 
-// Available icons
-EFIGUI::Icons::User
-EFIGUI::Icons::Home
-EFIGUI::Icons::Search
-EFIGUI::Icons::Check
-EFIGUI::Icons::Warning
-// ... and many more in Icons.h
+// Or use any Unicode text
+EFIGUI::Icons::Close = "[X]";
+EFIGUI::Icons::Check = "OK";
 ```
 
-To use icons, load Font Awesome into ImGui:
+Available icons in `EFIGUI::Icons`:
+- Window controls: `Close`, `Minimize`, `Collapse`, `Expand`
+- Navigation: `ChevronLeft`, `ChevronRight`, `Bars`, `Home`, `Cog`, `User`
+- Common UI: `Check`, `Warning`, `Info`, `Error`, `Eye`, `Shield`, `Bolt`
+
+## Font Awesome Icons
+
+To use Font Awesome icons, load the font into ImGui and set the icon values:
 
 ```cpp
 // After adding your main font
@@ -199,6 +208,12 @@ ImFontConfig config;
 config.MergeMode = true;
 static const ImWchar iconRanges[] = { 0xf000, 0xf8ff, 0 };
 io.Fonts->AddFontFromFileTTF("fa-solid-900.ttf", 16.0f, &config, iconRanges);
+
+// Then set EFIGUI icons to Font Awesome codepoints
+EFIGUI::Icons::Close       = "\xef\x80\x8d";  // xmark
+EFIGUI::Icons::Home        = "\xef\x80\x95";  // home
+EFIGUI::Icons::Cog         = "\xef\x80\x93";  // cog
+// ... set other icons as needed
 ```
 
 ## License

@@ -27,7 +27,6 @@ set(EFIGUI_HEADERS
     src/EFIGUI/EFIGUI.h
     src/EFIGUI/Theme.h
     src/EFIGUI/Animation.h
-    src/EFIGUI/Icons.h
     src/EFIGUI/Draw.h
     src/EFIGUI/Components.h
     src/EFIGUI/Backend/IBlurBackend.h

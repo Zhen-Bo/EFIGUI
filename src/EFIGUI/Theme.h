@@ -3,6 +3,38 @@
 
 namespace EFIGUI
 {
+    // =============================================
+    // Configurable Icons
+    // =============================================
+    // Users can override these default icons before calling EFIGUI functions
+    // Example: EFIGUI::Icons::Close = "\xef\x80\x8d"; // Font Awesome xmark
+
+    namespace Icons
+    {
+        // Window control icons
+        inline const char* Close       = "X";           // Window close button
+        inline const char* Minimize    = "-";           // Window minimize button
+        inline const char* Collapse    = "<<";          // Navbar collapse button
+        inline const char* Expand      = ">>";          // Navbar expand button
+
+        // Navigation icons
+        inline const char* ChevronLeft  = "<";
+        inline const char* ChevronRight = ">";
+        inline const char* Bars         = "=";          // Menu/hamburger icon
+        inline const char* Home         = "H";          // Home icon
+        inline const char* Cog          = "*";          // Settings/gear icon
+        inline const char* User         = "U";          // User/profile icon
+
+        // Common UI icons
+        inline const char* Check       = "v";           // Checkmark
+        inline const char* Warning     = "!";           // Warning/exclamation
+        inline const char* Info        = "i";           // Information
+        inline const char* Error       = "x";           // Error/cross
+        inline const char* Eye         = "o";           // Eye/visibility
+        inline const char* Shield      = "S";           // Shield/protection
+        inline const char* Bolt        = "B";           // Lightning bolt/performance
+    }
+
     namespace Theme
     {
         // =============================================
