@@ -38,9 +38,10 @@ namespace EFIGUI
 
         // GlassmorphismBg constants
         constexpr int GlassBlurAlpha = 200;             // Alpha for blurred background
-        constexpr ImU32 GlassOverlayActive = IM_COL32(30, 30, 50, 180);
-        constexpr ImU32 GlassOverlayDefault = IM_COL32(20, 20, 35, 160);
-        constexpr ImU32 GlassOverlayHover = IM_COL32(30, 30, 55, 180);
+        constexpr ImU32 GlassBaseLayer = IM_COL32(20, 20, 35, 200);  // Opaque base to prevent transparency stacking
+        constexpr ImU32 GlassOverlayActive = IM_COL32(30, 30, 50, 255);
+        constexpr ImU32 GlassOverlayDefault = IM_COL32(20, 20, 35, 250);
+        constexpr ImU32 GlassOverlayHover = IM_COL32(30, 30, 55, 252);
     }
 
     namespace Draw

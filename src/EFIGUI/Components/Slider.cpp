@@ -1,6 +1,6 @@
 // =============================================
 // EFIGUI Components - Slider
-// Modern slider with editable value display box
+// Modern slider with decoupled track and value input
 // =============================================
 
 #include "Internal.h"
@@ -20,89 +20,15 @@ namespace EFIGUI
         constexpr float InputGap = 8.0f;
         constexpr float LabelGap = 12.0f;
         constexpr float MinSliderWidth = 80.0f;
-        constexpr float InputRounding = 6.0f;
-        constexpr float InputInset = 2.0f;
-        constexpr float InputPaddingX = 6.0f;
         constexpr float GlowExpandSize = 4.0f;
         constexpr float HoverThreshold = 0.1f;
-        constexpr float GlowThreshold = 0.05f;
         constexpr float ActiveGlowIntensity = 0.8f;
-        constexpr float EditingGlowIntensity = 0.7f;
-    }
-
-    namespace SliderColors
-    {
-        constexpr ImU32 BezelColor = IM_COL32(25, 25, 35, 255);
-        constexpr ImU32 ScreenBgDefault = IM_COL32(15, 15, 25, 255);
-        constexpr ImU32 ScreenBgHover = IM_COL32(20, 25, 35, 255);
-        constexpr ImU32 ScreenBgEditing = IM_COL32(20, 30, 40, 255);
-        constexpr ImU32 InnerBorderTop = IM_COL32(10, 10, 15, 255);
-        constexpr ImU32 InnerBorderBottom = IM_COL32(50, 50, 70, 100);
-        constexpr ImU32 OuterBorderDefault = IM_COL32(60, 60, 80, 255);
-        constexpr ImU32 OuterBorderHover = IM_COL32(80, 100, 120, 255);
-        constexpr ImU32 TextDefault = IM_COL32(180, 200, 210, 255);
-    }
-
-    // =============================================
-    // Slider Input Editing State
-    // =============================================
-    // Explicit three-state machine for reliable focus management.
-    // This avoids timing issues with ImGui's focus system where
-    // IsItemActive() may not be true immediately after SetKeyboardFocusHere().
-
-    enum class SliderInputState : uint8_t
-    {
-        Idle,             // Not editing, showing display value
-        WaitingForFocus,  // Clicked, waiting for InputText to become active
-        Editing           // InputText is active, user is typing
-    };
-
-    struct SliderInputData
-    {
-        std::string buffer;
-        int lastUpdateFrame = 0;
-    };
-
-    static std::unordered_map<ImGuiID, SliderInputData> s_sliderInputBuffers;
-    static std::unordered_map<ImGuiID, SliderInputState> s_sliderInputStates;
-
-    static SliderInputState GetSliderInputState(ImGuiID id)
-    {
-        auto it = s_sliderInputStates.find(id);
-        return (it != s_sliderInputStates.end()) ? it->second : SliderInputState::Idle;
-    }
-
-    static void SetSliderInputState(ImGuiID id, SliderInputState state)
-    {
-        if (state == SliderInputState::Idle)
-        {
-            s_sliderInputStates.erase(id);
-        }
-        else
-        {
-            s_sliderInputStates[id] = state;
-        }
-    }
-
-    static bool IsSliderInputEditing(ImGuiID id)
-    {
-        SliderInputState state = GetSliderInputState(id);
-        return state == SliderInputState::WaitingForFocus || state == SliderInputState::Editing;
     }
 
     // =============================================
     // Slider Helper Functions
     // =============================================
 
-    // Format a float value to string with given precision
-    static std::string FormatSliderValue(float value, int precision)
-    {
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(precision) << value;
-        return oss.str();
-    }
-
-    // Parse format string to extract precision (e.g., "%.2f" -> 2)
     static int ParseFormatPrecision(const char* format)
     {
         if (!format) return 1;
@@ -119,301 +45,100 @@ namespace EFIGUI
         return 1;
     }
 
-    // Apply slider input value and reset editing state
-    static bool ApplySliderInputValue(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
+    // =============================================
+    // SliderTrack - Internal Component
+    // =============================================
+    // Handles the slider track, knob, and drag interaction.
+    // Returns true if value was changed by dragging.
+
+    static bool SliderTrack(const char* label, float* value, float min, float max,
+                            float startX, float trackY, float sliderWidth,
+                            const Animation::WidgetState& state, bool sliderActive,
+                            std::optional<Layer> layer)
     {
-        auto it = s_sliderInputBuffers.find(id);
-        if (it != s_sliderInputBuffers.end())
+        using namespace SliderLayout;
+
+        if (!value) return false;
+
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        bool changed = false;
+
+        // Clamp value
+        *value = std::clamp(*value, min, max);
+
+        // Calculate fill width
+        float normalizedCurrent = std::clamp((*value - min) / (max - min), 0.0f, 1.0f);
+        float fillWidth = sliderWidth * normalizedCurrent;
+
+        // Handle drag interaction
+        if (sliderActive)
         {
-            try
+            float mouseX = ImGui::GetMousePos().x;
+            float sliderEndX = startX + sliderWidth;
+            float clampedMouseX = std::clamp(mouseX, startX, sliderEndX);
+
+            float normalizedValue = (clampedMouseX - startX) / sliderWidth;
+            float newValue = min + normalizedValue * (max - min);
+
+            if (newValue != *value)
             {
-                float newVal = std::stof(it->second.buffer);
-                newVal = std::clamp(newVal, min, max);
-                if (value && newVal != *value)
-                {
-                    *value = newVal;
-                    changed = true;
-                }
-            }
-            catch (...) { /* Invalid input, ignore */ }
-        }
-
-        auto& data = s_sliderInputBuffers[id];
-        data.buffer = FormatSliderValue(value ? *value : 0.0f, precision);
-        data.lastUpdateFrame = ImGui::GetFrameCount();
-        SetSliderInputState(id, SliderInputState::Idle);
-        return changed;
-    }
-
-    // Ensure input buffer is initialized and synced
-    static void SyncSliderInputBuffer(ImGuiID id, float* value, int precision, bool isEditing)
-    {
-        std::string expectedValue = FormatSliderValue(value ? *value : 0.0f, precision);
-        int currentFrame = ImGui::GetFrameCount();
-
-        auto it = s_sliderInputBuffers.find(id);
-        if (it == s_sliderInputBuffers.end())
-        {
-            s_sliderInputBuffers[id] = { expectedValue, currentFrame };
-        }
-        else
-        {
-            it->second.lastUpdateFrame = currentFrame;
-            if (!isEditing && value && it->second.buffer != expectedValue)
-            {
-                it->second.buffer = expectedValue;
+                *value = newValue;
+                changed = true;
+                // Recalculate fill width after value change
+                normalizedCurrent = std::clamp((*value - min) / (max - min), 0.0f, 1.0f);
+                fillWidth = sliderWidth * normalizedCurrent;
             }
         }
-    }
 
-    // Handle slider drag interaction and update value
-    static bool HandleSliderDrag(float* value, float min, float max, float sliderStartX, float sliderWidth,
-                                  ImGuiID id, int precision, bool sliderActive)
-    {
-        if (!sliderActive || !value) return false;
-
-        float mouseX = ImGui::GetMousePos().x;
-        float sliderEndX = sliderStartX + sliderWidth;
-        float clampedMouseX = std::clamp(mouseX, sliderStartX, sliderEndX);
-
-        float normalizedValue = (clampedMouseX - sliderStartX) / sliderWidth;
-        float newValue = min + normalizedValue * (max - min);
-
-        if (newValue != *value)
-        {
-            *value = newValue;
-            auto& data = s_sliderInputBuffers[id];
-            data.buffer = FormatSliderValue(*value, precision);
-            data.lastUpdateFrame = ImGui::GetFrameCount();
-            return true;
-        }
-        return false;
-    }
-
-    // Draw the slider track (background + filled portion + glow)
-    static void DrawSliderTrack(ImDrawList* draw, float sliderStartX, float trackY, float sliderWidth,
-                                 float fillWidth, float trackHeight, const Animation::WidgetState& state, bool sliderActive)
-    {
-        // Background track
+        // Draw background track
         draw->AddRectFilled(
-            ImVec2(sliderStartX, trackY),
-            ImVec2(sliderStartX + sliderWidth, trackY + trackHeight),
+            ImVec2(startX, trackY),
+            ImVec2(startX + sliderWidth, trackY + TrackHeight),
             Theme::ButtonDefault,
-            trackHeight * 0.5f
+            TrackHeight * 0.5f
         );
 
-        // Filled portion with gradient
+        // Draw filled portion with gradient
         if (fillWidth > 0)
         {
             Draw::RectGradientH(
-                ImVec2(sliderStartX, trackY),
-                ImVec2(sliderStartX + fillWidth, trackY + trackHeight),
+                ImVec2(startX, trackY),
+                ImVec2(startX + fillWidth, trackY + TrackHeight),
                 Theme::AccentPurple,
                 Theme::AccentCyan,
-                trackHeight * 0.5f
+                TrackHeight * 0.5f
             );
 
             // Glow effect on hover/active
-            if (state.hoverAnim > SliderLayout::HoverThreshold || sliderActive)
+            if (state.hoverAnim > HoverThreshold || sliderActive)
             {
-                float glowIntensity = sliderActive ? SliderLayout::ActiveGlowIntensity : state.hoverAnim * 0.5f;
+                float glowIntensity = sliderActive ? ActiveGlowIntensity : state.hoverAnim * 0.5f;
                 Draw::RectGlow(
-                    ImVec2(sliderStartX, trackY),
-                    ImVec2(sliderStartX + fillWidth, trackY + trackHeight),
+                    ImVec2(startX, trackY),
+                    ImVec2(startX + fillWidth, trackY + TrackHeight),
                     Theme::AccentCyanGlow,
                     glowIntensity,
-                    SliderLayout::GlowExpandSize
+                    GlowExpandSize
                 );
             }
         }
-    }
 
-    // Draw the slider knob with glow effect
-    static void DrawSliderKnob(ImDrawList* draw, float knobX, float knobY, float knobRadius,
-                                const Animation::WidgetState& state, bool sliderActive, std::optional<Layer> layer)
-    {
+        // Draw knob
+        float knobX = startX + fillWidth;
+        float knobY = trackY + TrackHeight * 0.5f;
+
         // Knob glow effect
-        if (state.hoverAnim > SliderLayout::HoverThreshold || sliderActive)
+        if (state.hoverAnim > HoverThreshold || sliderActive)
         {
-            float glowIntensity = sliderActive ? SliderLayout::ActiveGlowIntensity : state.hoverAnim * 0.5f;
-            Draw::GlowLayersCircle(ImVec2(knobX, knobY), knobRadius + 2.0f, Theme::AccentCyan,
+            float glowIntensity = sliderActive ? ActiveGlowIntensity : state.hoverAnim * 0.5f;
+            Draw::GlowLayersCircle(ImVec2(knobX, knobY), KnobRadius + 2.0f, Theme::AccentCyan,
                                     glowIntensity, Theme::SliderGlowLayers, Theme::SliderKnobGlowExpand, layer);
         }
 
         ImU32 knobColor = sliderActive ? Theme::AccentCyan : Theme::TextPrimary;
-        draw->AddCircleFilled(ImVec2(knobX, knobY), knobRadius, knobColor);
-    }
-
-    // Draw the value display box background and border
-    static void DrawValueBoxBackground(ImDrawList* draw, ImVec2 inputBoxMin, ImVec2 inputBoxMax,
-                                        float inputRounding, const Animation::WidgetState& displayState,
-                                        bool isEditing, std::optional<Layer> layer)
-    {
-        float valueInputWidth = inputBoxMax.x - inputBoxMin.x;
-        float valueInputHeight = inputBoxMax.y - inputBoxMin.y;
-
-        // Draw glow effect FIRST (before background)
-        if (displayState.hoverAnim > SliderLayout::GlowThreshold || isEditing)
-        {
-            float glowIntensity = isEditing ? SliderLayout::EditingGlowIntensity : displayState.hoverAnim * 0.5f;
-            ImVec2 boxSize = ImVec2(valueInputWidth, valueInputHeight);
-            Draw::GlowLayers(inputBoxMin, boxSize, Theme::AccentCyan, glowIntensity,
-                              Theme::SliderGlowLayers, Theme::SliderInputGlowExpand, inputRounding, layer);
-        }
-
-        // Bezel (outer frame)
-        draw->AddRectFilled(inputBoxMin, inputBoxMax, SliderColors::BezelColor, inputRounding);
-
-        // Inner screen area
-        ImVec2 screenMin = ImVec2(inputBoxMin.x + SliderLayout::InputInset, inputBoxMin.y + SliderLayout::InputInset);
-        ImVec2 screenMax = ImVec2(inputBoxMax.x - SliderLayout::InputInset, inputBoxMax.y - SliderLayout::InputInset);
-
-        // Screen background
-        ImU32 screenBg = isEditing ? SliderColors::ScreenBgEditing :
-                         Animation::LerpColorU32(SliderColors::ScreenBgDefault, SliderColors::ScreenBgHover, displayState.hoverAnim);
-        draw->AddRectFilled(screenMin, screenMax, screenBg, inputRounding - SliderLayout::InputInset);
-
-        // Inner border/bevel effect
-        draw->AddLine(ImVec2(screenMin.x + inputRounding, screenMin.y),
-                      ImVec2(screenMax.x - inputRounding, screenMin.y),
-                      SliderColors::InnerBorderTop, 1.0f);
-        draw->AddLine(ImVec2(screenMin.x + inputRounding, screenMax.y),
-                      ImVec2(screenMax.x - inputRounding, screenMax.y),
-                      SliderColors::InnerBorderBottom, 1.0f);
-
-        // Outer border
-        ImU32 borderColor = isEditing ? Theme::AccentCyan :
-                           Animation::LerpColorU32(SliderColors::OuterBorderDefault, SliderColors::OuterBorderHover, displayState.hoverAnim);
-        draw->AddRect(inputBoxMin, inputBoxMax, borderColor, inputRounding, 0, 1.0f);
-    }
-
-    // =============================================
-    // Slider Input Editing - State Transitions
-    // =============================================
-
-    static void BeginSliderInputEditing(ImGuiID id)
-    {
-        SetSliderInputState(id, SliderInputState::WaitingForFocus);
-    }
-
-    static void EndSliderInputEditing(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
-    {
-        ApplySliderInputValue(id, value, min, max, precision, changed);
-    }
-
-    // =============================================
-    // Slider Input Editing - Focus Management
-    // =============================================
-
-    // Request focus if we're still waiting for InputText to become active
-    static void RequestFocusIfNeeded(ImGuiID id)
-    {
-        if (GetSliderInputState(id) == SliderInputState::WaitingForFocus)
-        {
-            ImGui::SetKeyboardFocusHere();
-        }
-    }
-
-    // Update editing state based on InputText widget state
-    // Returns true if editing should continue, false if editing ended
-    static bool UpdateEditingState(ImGuiID id, float* value, float min, float max, int precision, bool& changed)
-    {
-        SliderInputState currentState = GetSliderInputState(id);
-
-        if (ImGui::IsItemActive())
-        {
-            // InputText is now active - transition to Editing state
-            if (currentState == SliderInputState::WaitingForFocus)
-            {
-                SetSliderInputState(id, SliderInputState::Editing);
-            }
-            return true;
-        }
-
-        if (currentState == SliderInputState::WaitingForFocus)
-        {
-            // Still waiting for focus - keep waiting (may take multiple frames)
-            return true;
-        }
-
-        if (ImGui::IsItemDeactivated())
-        {
-            // User left the input (clicked elsewhere, pressed Tab, etc.)
-            EndSliderInputEditing(id, value, min, max, precision, changed);
-            return false;
-        }
-
-        if (currentState == SliderInputState::Editing)
-        {
-            // We were editing but IsItemActive is now false
-            // This can happen when focus is lost unexpectedly
-            // Only exit if we also got a deactivation signal (handled above)
-            // Otherwise keep the editing state to handle edge cases
-            return true;
-        }
-
-        // Fallback: shouldn't reach here, but clean up gracefully
-        EndSliderInputEditing(id, value, min, max, precision, changed);
-        return false;
-    }
-
-    // Handle the editable input text when in editing mode
-    static bool HandleValueInputEditing(ImGuiID id, float* value, float min, float max, int precision,
-                                         const char* label, ImVec2 inputBoxMin, float valueInputWidth,
-                                         float valueInputHeight, float inputRounding, bool& changed)
-    {
-        RequestFocusIfNeeded(id);
-
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Text, Theme::ToVec4(Theme::AccentCyan));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, inputRounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(SliderLayout::InputPaddingX, (valueInputHeight - ImGui::GetFontSize()) * 0.5f));
-
-        ImGui::SetNextItemWidth(valueInputWidth);
-
-        char inputBuf[32];
-        strncpy(inputBuf, s_sliderInputBuffers[id].buffer.c_str(), sizeof(inputBuf) - 1);
-        inputBuf[sizeof(inputBuf) - 1] = '\0';
-
-        std::string inputId = std::string("##") + label + "_input";
-        bool enterPressed = ImGui::InputText(inputId.c_str(), inputBuf, sizeof(inputBuf),
-            ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
-
-        s_sliderInputBuffers[id].buffer = inputBuf;
-
-        if (enterPressed)
-        {
-            ApplySliderInputValue(id, value, min, max, precision, changed);
-        }
-        else
-        {
-            UpdateEditingState(id, value, min, max, precision, changed);
-        }
-
-        ImGui::PopStyleVar(3);
-        ImGui::PopStyleColor(5);
+        draw->AddCircleFilled(ImVec2(knobX, knobY), KnobRadius, knobColor);
 
         return changed;
-    }
-
-    // Draw the value text when in display mode (not editing)
-    static void DrawValueDisplay(ImDrawList* draw, ImGuiID id, ImVec2 inputBoxMin,
-                                  float valueInputWidth, float valueInputHeight,
-                                  const Animation::WidgetState& displayState)
-    {
-        const std::string& displayValue = s_sliderInputBuffers[id].buffer;
-        ImVec2 valTextSize = ImGui::CalcTextSize(displayValue.c_str());
-        ImVec2 textPos = ImVec2(
-            inputBoxMin.x + (valueInputWidth - valTextSize.x) * 0.5f,
-            inputBoxMin.y + (valueInputHeight - valTextSize.y) * 0.5f
-        );
-
-        ImU32 textColor = Animation::LerpColorU32(SliderColors::TextDefault, Theme::TextPrimary, displayState.hoverAnim);
-        draw->AddText(textPos, textColor, displayValue.c_str());
     }
 
     // =============================================
@@ -422,6 +147,8 @@ namespace EFIGUI
 
     bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format, std::optional<Layer> layer)
     {
+        using namespace SliderLayout;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
@@ -438,103 +165,62 @@ namespace EFIGUI
         if (!labelHidden)
         {
             textSize = ImGui::CalcTextSize(label);
-            labelWidth = textSize.x + SliderLayout::LabelGap;
+            labelWidth = textSize.x + LabelGap;
         }
 
         // Calculate layout dimensions
-        float knobPadding = SliderLayout::KnobRadius + 2.0f;
-        float valueInputHeight = SliderLayout::Height - 2.0f;
-        float sliderWidth = ImGui::GetContentRegionAvail().x - labelWidth - SliderLayout::ValueInputWidth - knobPadding * 2 - SliderLayout::InputGap;
-        sliderWidth = std::max(sliderWidth, SliderLayout::MinSliderWidth);
+        float knobPadding = KnobRadius + 2.0f;
+        float valueInputHeight = Height - 2.0f;
+        float sliderWidth = ImGui::GetContentRegionAvail().x - labelWidth - ValueInputWidth - knobPadding * 2 - InputGap;
+        sliderWidth = std::max(sliderWidth, MinSliderWidth);
 
         bool changed = false;
-        bool isEditingThisSlider = IsSliderInputEditing(id);
 
         // Draw label
         if (!labelHidden)
         {
-            draw->AddText(ImVec2(pos.x, pos.y + (SliderLayout::Height - textSize.y) * 0.5f), Theme::TextPrimary, label);
+            draw->AddText(ImVec2(pos.x, pos.y + (Height - textSize.y) * 0.5f), Theme::TextPrimary, label);
         }
 
         // Slider track area calculations
         float sliderStartX = pos.x + labelWidth + knobPadding;
-        float trackY = pos.y + (SliderLayout::Height - SliderLayout::TrackHeight) * 0.5f;
+        float trackY = pos.y + (Height - TrackHeight) * 0.5f;
 
         // Create invisible button for slider interaction
         ImGui::SetCursorScreenPos(ImVec2(sliderStartX - knobPadding, pos.y));
-        ImGui::InvisibleButton((std::string(label) + "_slider").c_str(), ImVec2(sliderWidth + knobPadding * 2, SliderLayout::Height));
+        ImGui::InvisibleButton((std::string(label) + "_slider").c_str(), ImVec2(sliderWidth + knobPadding * 2, Height));
         bool sliderHovered = ImGui::IsItemHovered();
         bool sliderActive = ImGui::IsItemActive();
 
         Animation::UpdateWidgetState(state, sliderHovered, sliderActive, false);
 
-        // Handle slider drag
-        if (HandleSliderDrag(value, min, max, sliderStartX, sliderWidth, id, precision, sliderActive))
+        // Draw and handle slider track
+        if (SliderTrack(label, value, min, max, sliderStartX, trackY, sliderWidth, state, sliderActive, layer))
         {
             changed = true;
         }
 
-        // Clamp value
-        if (value)
+        // Value input box - using NumericInput component
+        float inputX = sliderStartX + sliderWidth + knobPadding + InputGap;
+        float inputY = pos.y + (Height - valueInputHeight) * 0.5f;
+
+        ImGui::SetCursorScreenPos(ImVec2(inputX, inputY));
+
+        NumericInputConfig inputConfig;
+        inputConfig.min = min;
+        inputConfig.max = max;
+        inputConfig.precision = precision;
+        inputConfig.width = ValueInputWidth;
+
+        // Use unique ID for the input to avoid collision with slider
+        std::string inputLabel = std::string("##") + label + "_value";
+        if (NumericInput(inputLabel.c_str(), value, inputConfig, layer))
         {
-            *value = std::clamp(*value, min, max);
-        }
-
-        // Calculate fill width
-        float normalizedCurrent = value ? std::clamp((*value - min) / (max - min), 0.0f, 1.0f) : 0.0f;
-        float fillWidth = sliderWidth * normalizedCurrent;
-
-        // Draw track
-        DrawSliderTrack(draw, sliderStartX, trackY, sliderWidth, fillWidth, SliderLayout::TrackHeight, state, sliderActive);
-
-        // Draw knob
-        float knobX = sliderStartX + fillWidth;
-        float knobY = pos.y + SliderLayout::Height * 0.5f;
-        DrawSliderKnob(draw, knobX, knobY, SliderLayout::KnobRadius, state, sliderActive, layer);
-
-        // Value input box calculations
-        float inputX = sliderStartX + sliderWidth + knobPadding + SliderLayout::InputGap;
-        float inputY = pos.y + (SliderLayout::Height - valueInputHeight) * 0.5f;
-        ImVec2 inputBoxMin = ImVec2(inputX, inputY);
-        ImVec2 inputBoxMax = ImVec2(inputX + SliderLayout::ValueInputWidth, inputY + valueInputHeight);
-
-        // Sync input buffer
-        SyncSliderInputBuffer(id, value, precision, isEditingThisSlider);
-
-        // Create invisible button for display box interaction
-        ImGui::SetCursorScreenPos(inputBoxMin);
-        ImGui::InvisibleButton((std::string(label) + "_display").c_str(), ImVec2(SliderLayout::ValueInputWidth, valueInputHeight));
-        bool displayHovered = ImGui::IsItemHovered();
-        bool displayClicked = ImGui::IsItemClicked();
-
-        // Get animation state for display box
-        ImGuiID displayId = ImGui::GetID((std::string(label) + "_display").c_str());
-        Animation::WidgetState& displayState = Animation::GetState(displayId);
-        Animation::UpdateWidgetState(displayState, displayHovered, isEditingThisSlider, false);
-
-        // Draw value box background
-        DrawValueBoxBackground(draw, inputBoxMin, inputBoxMax, SliderLayout::InputRounding, displayState, isEditingThisSlider, layer);
-
-        // Handle input/display
-        ImGui::SetCursorScreenPos(inputBoxMin);
-
-        if (isEditingThisSlider)
-        {
-            HandleValueInputEditing(id, value, min, max, precision, label, inputBoxMin,
-                                     SliderLayout::ValueInputWidth, valueInputHeight, SliderLayout::InputRounding, changed);
-        }
-        else
-        {
-            DrawValueDisplay(draw, id, inputBoxMin, SliderLayout::ValueInputWidth, valueInputHeight, displayState);
-
-            if (displayClicked)
-            {
-                BeginSliderInputEditing(id);
-            }
+            changed = true;
         }
 
         // Restore cursor for next element
-        ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + SliderLayout::Height + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + Height + ImGui::GetStyle().ItemSpacing.y));
 
         return changed;
     }
@@ -567,19 +253,7 @@ namespace EFIGUI
 
     void PruneSliderInputBuffers(int maxIdleFrames)
     {
-        int currentFrame = ImGui::GetFrameCount();
-        for (auto it = s_sliderInputBuffers.begin(); it != s_sliderInputBuffers.end(); )
-        {
-            if (currentFrame - it->second.lastUpdateFrame > maxIdleFrames)
-            {
-                // Also clean up the editing state if present
-                s_sliderInputStates.erase(it->first);
-                it = s_sliderInputBuffers.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // Delegate to NumericInput's cleanup
+        PruneNumericInputBuffers(maxIdleFrames);
     }
 }

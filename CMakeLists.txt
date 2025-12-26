@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.2.4 LANGUAGES CXX)
+project(EFIGUI VERSION 0.2.5 LANGUAGES CXX)
 
 # =============================================
 # Options
@@ -28,6 +28,7 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Button.cpp
     src/EFIGUI/Components/Toggle.cpp
     src/EFIGUI/Components/Input.cpp
+    src/EFIGUI/Components/NumericInput.cpp
     src/EFIGUI/Components/Slider.cpp
     src/EFIGUI/Components/Combo.cpp
     src/EFIGUI/Components/Progress.cpp

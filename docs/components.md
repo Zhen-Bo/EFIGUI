@@ -139,6 +139,7 @@ EFIGUI::EndGlassPanel();
 | `ModernInputText(label, str, flags)` | Auto-resizing string input |
 | `ModernInputTextMultiline(label, buf, buf_size, size, flags)` | Multiline text input |
 | `ModernInputTextMultiline(label, str, size, flags)` | Auto-resizing multiline input |
+| `NumericInput(label, value, config, layer)` | Standalone editable numeric box |
 | `ModernSliderFloat(label, value, min, max, format, layer)` | Float slider |
 | `ModernSliderInt(label, value, min, max, format, layer)` | Integer slider |
 | `ModernCombo(label, item, items, count, popupBgAlpha)` | Styled dropdown |
@@ -153,6 +154,26 @@ EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f);
 
 // Slider with glow in popup layer (renders above popups)
 EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f, "%.1f", EFIGUI::Layer::PopupGlow);
+```
+
+**NumericInput:**
+
+Standalone editable numeric value display box with glow effects. Can be used independently or composed into custom widgets.
+
+```cpp
+static float value = 50.0f;
+
+// Basic usage with default config
+EFIGUI::NumericInputConfig config;
+config.min = 0.0f;
+config.max = 100.0f;
+config.precision = 2;
+config.width = 55.0f;
+EFIGUI::NumericInput("##value", &value, config);
+
+// Custom width and precision
+EFIGUI::NumericInputConfig wideConfig{ 0.0f, 1000.0f, 0, 80.0f };
+EFIGUI::NumericInput("##count", &value, wideConfig);
 ```
 
 **ModernCombo optional parameters:**
