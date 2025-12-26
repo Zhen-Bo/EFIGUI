@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.2.1 LANGUAGES CXX)
+project(EFIGUI VERSION 0.2.2 LANGUAGES CXX)
 
 # =============================================
 # Options
@@ -21,7 +21,19 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Animation.cpp
     src/EFIGUI/Layer.cpp
     src/EFIGUI/Draw.cpp
-    src/EFIGUI/Components.cpp
+    # Components (split into separate files for maintainability)
+    src/EFIGUI/Components/Window.cpp
+    src/EFIGUI/Components/Panel.cpp
+    src/EFIGUI/Components/Navigation.cpp
+    src/EFIGUI/Components/Button.cpp
+    src/EFIGUI/Components/Toggle.cpp
+    src/EFIGUI/Components/Input.cpp
+    src/EFIGUI/Components/Slider.cpp
+    src/EFIGUI/Components/Combo.cpp
+    src/EFIGUI/Components/Progress.cpp
+    src/EFIGUI/Components/Card.cpp
+    src/EFIGUI/Components/Tooltip.cpp
+    src/EFIGUI/Components/Layout.cpp
 )
 
 set(EFIGUI_HEADERS
@@ -31,6 +43,7 @@ set(EFIGUI_HEADERS
     src/EFIGUI/Layer.h
     src/EFIGUI/Draw.h
     src/EFIGUI/Components.h
+    src/EFIGUI/Components/Internal.h
     src/EFIGUI/Backend/IBlurBackend.h
 )
 
@@ -45,6 +58,11 @@ add_library(EFIGUI STATIC ${EFIGUI_SOURCES} ${EFIGUI_HEADERS})
 
 # C++17 standard
 target_compile_features(EFIGUI PUBLIC cxx_std_17)
+
+# MSVC-specific options
+if(MSVC)
+    target_compile_options(EFIGUI PRIVATE /EHsc)
+endif()
 
 # Include directories
 target_include_directories(EFIGUI PUBLIC
