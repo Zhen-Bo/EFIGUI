@@ -23,9 +23,10 @@ A modern, cyberpunk-themed UI framework built on top of [Dear ImGui](https://git
 5. [Components Reference](#components-reference)
 6. [Theme Customization](#theme-customization)
 7. [Animation System](#animation-system)
-8. [Blur Backend](#blur-backend)
-9. [Building](#building)
-10. [Icons](#icons)
+8. [Layer System](#layer-system-z-order-control)
+9. [Blur Backend](#blur-backend)
+10. [Building](#building)
+11. [Icons](#icons)
 
 ---
 
@@ -77,6 +78,8 @@ Add these files to your Visual Studio project (right-click project → Add → E
 | `EFIGUI/Theme.cpp` | Yes |
 | `EFIGUI/Animation.h` | Yes |
 | `EFIGUI/Animation.cpp` | Yes |
+| `EFIGUI/Layer.h` | Yes |
+| `EFIGUI/Layer.cpp` | Yes |
 | `EFIGUI/Components.h` | Yes |
 | `EFIGUI/Components.cpp` | Yes |
 | `EFIGUI/Draw.h` | Yes |
@@ -139,6 +142,8 @@ ImGui::DestroyContext();
 EFIGUI::Initialize();
 
 // In your render loop
+EFIGUI::BeginFrame();  // Required for Layer System
+
 if (EFIGUI::BeginCustomWindow("My Window", nullptr))
 {
     // A simple glowing button
@@ -157,6 +162,8 @@ if (EFIGUI::BeginCustomWindow("My Window", nullptr))
 }
 EFIGUI::EndCustomWindow();
 
+EFIGUI::EndFrame();  // Flushes all deferred drawing
+
 // Cleanup on exit
 EFIGUI::Shutdown();
 ```
@@ -170,6 +177,8 @@ EFIGUI::Shutdown();
 EFIGUI::Initialize(EFIGUI::BackendType::DX11, pDevice, width, height);
 
 // In your render loop
+EFIGUI::BeginFrame();  // Required for Layer System
+
 static int selected = 0;
 static bool navCollapsed = false;
 
@@ -203,6 +212,8 @@ if (EFIGUI::BeginCustomWindow("My App", nullptr))
     ImGui::EndChild();
 }
 EFIGUI::EndCustomWindow();
+
+EFIGUI::EndFrame();  // Flushes all deferred drawing
 
 // Cleanup
 EFIGUI::Shutdown();
@@ -379,14 +390,15 @@ EFIGUI::NavItem(Icons::Home, "Home", selected,
 
 | Function | Description |
 |----------|-------------|
-| `GlowButton(label, size, glowColor, forceHover)` | Primary glowing button |
+| `GlowButton(label, size, glowColor, forceHover, layer)` | Primary glowing button |
 | `IconButton(icon, size, color, bgAlpha)` | Icon-only button |
-| `DangerButton(label, size)` | Red destructive button |
-| `ColoredButton(label, size, borderColor, bgAlpha)` | Custom colored button |
-| `CooldownButton(label, size, glowColor, cooldownProgress)` | Button with cooldown |
+| `DangerButton(label, size, layer)` | Red destructive button |
+| `ColoredButton(label, size, borderColor, bgAlpha, layer)` | Custom colored button |
+| `CooldownButton(label, size, glowColor, cooldownProgress, layer)` | Button with cooldown |
 
 **GlowButton optional parameters:**
 - `glowColor` - Glow color (default: Theme::AccentCyan)
+- `layer` - Rendering layer for glow/marquee effects (default: LayerConfig::defaultWidgetGlow)
 
 ```cpp
 // Default cyan glow
@@ -456,9 +468,21 @@ EFIGUI::EndGlassPanel();
 | `ModernInputText(label, str, flags)` | Auto-resizing string input |
 | `ModernInputTextMultiline(label, buf, buf_size, size, flags)` | Multiline text input |
 | `ModernInputTextMultiline(label, str, size, flags)` | Auto-resizing multiline input |
-| `ModernSliderFloat(label, value, min, max, format)` | Float slider |
-| `ModernSliderInt(label, value, min, max, format)` | Integer slider |
+| `ModernSliderFloat(label, value, min, max, format, layer)` | Float slider |
+| `ModernSliderInt(label, value, min, max, format, layer)` | Integer slider |
 | `ModernCombo(label, item, items, count, popupBgAlpha)` | Styled dropdown |
+
+**ModernSliderFloat/Int optional parameters:**
+- `layer` - Rendering layer for knob and input box glow effects (default: LayerConfig::defaultWidgetGlow)
+
+```cpp
+// Default glow layer
+static float val = 0.5f;
+EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f);
+
+// Slider with glow in popup layer (renders above popups)
+EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f, "%.1f", EFIGUI::Layer::PopupGlow);
+```
 
 **ModernCombo optional parameters:**
 - `popupBgAlpha` - Popup background transparency (0-255)
@@ -478,12 +502,15 @@ EFIGUI::ModernCombo("Select", &current, items, 3, 230);
 
 | Function | Description |
 |----------|-------------|
-| `ModernProgressBar(fraction, size, overlay)` | Progress indicator |
+| `ModernProgressBar(fraction, size, overlay, layer)` | Progress indicator |
 | `StatusIndicator(label, color, pulse, dotSize)` | Status dot with text |
 | `FeatureCard(icon, name, desc, enabled, bgAlpha)` | Feature toggle card |
 | `SectionHeader(label, collapsed, accentColor)` | Section divider |
 | `ModernTooltip(text)` | Styled tooltip |
 | `HelpMarker(text)` | Help icon with tooltip |
+
+**ModernProgressBar optional parameters:**
+- `layer` - Rendering layer for progress bar glow effects (default: LayerConfig::defaultWidgetGlow)
 
 **StatusIndicator optional parameters:**
 - `dotSize` - Size of the status dot (default: 8.0f)
@@ -664,6 +691,120 @@ ImU32 color = EFIGUI::Animation::LerpColorU32(
     state.hoverAnim        // 0.0 to 1.0
 );
 ```
+
+---
+
+## Layer System (Z-Order Control)
+
+### Overview
+
+EFIGUI provides a Layer system for fine-grained control over rendering order. This solves z-order issues where glow effects might cover popup/dropdown content.
+
+### Layer Hierarchy
+
+| Layer | Order | Purpose |
+|-------|-------|---------|
+| `Background` | 0 | Background decorations |
+| `Content` | 1 | General window content |
+| `Widget` | 2 | Widget surfaces (buttons, inputs) |
+| `WidgetGlow` | 3 | Widget glow effects |
+| `Popup` | 4 | Popup/Dropdown surfaces |
+| `PopupGlow` | 5 | Popup glow effects |
+| `Overlay` | 6 | Tooltips, notifications |
+| `Debug` | 7 | Debug info (topmost) |
+
+### Basic Usage
+
+The Layer system requires explicit frame management:
+
+```cpp
+// In your render loop
+EFIGUI::BeginFrame();  // Start deferred drawing
+
+if (EFIGUI::BeginBorderlessWindow("MyApp", &open))
+{
+    EFIGUI::GlowButton("Click Me");  // Uses default WidgetGlow layer
+
+    static int selected = 0;
+    const char* items[] = {"Option A", "Option B"};
+    EFIGUI::ModernCombo("Dropdown", &selected, items, 2);  // Popup won't be covered
+}
+EFIGUI::EndBorderlessWindow();
+
+EFIGUI::EndFrame();  // Flush all deferred drawing commands
+```
+
+### Frame Lifecycle Functions
+
+| Function | Description |
+|----------|-------------|
+| `BeginFrame()` | Clears deferred drawing commands from previous frame |
+| `EndFrame(targetDrawList)` | Flushes all deferred drawing commands in layer order |
+
+**EndFrame optional parameter:**
+- `targetDrawList` - Custom ImDrawList to render to (default: ForegroundDrawList)
+
+```cpp
+// Default: renders to ForegroundDrawList (recommended for single-window apps)
+EFIGUI::EndFrame();
+
+// Custom: render to a specific draw list (useful for multi-window or testing)
+ImDrawList* myDrawList = ImGui::GetWindowDrawList();
+EFIGUI::EndFrame(myDrawList);
+```
+
+### Custom Layer Per Widget
+
+Override the default layer for specific widgets:
+
+```cpp
+// Button glow below popups (Widget layer instead of WidgetGlow)
+EFIGUI::GlowButton("Low", ImVec2(0,0), std::nullopt, false, EFIGUI::Layer::Widget);
+
+// Button glow above everything (overlay layer)
+EFIGUI::GlowButton("High", ImVec2(0,0), std::nullopt, false, EFIGUI::Layer::Overlay);
+
+// Slider with glow in popup layer
+static float val = 0.5f;
+EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f, "%.1f", EFIGUI::Layer::PopupGlow);
+```
+
+### Global Layer Configuration
+
+Change default layers for all widgets:
+
+```cpp
+// Get and modify layer configuration
+EFIGUI::LayerConfig config;
+config.defaultWidgetGlow = EFIGUI::Layer::Widget;      // Lower glow layer
+config.defaultMarqueeBorder = EFIGUI::Layer::Widget;   // Lower marquee layer
+config.autoElevateInPopup = false;                     // Disable auto-elevation
+EFIGUI::GetLayerManager().SetConfig(config);
+```
+
+### LayerConfig Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `defaultWidgetGlow` | `WidgetGlow` | Default layer for widget glow effects |
+| `defaultMarqueeBorder` | `WidgetGlow` | Default layer for marquee borders |
+| `defaultButtonBackground` | `Widget` | Default layer for button backgrounds |
+| `defaultPopupBackground` | `Popup` | Default layer for popup backgrounds |
+| `defaultPopupGlow` | `PopupGlow` | Default layer for popup glow effects |
+| `defaultTooltip` | `Overlay` | Default layer for tooltips |
+| `autoElevateInPopup` | `true` | Auto-elevate glow layers inside popups |
+
+### Components with Layer Support
+
+The following components accept an optional `layer` parameter:
+
+- `GlowButton` - Glow and marquee border layer
+- `DangerButton` - Glow and marquee border layer
+- `ColoredButton` - Glow layer
+- `CooldownButton` - Glow and marquee border layer
+- `ModernSliderFloat` - Knob glow and input box glow layer
+- `ModernSliderInt` - Knob glow and input box glow layer
+- `ModernProgressBar` - Progress bar glow layer
 
 ---
 
