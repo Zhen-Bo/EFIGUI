@@ -140,6 +140,56 @@ namespace EFIGUI
         constexpr float PulseFrequency      = 2.0f;
 
         // =============================================
+        // Default Values (for optional parameters)
+        // =============================================
+
+        constexpr uint8_t DefaultOverlayAlpha       = 200;      // Borderless window overlay
+        constexpr uint8_t DefaultBgAlpha            = 30;       // Icon button hover background
+        constexpr uint8_t DefaultButtonBgAlpha      = 200;      // Colored button background
+        constexpr uint8_t DefaultButtonHoverAlpha   = 220;      // Colored button hover background
+        constexpr float   DefaultDotSize            = 8.0f;     // Status indicator dot size
+        constexpr float   DefaultGlowMaxAlpha       = 75.0f;    // Glow animation max alpha delta
+        constexpr float   DefaultGlowBaseAlpha      = 180.0f;   // Glow animation base alpha
+
+        // =============================================
+        // Color Utilities
+        // =============================================
+
+        // RGB component structure for color manipulation
+        struct ColorRGB
+        {
+            uint8_t r, g, b;
+        };
+
+        // Extract RGB components from ImU32 color (ignores alpha)
+        inline ColorRGB ExtractRGB(ImU32 color)
+        {
+            return {
+                static_cast<uint8_t>((color >> 0) & 0xFF),
+                static_cast<uint8_t>((color >> 8) & 0xFF),
+                static_cast<uint8_t>((color >> 16) & 0xFF)
+            };
+        }
+
+        // Create ImU32 color from RGB components and alpha
+        inline ImU32 MakeColor(const ColorRGB& rgb, uint8_t alpha)
+        {
+            return IM_COL32(rgb.r, rgb.g, rgb.b, alpha);
+        }
+
+        // Apply new alpha to existing color (preserves RGB)
+        inline ImU32 ApplyAlpha(ImU32 color, uint8_t alpha)
+        {
+            return (color & 0x00FFFFFF) | (static_cast<ImU32>(alpha) << 24);
+        }
+
+        // Extract alpha from ImU32 color
+        inline uint8_t ExtractAlpha(ImU32 color)
+        {
+            return static_cast<uint8_t>((color >> 24) & 0xFF);
+        }
+
+        // =============================================
         // Theme initialization
         // =============================================
 
