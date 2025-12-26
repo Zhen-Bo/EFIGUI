@@ -7,23 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### Changed
-- **Internal refactoring**: Extracted magic numbers to centralized constant namespaces for improved maintainability.
-  - `CardConstants` (19 constants) - Card and section header rendering
-  - `NavConstants` (12 constants) - Navigation item rendering
-  - `ToggleConstants` (6 constants) - Toggle switch rendering
-- **Card.cpp**: Refactored `FeatureCard` from ~146 lines into focused helper functions:
-  - `CalculateCardLayout()` - Layout dimension calculation
-  - `DrawCardBackground()` - Background rendering with alpha override
-  - `DrawWrappedDescription()` - Multi-line text wrapping
-  - `DrawCardToggle()` - Inline toggle switch rendering
-- **Navigation.cpp**: Updated `NavItem`, `NavCollapseButton`, `NavSectionHeader` to use `NavConstants`.
-- **Toggle.cpp**: Updated `ModernToggle`, `ModernToggleWithDesc` to use `ToggleConstants`.
-
----
-
 ## [0.2.4] - 2025-12-27
 
 ### Fixed
@@ -40,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WidgetState` now tracks `lastUpdateFrame` for pruning stale entries.
 - `SliderInputData` struct now stores both buffer content and last update frame.
 - Periodic cleanup runs in `BeginFrame()` every 60 frames (~1 second at 60fps).
+- **Internal refactoring**: Extracted magic numbers to centralized constant namespaces for improved maintainability.
+  - `CardConstants` (19 constants) - Card and section header rendering
+  - `NavConstants` (12 constants) - Navigation item rendering
+  - `ToggleConstants` (6 constants) - Toggle switch rendering
+- **Card.cpp**: Refactored `FeatureCard` from ~146 lines into focused helper functions:
+  - `CalculateCardLayout()` - Layout dimension calculation
+  - `DrawCardBackground()` - Background rendering with alpha override
+  - `DrawWrappedDescription()` - Multi-line text wrapping
+  - `DrawCardToggle()` - Inline toggle switch rendering
+- **Navigation.cpp**: Updated `NavItem`, `NavCollapseButton`, `NavSectionHeader` to use `NavConstants`.
+- **Toggle.cpp**: Updated `ModernToggle`, `ModernToggleWithDesc` to use `ToggleConstants`.
 
 ---
 
