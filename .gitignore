@@ -78,3 +78,6 @@ desktop.ini
 
 # Log files
 *.log
+
+# Dependencies
+imgui/

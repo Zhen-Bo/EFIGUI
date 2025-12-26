@@ -9,12 +9,13 @@
 // Version
 #define EFIGUI_VERSION_MAJOR 0
 #define EFIGUI_VERSION_MINOR 2
-#define EFIGUI_VERSION_PATCH 0
-#define EFIGUI_VERSION_STRING "0.2.0"
+#define EFIGUI_VERSION_PATCH 1
+#define EFIGUI_VERSION_STRING "0.2.1"
 
 // Core headers
 #include "Theme.h"
 #include "Animation.h"
+#include "Layer.h"
 #include "Draw.h"
 #include "Components.h"
 
@@ -64,11 +65,21 @@ namespace EFIGUI
     // Per-Frame Operations
     // =============================================
 
-    // Call at the beginning of each frame (optional, for internal state management)
+    // Call at the beginning of each frame (required for Layer system)
+    // Clears deferred drawing commands from previous frame
     void BeginFrame();
 
-    // Call at the end of each frame (optional)
-    void EndFrame();
+    // Call at the end of each frame (required for Layer system)
+    // Flushes all deferred drawing commands in layer order
+    // targetDrawList: Optional custom draw list (nullptr = use ForegroundDrawList)
+    void EndFrame(ImDrawList* targetDrawList = nullptr);
+
+    // =============================================
+    // Layer System
+    // =============================================
+
+    // Get the Layer Manager for advanced configuration
+    LayerManager& GetLayerManager();
 
     // =============================================
     // Blur Backend Operations
