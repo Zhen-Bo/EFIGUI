@@ -305,7 +305,7 @@ namespace EFIGUI
             DrawMarqueeSegments(targetLayer, pathPoints, r, g, b, sweepPos, sweepLengthFrac, lineThickness, hoverAnim);
         }
 
-        bool GlassmorphismBg(ImVec2 pos, ImVec2 size, float rounding, float hoverAnim, bool isActive)
+        bool GlassmorphismBg(ImVec2 pos, ImVec2 size, float rounding, float hoverAnim, bool isActive, std::optional<uint8_t> bgAlpha)
         {
             using namespace DrawConstants;
 
@@ -337,9 +337,22 @@ namespace EFIGUI
                     rounding
                 );
 
-                // Overlay for color tinting (now nearly opaque since base layer handles transparency)
-                ImU32 overlayColor = isActive ? GlassOverlayActive :
-                                     Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
+                // Overlay for color tinting
+                ImU32 overlayColor;
+                if (bgAlpha.has_value())
+                {
+                    // Use custom alpha - apply to the appropriate overlay base color
+                    uint8_t alpha = bgAlpha.value();
+                    ImU32 baseColor = isActive ? GlassOverlayActive :
+                                      Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
+                    overlayColor = Theme::ApplyAlpha(baseColor, alpha);
+                }
+                else
+                {
+                    // Use default overlay colors
+                    overlayColor = isActive ? GlassOverlayActive :
+                                   Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
+                }
                 draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), overlayColor, rounding);
                 return true;
             }
@@ -354,6 +367,11 @@ namespace EFIGUI
                 if (isActive)
                 {
                     bgColor = Theme::ButtonActive;
+                }
+                // Apply custom alpha if provided
+                if (bgAlpha.has_value())
+                {
+                    bgColor = Theme::ApplyAlpha(bgColor, bgAlpha.value());
                 }
                 draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, rounding);
                 return false;

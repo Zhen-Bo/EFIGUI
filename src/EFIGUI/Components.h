@@ -74,7 +74,8 @@ namespace EFIGUI
     // Glowing button with neon effect
     // forceHover: if true, always show hover animation (marquee border)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
-    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false, std::optional<Layer> layer = std::nullopt);
+    // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
+    bool GlowButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<ImU32> glowColor = std::nullopt, bool forceHover = false, std::optional<Layer> layer = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Icon button (just an icon, no label)
     // uniqueId: unique ID to avoid collision when same icon used multiple times (omit = use icon as ID)
@@ -83,7 +84,8 @@ namespace EFIGUI
 
     // Danger button (red glow, always shows hover effect with marquee)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
-    bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<Layer> layer = std::nullopt);
+    // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
+    bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<Layer> layer = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // Colored button - always shows colored border, no marquee effect
     // bgAlpha: background alpha (omit = use default)
@@ -93,7 +95,8 @@ namespace EFIGUI
     // Cooldown button - shows a cooldown progress overlay
     // cooldownProgress: 0.0 = no cooldown, 1.0 = full cooldown (just started)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
-    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer = std::nullopt);
+    // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
+    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // =============================================
     // Toggle / Checkbox
@@ -125,6 +128,14 @@ namespace EFIGUI
     // NumericInput
     // =============================================
 
+    // Text alignment options for NumericInput
+    enum class TextAlignment
+    {
+        Left,
+        Center,
+        Right
+    };
+
     // Configuration for NumericInput
     struct NumericInputConfig
     {
@@ -132,6 +143,7 @@ namespace EFIGUI
         float max = 100.0f;
         int precision = 2;
         float width = 55.0f;
+        TextAlignment alignment = TextAlignment::Center;  // Text alignment within the input box
     };
 
     // Standalone editable numeric value display box
