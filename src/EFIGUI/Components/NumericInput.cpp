@@ -208,6 +208,26 @@ namespace EFIGUI
         float textHeight = ImGui::GetFontSize();
         float verticalPadding = (height - textHeight) * 0.5f;
 
+        // Calculate horizontal padding based on alignment
+        float textWidth = ImGui::CalcTextSize(buffers[id].buffer.c_str()).x;
+        float dynamicPaddingX = PaddingX;  // Default left-aligned
+
+        switch (config.alignment)
+        {
+        case TextAlignment::Center:
+            dynamicPaddingX = (width - textWidth) * 0.5f;
+            dynamicPaddingX = std::max(dynamicPaddingX, 2.0f);  // Minimum margin
+            break;
+        case TextAlignment::Right:
+            dynamicPaddingX = width - textWidth - PaddingX;
+            dynamicPaddingX = std::max(dynamicPaddingX, 2.0f);  // Minimum margin
+            break;
+        case TextAlignment::Left:
+        default:
+            dynamicPaddingX = PaddingX;
+            break;
+        }
+
         // Style: transparent background, colored text when editing
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
@@ -217,7 +237,7 @@ namespace EFIGUI
                               Theme::ToVec4(Animation::LerpColorU32(TextDefault, Theme::TextPrimary, state.hoverAnim)));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, Rounding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(PaddingX, verticalPadding));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(dynamicPaddingX, verticalPadding));
 
         ImGui::SetNextItemWidth(width);
 

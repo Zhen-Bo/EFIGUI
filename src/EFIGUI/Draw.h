@@ -38,10 +38,10 @@ namespace EFIGUI
 
         // GlassmorphismBg constants
         constexpr int GlassBlurAlpha = 200;             // Alpha for blurred background
-        constexpr ImU32 GlassBaseLayer = IM_COL32(20, 20, 35, 200);  // Opaque base to prevent transparency stacking
-        constexpr ImU32 GlassOverlayActive = IM_COL32(30, 30, 50, 255);
-        constexpr ImU32 GlassOverlayDefault = IM_COL32(20, 20, 35, 250);
-        constexpr ImU32 GlassOverlayHover = IM_COL32(30, 30, 55, 252);
+        constexpr ImU32 GlassBaseLayer = IM_COL32(20, 20, 35, 0);     // Transparent base (no stacking)
+        constexpr ImU32 GlassOverlayActive = IM_COL32(30, 30, 50, 200);
+        constexpr ImU32 GlassOverlayDefault = IM_COL32(20, 20, 35, 200);
+        constexpr ImU32 GlassOverlayHover = IM_COL32(30, 30, 55, 200);
     }
 
     namespace Draw
@@ -122,12 +122,14 @@ namespace EFIGUI
         // Draw a glassmorphism background using the blur backend
         // Returns true if blur was applied, false if fallback solid color was used
         // Requires a blur backend to be initialized for the blur effect
+        // bgAlpha: overlay alpha (omit = use GlassOverlay* defaults, 0-255 = custom alpha)
         bool GlassmorphismBg(
             ImVec2 pos,
             ImVec2 size,
             float rounding = 8.0f,
             float hoverAnim = 0.0f,
-            bool isActive = false
+            bool isActive = false,
+            std::optional<uint8_t> bgAlpha = std::nullopt
         );
     }
 }

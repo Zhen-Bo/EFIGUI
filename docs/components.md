@@ -52,15 +52,16 @@ EFIGUI::NavItem(Icons::Home, "Home", selected,
 
 | Function | Description |
 |----------|-------------|
-| `GlowButton(label, size, glowColor, forceHover, layer)` | Primary glowing button |
+| `GlowButton(label, size, glowColor, forceHover, layer, bgAlpha)` | Primary glowing button |
 | `IconButton(icon, size, color, bgAlpha, uniqueId)` | Icon-only button |
-| `DangerButton(label, size, layer)` | Red destructive button |
+| `DangerButton(label, size, layer, bgAlpha)` | Red destructive button |
 | `ColoredButton(label, size, borderColor, bgAlpha, layer)` | Custom colored button |
-| `CooldownButton(label, size, glowColor, cooldownProgress, layer)` | Button with cooldown |
+| `CooldownButton(label, size, glowColor, cooldownProgress, layer, bgAlpha)` | Button with cooldown |
 
 **GlowButton optional parameters:**
 - `glowColor` - Glow color (default: Theme::AccentCyan)
 - `layer` - Rendering layer for glow/marquee effects (default: LayerConfig::defaultWidgetGlow)
+- `bgAlpha` - Background transparency 0-255 (default: uses GlassOverlay defaults)
 
 ```cpp
 // Default cyan glow
@@ -71,6 +72,12 @@ EFIGUI::GlowButton("Delete All", ImVec2(0,0), Theme::StatusError);
 
 // Green glow for positive action
 EFIGUI::GlowButton("Confirm", ImVec2(0,0), Theme::StatusSuccess);
+
+// Custom background transparency (more transparent)
+EFIGUI::GlowButton("Subtle", ImVec2(0,0), std::nullopt, false, std::nullopt, 100);
+
+// Fully opaque background
+EFIGUI::GlowButton("Solid", ImVec2(0,0), std::nullopt, false, std::nullopt, 255);
 ```
 
 **IconButton optional parameters:**
@@ -99,6 +106,31 @@ EFIGUI::ColoredButton("Action", ImVec2(100,36), Theme::AccentCyan);
 
 // Same but more transparent
 EFIGUI::ColoredButton("Action", ImVec2(100,36), Theme::AccentCyan, 100);
+```
+
+**DangerButton optional parameters:**
+- `layer` - Rendering layer for glow/marquee effects (default: LayerConfig::defaultWidgetGlow)
+- `bgAlpha` - Background transparency 0-255 (default: uses GlassOverlay defaults)
+
+```cpp
+// Default danger button
+EFIGUI::DangerButton("Delete");
+
+// With custom background transparency
+EFIGUI::DangerButton("Delete", ImVec2(0,0), std::nullopt, 150);
+```
+
+**CooldownButton optional parameters:**
+- `layer` - Rendering layer for glow/marquee effects (default: LayerConfig::defaultWidgetGlow)
+- `bgAlpha` - Background transparency 0-255 (default: uses GlassOverlay defaults)
+
+```cpp
+// Basic cooldown button
+static float cooldown = 0.0f;
+EFIGUI::CooldownButton("Fire", ImVec2(100,36), Theme::AccentCyan, cooldown);
+
+// With custom background transparency
+EFIGUI::CooldownButton("Fire", ImVec2(100,36), Theme::AccentCyan, cooldown, std::nullopt, 180);
 ```
 
 ---
@@ -160,10 +192,17 @@ EFIGUI::ModernSliderFloat("Value", &val, 0.0f, 1.0f, "%.1f", EFIGUI::Layer::Popu
 
 Standalone editable numeric value display box with glow effects. Can be used independently or composed into custom widgets.
 
+**NumericInputConfig fields:**
+- `min` - Minimum value (default: 0.0f)
+- `max` - Maximum value (default: 100.0f)
+- `precision` - Decimal places (default: 2)
+- `width` - Input box width (default: 55.0f)
+- `alignment` - Text alignment: `TextAlignment::Left`, `Center`, `Right` (default: Center)
+
 ```cpp
 static float value = 50.0f;
 
-// Basic usage with default config
+// Basic usage with default config (text centered)
 EFIGUI::NumericInputConfig config;
 config.min = 0.0f;
 config.max = 100.0f;
@@ -171,9 +210,14 @@ config.precision = 2;
 config.width = 55.0f;
 EFIGUI::NumericInput("##value", &value, config);
 
-// Custom width and precision
-EFIGUI::NumericInputConfig wideConfig{ 0.0f, 1000.0f, 0, 80.0f };
+// Custom width, precision, and alignment
+EFIGUI::NumericInputConfig wideConfig{ 0.0f, 1000.0f, 0, 80.0f, EFIGUI::TextAlignment::Right };
 EFIGUI::NumericInput("##count", &value, wideConfig);
+
+// Left-aligned text
+EFIGUI::NumericInputConfig leftConfig;
+leftConfig.alignment = EFIGUI::TextAlignment::Left;
+EFIGUI::NumericInput("##left", &value, leftConfig);
 ```
 
 **ModernCombo optional parameters:**

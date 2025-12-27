@@ -65,7 +65,7 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
-    bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer)
+    bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
         using namespace ButtonConstants;
 
@@ -102,7 +102,7 @@ namespace EFIGUI
 
         // Glassmorphism background
         float effectiveHoverAnim = forceHover ? 1.0f : state.hoverAnim;
-        Draw::GlassmorphismBg(pos, size, Theme::ButtonRounding, effectiveHoverAnim, active);
+        Draw::GlassmorphismBg(pos, size, Theme::ButtonRounding, effectiveHoverAnim, active, bgAlpha);
 
         // Marquee border
         float sweepPos = Animation::Sweep(0.12f);
@@ -154,10 +154,10 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool DangerButton(const char* label, ImVec2 size, std::optional<Layer> layer)
+    bool DangerButton(const char* label, ImVec2 size, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
         // DangerButton always shows hover effect (forceHover = true)
-        return GlowButton(label, size, Theme::StatusError, true, layer);
+        return GlowButton(label, size, Theme::StatusError, true, layer, bgAlpha);
     }
 
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
@@ -234,7 +234,7 @@ namespace EFIGUI
         return clicked && !isDisabled;
     }
 
-    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer)
+    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
         using namespace ButtonConstants;
 
@@ -276,12 +276,17 @@ namespace EFIGUI
         // Glassmorphism background (skip when on cooldown for simpler look)
         if (!isOnCooldown)
         {
-            Draw::GlassmorphismBg(pos, size, rounding, state.hoverAnim, active);
+            Draw::GlassmorphismBg(pos, size, rounding, state.hoverAnim, active, bgAlpha);
         }
         else
         {
             // Fallback: solid background when on cooldown
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::ButtonDefault, rounding);
+            ImU32 cooldownBg = Theme::ButtonDefault;
+            if (bgAlpha.has_value())
+            {
+                cooldownBg = Theme::ApplyAlpha(cooldownBg, bgAlpha.value());
+            }
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), cooldownBg, rounding);
         }
 
         // Cooldown overlay with edge glow and particles
