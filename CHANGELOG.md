@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5] - 2025-12-27
+## [0.2.6] - 2025-12-27 [`532e4ad`]
+
+### Fixed
+- **Glassmorphism alpha stacking**: Changed `GlassOverlay*` alpha values from 250-255 to 200 and `GlassBaseLayer` to transparent (alpha 0) to prevent transparency stacking issues where multiple layers would accumulate incorrectly.
+- **NumericInput text centering**: Text in `NumericInput` now properly centers by default. Added `TextAlignment` enum for configurable alignment (Left, Center, Right).
+
+### Added
+- **bgAlpha parameter**: New optional `bgAlpha` parameter for controlling background transparency:
+  - `GlassmorphismBg()` - Core glassmorphism drawing function
+  - `GlowButton()`, `DangerButton()`, `CooldownButton()` - Button components
+- **TextAlignment enum**: New `TextAlignment` enum with `Left`, `Center`, `Right` values for `NumericInputConfig`.
+- **LayoutConstants namespace**: Centralized constants for layout helpers (`SeparatorOffsetY`, `SeparatorSpacing`).
+- **TooltipConstants namespace**: Centralized constants for tooltip rendering (`PaddingX`, `PaddingY`).
+
+### Changed
+- `NumericInputConfig` now includes `alignment` field (default: `TextAlignment::Center`).
+- Layout.cpp and Tooltip.cpp now use named constants instead of magic numbers.
+
+---
+
+## [0.2.5] - 2025-12-27 [`211bee3`]
 
 ### Fixed
 - **Button transparency stacking**: Fixed issue where multiple semi-transparent layers would accumulate, causing buttons to appear more transparent than intended. Added opaque base layer (`GlassBaseLayer`) to ensure consistent alpha 200 appearance.
@@ -30,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.4] - 2025-12-27
+## [0.2.4] - 2025-12-27 [`daaec1c`]
 
 ### Fixed
 - **Slider input state machine**: Replaced implicit state tracking with explicit three-state enum (`Idle → WaitingForFocus → Editing`) for reliable focus management.

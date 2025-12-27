@@ -166,6 +166,32 @@ namespace EFIGUI
     }
 
     // =============================================
+    // Layout Constants
+    // =============================================
+    // Centralized constants for layout helpers.
+    // Avoids magic numbers and enables easy tuning.
+
+    namespace LayoutConstants
+    {
+        // Separator dimensions
+        constexpr float SeparatorOffsetY = 4.0f;         // Y offset for separator line
+        constexpr float SeparatorSpacing = 8.0f;         // Total vertical spacing for separator
+    }
+
+    // =============================================
+    // Tooltip Constants
+    // =============================================
+    // Centralized constants for tooltip rendering.
+    // Avoids magic numbers and enables easy tuning.
+
+    namespace TooltipConstants
+    {
+        // Padding
+        constexpr float PaddingX = 8.0f;                 // Horizontal padding
+        constexpr float PaddingY = 6.0f;                 // Vertical padding
+    }
+
+    // =============================================
     // Internal State (Window dragging)
     // =============================================
 
