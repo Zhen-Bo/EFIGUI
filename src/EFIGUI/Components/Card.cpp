@@ -8,7 +8,17 @@
 namespace EFIGUI
 {
     // =============================================
-    // Card Helper Functions
+    // Card Local Constants (non-configurable)
+    // =============================================
+
+    namespace CardLocal
+    {
+        // Currently empty - all constants moved to CardTheme
+        // This namespace exists for future non-configurable values
+    }
+
+    // =============================================
+    // Card Helper Structures
     // =============================================
 
     // Layout information for a feature card
@@ -22,17 +32,28 @@ namespace EFIGUI
         ImVec2 size;
     };
 
+    // =============================================
+    // Card Helper Functions
+    // =============================================
+
     // Calculate layout dimensions for a feature card
-    static CardLayout CalculateCardLayout(ImVec2 pos, const char* description)
+    static CardLayout CalculateCardLayout(ImVec2 pos, const char* description, const CardConfig& config)
     {
-        using namespace CardConstants;
+        using namespace CardLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Card();
+        const float iconSize = Resolve(config.iconSize, t.iconSize);
+        const float iconPadding = Resolve(config.iconPadding, t.iconPadding);
+        const float baseHeight = Resolve(config.height, t.baseHeight);
+        const float minTextWidth = Resolve(config.minTextWidth, t.minTextWidth);
 
         CardLayout layout;
 
-        layout.iconX = pos.x + IconPadding;
-        layout.textX = layout.iconX + IconSize + IconPadding;
+        layout.iconX = pos.x + iconPadding;
+        layout.textX = layout.iconX + iconSize + iconPadding;
 
-        float togglePadding = IconPadding;
+        float togglePadding = iconPadding;
         float cardWidth = ImGui::GetContentRegionAvail().x;
 
         // Calculate available width for description text
@@ -43,15 +64,15 @@ namespace EFIGUI
         layout.needsWrap = descSize.x > layout.availableTextWidth;
 
         // Calculate card height based on whether text wraps
-        layout.cardHeight = BaseHeight;
+        layout.cardHeight = baseHeight;
 
-        if (layout.needsWrap && layout.availableTextWidth > MinTextWidth)
+        if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
         {
             ImVec2 wrappedSize = ImGui::CalcTextSize(description, nullptr, false, layout.availableTextWidth);
             float extraHeight = wrappedSize.y - ImGui::GetFontSize();
             if (extraHeight > 0)
             {
-                layout.cardHeight = BaseHeight + extraHeight;
+                layout.cardHeight = baseHeight + extraHeight;
             }
         }
 
@@ -65,16 +86,16 @@ namespace EFIGUI
         ImVec2 pos,
         ImVec2 size,
         float hoverAnim,
-        std::optional<uint8_t> bgAlpha)
+        const CardConfig& config)
     {
-        ImU32 bgBase = Theme::ButtonDefault();
+        ImU32 bgBase = config.bgColor.value_or(Theme::ButtonDefault());
         ImU32 bgHoverTarget = Theme::ButtonHover();
 
         // Apply custom alpha if specified
-        if (bgAlpha.has_value())
+        if (config.bgAlpha.has_value())
         {
-            bgBase = (bgBase & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
-            bgHoverTarget = (bgHoverTarget & 0x00FFFFFF) | ((ImU32)bgAlpha.value() << 24);
+            bgBase = (bgBase & 0x00FFFFFF) | ((ImU32)config.bgAlpha.value() << 24);
+            bgHoverTarget = (bgHoverTarget & 0x00FFFFFF) | ((ImU32)config.bgAlpha.value() << 24);
         }
 
         ImU32 bgColor = Animation::LerpColorU32(bgBase, bgHoverTarget, hoverAnim);
@@ -118,12 +139,23 @@ namespace EFIGUI
         ImDrawList* draw,
         ImVec2 pos,
         ImVec2 size,
-        float slideAnim)
+        float slideAnim,
+        const CardConfig& config)
     {
-        using namespace CardConstants;
+        using namespace CardLocal;
 
-        float toggleX = pos.x + size.x - ToggleRightMargin;
-        float toggleY = pos.y + (size.y - ToggleHeight) * 0.5f;
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Card();
+        const float toggleWidth = Resolve(config.toggleWidth, t.toggleWidth);
+        const float toggleHeight = Resolve(config.toggleHeight, t.toggleHeight);
+        const float toggleRounding = Resolve(config.toggleRounding, t.toggleRounding);
+        const float toggleRightMargin = Resolve(config.toggleRightMargin, t.toggleRightMargin);
+        const float knobRadius = Resolve(config.knobRadius, t.knobRadius);
+        const float knobPadding = Resolve(config.knobPadding, t.knobPadding);
+        const float knobTravel = Resolve(config.knobTravel, t.knobTravel);
+
+        float toggleX = pos.x + size.x - toggleRightMargin;
+        float toggleY = pos.y + (size.y - toggleHeight) * 0.5f;
 
         // Toggle track
         ImU32 toggleColor = Animation::LerpColorU32(
@@ -133,27 +165,36 @@ namespace EFIGUI
         );
         draw->AddRectFilled(
             ImVec2(toggleX, toggleY),
-            ImVec2(toggleX + ToggleWidth, toggleY + ToggleHeight),
+            ImVec2(toggleX + toggleWidth, toggleY + toggleHeight),
             toggleColor,
-            ToggleRounding
+            toggleRounding
         );
 
         // Toggle knob
-        float knobX = toggleX + KnobPadding + slideAnim * KnobTravel;
+        float knobX = toggleX + knobPadding + slideAnim * knobTravel;
         draw->AddCircleFilled(
-            ImVec2(knobX + KnobRadius, toggleY + ToggleHeight * 0.5f),
-            KnobRadius,
+            ImVec2(knobX + knobRadius, toggleY + toggleHeight * 0.5f),
+            knobRadius,
             Theme::TextPrimary()
         );
     }
 
     // =============================================
-    // Cards / Sections
+    // Cards / Sections (Config version - recommended)
     // =============================================
 
-    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha)
+    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, const CardConfig& config)
     {
-        using namespace CardConstants;
+        using namespace CardLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Card();
+        const float iconSize = Resolve(config.iconSize, t.iconSize);
+        const float iconTextOffset = Resolve(config.iconTextOffset, t.iconTextOffset);
+        const float nameOffsetY = Resolve(config.nameOffsetY, t.nameOffsetY);
+        const float descOffsetY = Resolve(config.descOffsetY, t.descOffsetY);
+        const float minTextWidth = Resolve(config.minTextWidth, t.minTextWidth);
+        const float toggleAnimSpeed = Resolve(config.toggleAnimSpeed, t.toggleAnimSpeed);
 
         ImGuiID id = ImGui::GetID(name);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -167,7 +208,7 @@ namespace EFIGUI
         }
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        CardLayout layout = CalculateCardLayout(pos, description);
+        CardLayout layout = CalculateCardLayout(pos, description, config);
 
         // Interaction
         ImGui::InvisibleButton(name, layout.size);
@@ -181,40 +222,87 @@ namespace EFIGUI
 
         isOn = enabled ? *enabled : false;
         Animation::UpdateWidgetState(state, hovered, false, isOn);
-        state.slideAnim = Animation::Lerp(state.slideAnim, isOn ? 1.0f : 0.0f, ToggleAnimSpeed);
+        state.slideAnim = Animation::Lerp(state.slideAnim, isOn ? 1.0f : 0.0f, toggleAnimSpeed);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Background
-        DrawCardBackground(draw, pos, layout.size, state.hoverAnim, bgAlpha);
+        DrawCardBackground(draw, pos, layout.size, state.hoverAnim, config);
 
         // Icon
-        float iconY = pos.y + (layout.size.y - IconSize) * 0.5f;
+        float iconY = pos.y + (layout.size.y - iconSize) * 0.5f;
         ImU32 iconColor = isOn ? Theme::AccentCyan() : Theme::TextMuted();
-        draw->AddText(ImVec2(layout.iconX + IconTextOffset, iconY + IconTextOffset), iconColor, icon);
+        draw->AddText(ImVec2(layout.iconX + iconTextOffset, iconY + iconTextOffset), iconColor, icon);
 
         // Name
-        draw->AddText(ImVec2(layout.textX, pos.y + NameOffsetY), Theme::TextPrimary(), name);
+        draw->AddText(ImVec2(layout.textX, pos.y + nameOffsetY), Theme::TextPrimary(), name);
 
         // Description
-        if (layout.needsWrap && layout.availableTextWidth > MinTextWidth)
+        if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
         {
-            DrawWrappedDescription(draw, description, layout.textX, pos.y + DescOffsetY, layout.availableTextWidth);
+            DrawWrappedDescription(draw, description, layout.textX, pos.y + descOffsetY, layout.availableTextWidth);
         }
         else
         {
-            draw->AddText(ImVec2(layout.textX, pos.y + DescOffsetY), Theme::TextMuted(), description);
+            draw->AddText(ImVec2(layout.textX, pos.y + descOffsetY), Theme::TextMuted(), description);
         }
 
         // Toggle
-        DrawCardToggle(draw, pos, layout.size, state.slideAnim);
+        DrawCardToggle(draw, pos, layout.size, state.slideAnim, config);
 
         return clicked;
     }
 
+    bool SectionHeader(const char* label, bool* collapsed, const CardConfig& config)
+    {
+        using namespace CardLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Card();
+        const float sectionLineOffset = Resolve(config.sectionLineOffset, t.sectionLineOffset);
+        const float sectionSpacing = Resolve(config.sectionSpacing, t.sectionSpacing);
+
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+
+        draw->AddText(
+            ImVec2(pos.x, pos.y),
+            Theme::TextAccent(),
+            label
+        );
+
+        // Line under header
+        float lineY = pos.y + ImGui::GetFontSize() + sectionLineOffset;
+        draw->AddLine(
+            ImVec2(pos.x, lineY),
+            ImVec2(pos.x + ImGui::GetContentRegionAvail().x, lineY),
+            Theme::BorderDefault()
+        );
+
+        ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + sectionSpacing));
+
+        return collapsed ? !*collapsed : true;
+    }
+
+    // =============================================
+    // Cards / Sections (legacy API - for backward compatibility)
+    // =============================================
+
+    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha)
+    {
+        CardConfig config;
+        config.bgAlpha = bgAlpha;
+        return FeatureCard(icon, name, description, enabled, config);
+    }
+
     bool SectionHeader(const char* label, bool* collapsed, std::optional<ImU32> accentColor)
     {
-        using namespace CardConstants;
+        // Note: accentColor is not part of CardConfig, so we handle it directly here
+        // This is a legacy API that allows setting accent color directly
+
+        const auto& t = Theme::Card();
+        const float sectionLineOffset = t.sectionLineOffset;
+        const float sectionSpacing = t.sectionSpacing;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
@@ -228,14 +316,14 @@ namespace EFIGUI
         );
 
         // Line under header
-        float lineY = pos.y + ImGui::GetFontSize() + SectionLineOffset;
+        float lineY = pos.y + ImGui::GetFontSize() + sectionLineOffset;
         draw->AddLine(
             ImVec2(pos.x, lineY),
             ImVec2(pos.x + ImGui::GetContentRegionAvail().x, lineY),
             Theme::BorderDefault()
         );
 
-        ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + SectionSpacing));
+        ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + sectionSpacing));
 
         return collapsed ? !*collapsed : true;
     }

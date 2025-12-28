@@ -20,7 +20,7 @@ namespace EFIGUI
 
     void Separator(std::optional<ImU32> color)
     {
-        using namespace LayoutConstants;
+        const auto& l = Theme::Layout();
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
         float width = ImGui::GetContentRegionAvail().x;
@@ -28,12 +28,12 @@ namespace EFIGUI
         ImU32 effectiveColor = color.value_or(Theme::BorderDefault());
 
         ImGui::GetWindowDrawList()->AddLine(
-            ImVec2(pos.x, pos.y + SeparatorOffsetY),
-            ImVec2(pos.x + width, pos.y + SeparatorOffsetY),
+            ImVec2(pos.x, pos.y + l.separatorOffsetY),
+            ImVec2(pos.x + width, pos.y + l.separatorOffsetY),
             effectiveColor
         );
 
-        ImGui::Dummy(ImVec2(0, SeparatorSpacing));
+        ImGui::Dummy(ImVec2(0, l.separatorSpacing));
     }
 
     void SameLine(float offset, float spacing)

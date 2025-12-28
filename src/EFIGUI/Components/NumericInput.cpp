@@ -8,33 +8,13 @@
 namespace EFIGUI
 {
     // =============================================
-    // NumericInput Layout Constants
+    // NumericInput Local Constants (non-configurable)
     // =============================================
 
-    namespace NumericInputLayout
+    namespace NumericInputLocal
     {
-        constexpr float DefaultWidth = 55.0f;
-        constexpr float DefaultHeight = 22.0f;
-        constexpr float Rounding = 6.0f;
-        constexpr float Inset = 2.0f;
-        constexpr float PaddingX = 6.0f;
-        constexpr float GlowExpandSize = 4.0f;
-        constexpr float HoverThreshold = 0.1f;
-        constexpr float GlowThreshold = 0.05f;
-        constexpr float EditingGlowIntensity = 0.7f;
-    }
-
-    namespace NumericInputColors
-    {
-        constexpr ImU32 BezelColor = IM_COL32(25, 25, 35, 255);
-        constexpr ImU32 ScreenBgDefault = IM_COL32(15, 15, 25, 255);
-        constexpr ImU32 ScreenBgHover = IM_COL32(20, 25, 35, 255);
-        constexpr ImU32 ScreenBgEditing = IM_COL32(20, 30, 40, 255);
-        constexpr ImU32 InnerBorderTop = IM_COL32(10, 10, 15, 255);
-        constexpr ImU32 InnerBorderBottom = IM_COL32(50, 50, 70, 100);
-        constexpr ImU32 OuterBorderDefault = IM_COL32(60, 60, 80, 255);
-        constexpr ImU32 OuterBorderHover = IM_COL32(80, 100, 120, 255);
-        constexpr ImU32 TextDefault = IM_COL32(180, 200, 210, 255);
+        // Currently empty - all constants moved to NumericInputTheme
+        // This namespace exists for future non-configurable values
     }
 
     // =============================================
@@ -119,44 +99,57 @@ namespace EFIGUI
                                            float rounding, const Animation::WidgetState& state,
                                            bool isEditing, std::optional<Layer> layer)
     {
-        using namespace NumericInputLayout;
-        using namespace NumericInputColors;
+        using namespace NumericInputLocal;
+
+        // Resolve values from NumericInputTheme
+        const auto& t = Theme::NumericInput();
+        const float inset = t.inset;
+        const float glowThreshold = t.glowThreshold;
+        const float editingGlowIntensity = t.editingGlowIntensity;
+        const ImU32 bezelColor = t.bezelColor;
+        const ImU32 screenBgDefault = t.screenBgDefault;
+        const ImU32 screenBgHover = t.screenBgHover;
+        const ImU32 screenBgEditing = t.screenBgEditing;
+        const ImU32 innerBorderTop = t.innerBorderTop;
+        const ImU32 innerBorderBottom = t.innerBorderBottom;
+        const ImU32 outerBorderDefault = t.outerBorderDefault;
+        const ImU32 outerBorderHover = t.outerBorderHover;
 
         float width = boxMax.x - boxMin.x;
         float height = boxMax.y - boxMin.y;
 
         // Draw glow effect first (before background)
-        if (state.hoverAnim > GlowThreshold || isEditing)
+        if (state.hoverAnim > glowThreshold || isEditing)
         {
-            float glowIntensity = isEditing ? EditingGlowIntensity : state.hoverAnim * 0.5f;
+            float glowIntensity = isEditing ? editingGlowIntensity : state.hoverAnim * 0.5f;
             ImVec2 boxSize = ImVec2(width, height);
             Draw::GlowLayers(boxMin, boxSize, Theme::AccentCyan(), glowIntensity,
                               Theme::SliderGlowLayers(), Theme::SliderInputGlowExpand(), rounding, layer);
         }
 
         // Bezel (outer frame)
-        draw->AddRectFilled(boxMin, boxMax, BezelColor, rounding);
+        draw->AddRectFilled(boxMin, boxMax, bezelColor, rounding);
 
         // Inner screen area
-        ImVec2 screenMin = ImVec2(boxMin.x + Inset, boxMin.y + Inset);
-        ImVec2 screenMax = ImVec2(boxMax.x - Inset, boxMax.y - Inset);
+        ImVec2 screenMin = ImVec2(boxMin.x + inset, boxMin.y + inset);
+        ImVec2 screenMax = ImVec2(boxMax.x - inset, boxMax.y - inset);
 
         // Screen background
-        ImU32 screenBg = isEditing ? ScreenBgEditing :
-                         Animation::LerpColorU32(ScreenBgDefault, ScreenBgHover, state.hoverAnim);
-        draw->AddRectFilled(screenMin, screenMax, screenBg, rounding - Inset);
+        ImU32 screenBg = isEditing ? screenBgEditing :
+                         Animation::LerpColorU32(screenBgDefault, screenBgHover, state.hoverAnim);
+        draw->AddRectFilled(screenMin, screenMax, screenBg, rounding - inset);
 
         // Inner border/bevel effect
         draw->AddLine(ImVec2(screenMin.x + rounding, screenMin.y),
                       ImVec2(screenMax.x - rounding, screenMin.y),
-                      InnerBorderTop, 1.0f);
+                      innerBorderTop, 1.0f);
         draw->AddLine(ImVec2(screenMin.x + rounding, screenMax.y),
                       ImVec2(screenMax.x - rounding, screenMax.y),
-                      InnerBorderBottom, 1.0f);
+                      innerBorderBottom, 1.0f);
 
         // Outer border
         ImU32 borderColor = isEditing ? Theme::AccentCyan() :
-                           Animation::LerpColorU32(OuterBorderDefault, OuterBorderHover, state.hoverAnim);
+                           Animation::LerpColorU32(outerBorderDefault, outerBorderHover, state.hoverAnim);
         draw->AddRect(boxMin, boxMax, borderColor, rounding, 0, 1.0f);
     }
 
@@ -166,8 +159,15 @@ namespace EFIGUI
 
     bool NumericInput(const char* label, float* value, const NumericInputConfig& config, std::optional<Layer> layer)
     {
-        using namespace NumericInputLayout;
-        using namespace NumericInputColors;
+        using namespace NumericInputLocal;
+
+        // Resolve values from NumericInputTheme
+        const auto& t = Theme::NumericInput();
+        const float defaultWidth = t.defaultWidth;
+        const float defaultHeight = t.defaultHeight;
+        const float rounding = t.rounding;
+        const float paddingX = t.paddingX;
+        const ImU32 textDefault = t.textDefault;
 
         if (!value) return false;
 
@@ -176,8 +176,8 @@ namespace EFIGUI
 
         // Calculate box position and size
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        float width = config.width > 0 ? config.width : DefaultWidth;
-        float height = DefaultHeight;
+        float width = config.width > 0 ? config.width : defaultWidth;
+        float height = defaultHeight;
         ImVec2 boxMin = pos;
         ImVec2 boxMax = ImVec2(pos.x + width, pos.y + height);
 
@@ -199,7 +199,7 @@ namespace EFIGUI
         Animation::UpdateWidgetState(state, hovered || isEditing, isEditing, false);
 
         // Draw background
-        DrawNumericInputBackground(draw, boxMin, boxMax, Rounding, state, isEditing, layer);
+        DrawNumericInputBackground(draw, boxMin, boxMax, rounding, state, isEditing, layer);
 
         // Render InputText (always rendered - handles its own click/focus)
         ImGui::SetCursorScreenPos(boxMin);
@@ -210,7 +210,7 @@ namespace EFIGUI
 
         // Calculate horizontal padding based on alignment
         float textWidth = ImGui::CalcTextSize(buffers[id].buffer.c_str()).x;
-        float dynamicPaddingX = PaddingX;  // Default left-aligned
+        float dynamicPaddingX = paddingX;  // Default left-aligned
 
         switch (config.alignment)
         {
@@ -219,12 +219,12 @@ namespace EFIGUI
             dynamicPaddingX = std::max(dynamicPaddingX, 2.0f);  // Minimum margin
             break;
         case TextAlignment::Right:
-            dynamicPaddingX = width - textWidth - PaddingX;
+            dynamicPaddingX = width - textWidth - paddingX;
             dynamicPaddingX = std::max(dynamicPaddingX, 2.0f);  // Minimum margin
             break;
         case TextAlignment::Left:
         default:
-            dynamicPaddingX = PaddingX;
+            dynamicPaddingX = paddingX;
             break;
         }
 
@@ -234,8 +234,8 @@ namespace EFIGUI
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Text, isEditing ? Theme::ToVec4(Theme::AccentCyan()) :
-                              Theme::ToVec4(Animation::LerpColorU32(TextDefault, Theme::TextPrimary(), state.hoverAnim)));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, Rounding);
+                              Theme::ToVec4(Animation::LerpColorU32(textDefault, Theme::TextPrimary(), state.hoverAnim)));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, rounding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(dynamicPaddingX, verticalPadding));
 
