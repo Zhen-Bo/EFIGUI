@@ -6,6 +6,12 @@
 // Your ImGui and graphics API initialization code here...
 // This is just a demonstration of EFIGUI API usage
 
+// Forward declarations
+void RenderDashboard();
+void RenderSettings();
+void RenderProfile();
+void RenderAbout();
+
 void RenderEFIGUIDemo()
 {
     // =============================================
@@ -21,11 +27,11 @@ void RenderEFIGUIDemo()
     if (EFIGUI::BeginCustomWindow("EFIGUI Demo", &windowOpen))
     {
         // Left navbar
-        ImGui::BeginChild("Navbar", ImVec2(EFIGUI::Theme::NavbarWidth, 0), false);
+        ImGui::BeginChild("Navbar", ImVec2(EFIGUI::Theme::NavbarWidth(), 0), ImGuiChildFlags_None);
         {
             static bool navCollapsed = false;
             if (EFIGUI::NavbarHeader("Navigation", EFIGUI::Icons::Expand, EFIGUI::Icons::Collapse,
-                                      navCollapsed, EFIGUI::Theme::NavbarWidth))
+                                      navCollapsed, EFIGUI::Theme::NavbarWidth()))
                 navCollapsed = !navCollapsed;
 
             if (EFIGUI::NavItem(EFIGUI::Icons::Home, "Dashboard", selectedNav == 0))
@@ -45,9 +51,9 @@ void RenderEFIGUIDemo()
         ImGui::SameLine();
 
         // Content area
-        ImGui::BeginChild("Content", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding);
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(EFIGUI::Theme::ContentPadding, EFIGUI::Theme::ContentPadding));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(EFIGUI::Theme::ContentPadding(), EFIGUI::Theme::ContentPadding()));
 
             switch (selectedNav)
             {
@@ -101,9 +107,9 @@ void RenderDashboard()
     // Status indicators
     EFIGUI::SectionHeader("Status");
 
-    EFIGUI::StatusIndicator("System", EFIGUI::Theme::StatusSuccess, true);
-    EFIGUI::StatusIndicator("Network", EFIGUI::Theme::StatusWarning, false);
-    EFIGUI::StatusIndicator("Updates", EFIGUI::Theme::StatusInfo, true);
+    EFIGUI::StatusIndicator("System", EFIGUI::Theme::StatusSuccess(), true);
+    EFIGUI::StatusIndicator("Network", EFIGUI::Theme::StatusWarning(), false);
+    EFIGUI::StatusIndicator("Updates", EFIGUI::Theme::StatusInfo(), true);
 
     EFIGUI::Spacing();
 
@@ -140,7 +146,7 @@ void RenderSettings()
     EFIGUI::ModernInputText("Text Input", textBuffer, sizeof(textBuffer));
 
     static std::string stdString = "Modern C++ string";
-    EFIGUI::ModernInputText("String Input", stdString);
+    EFIGUI::ModernInputText("String Input", &stdString);
 }
 
 void RenderProfile()
