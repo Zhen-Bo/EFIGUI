@@ -67,6 +67,76 @@ namespace EFIGUI
         float Shimmer(float frequency = 1.0f, float offset = 0.0f);
 
         // =============================================
+        // Smooth Transition Helpers
+        // =============================================
+        // For dynamic real-time UI scaling with smooth animations.
+        // Usage: SmoothFloat height; height.SetTarget(48.0f); ... height.Update();
+
+        // Smooth floating point value with automatic interpolation
+        struct SmoothFloat
+        {
+            float current = 0.0f;
+            float target = 0.0f;
+
+            // Update and return the smoothed value
+            float Update(float speed = 8.0f)
+            {
+                current = Lerp(current, target, speed);
+                return current;
+            }
+
+            // Set new target value (will animate towards it)
+            void SetTarget(float newTarget) { target = newTarget; }
+
+            // Set immediately without animation
+            void SetImmediate(float value) { current = target = value; }
+
+            // Check if animation is complete (within threshold)
+            bool IsComplete(float threshold = 0.001f) const
+            {
+                return (current > target - threshold) && (current < target + threshold);
+            }
+
+            // Implicit conversion to float for convenience
+            operator float() const { return current; }
+        };
+
+        // Smooth 2D vector with automatic interpolation
+        struct SmoothVec2
+        {
+            ImVec2 current = ImVec2(0.0f, 0.0f);
+            ImVec2 target = ImVec2(0.0f, 0.0f);
+
+            // Update and return the smoothed value
+            ImVec2 Update(float speed = 8.0f)
+            {
+                current.x = Lerp(current.x, target.x, speed);
+                current.y = Lerp(current.y, target.y, speed);
+                return current;
+            }
+
+            // Set new target value (will animate towards it)
+            void SetTarget(const ImVec2& newTarget) { target = newTarget; }
+            void SetTarget(float x, float y) { target = ImVec2(x, y); }
+
+            // Set immediately without animation
+            void SetImmediate(const ImVec2& value) { current = target = value; }
+            void SetImmediate(float x, float y) { current = target = ImVec2(x, y); }
+
+            // Check if animation is complete (within threshold)
+            bool IsComplete(float threshold = 0.001f) const
+            {
+                float dx = current.x - target.x;
+                float dy = current.y - target.y;
+                return (dx > -threshold) && (dx < threshold) &&
+                       (dy > -threshold) && (dy < threshold);
+            }
+
+            // Implicit conversion to ImVec2 for convenience
+            operator ImVec2() const { return current; }
+        };
+
+        // =============================================
         // Utility
         // =============================================
 

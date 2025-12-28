@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.3.0 LANGUAGES CXX)
+project(EFIGUI VERSION 0.3.1 LANGUAGES CXX)
 
 # =============================================
 # Options
@@ -35,6 +35,7 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Card.cpp
     src/EFIGUI/Components/Tooltip.cpp
     src/EFIGUI/Components/Layout.cpp
+    src/EFIGUI/Components/ConfigImpl.cpp
 )
 
 set(EFIGUI_HEADERS

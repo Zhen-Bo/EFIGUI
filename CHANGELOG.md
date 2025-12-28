@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2025-12-29
+
+### Added
+- **Per-Instance Config Structures**: New config structs for per-instance customization of components using `std::optional` fields for selective override of Theme defaults.
+  - `SliderConfig` - Slider dimensions, colors, and glow settings
+  - `ToggleConfig` - Toggle dimensions, colors, and animation settings
+  - `CardConfig` - Card dimensions and inline toggle settings
+  - `NavItemConfig` - Navigation item dimensions and accent colors
+  - `WindowConfig` - Title bar settings and overlay alpha
+  - `PanelConfig` - Panel rounding, border, and glow settings
+  - `ProgressConfig` - Progress bar dimensions and glow settings
+  - `InputConfig` - Input field rounding and colors
+- **FromTheme() Static Methods**: Each config struct has a `FromTheme()` method to create a config with all Theme defaults filled in, enabling easy modification of specific values.
+- **Animation Smooth Transition Helpers**: New structures for dynamic real-time UI scaling with smooth animations.
+  - `Animation::SmoothFloat` - Smooth floating point value with automatic interpolation
+  - `Animation::SmoothVec2` - Smooth 2D vector with automatic interpolation
+  - Both support `Update()`, `SetTarget()`, `SetImmediate()`, and `IsComplete()` methods
+  - Implicit conversion operators for convenient usage
+- **Resolve Template Function**: Added `Resolve(opt, def)` template in Theme.h for cleaner optional-to-default fallback syntax.
+- **Component Theme Accessors**: New accessors for component-specific theme configurations.
+  - `Theme::Slider()`, `Theme::Toggle()`, `Theme::Card()`, `Theme::Nav()`
+  - `Theme::Button()`, `Theme::Window()`, `Theme::Draw()`, `Theme::Layout()`
+  - `Theme::NumericInput()`
+  - Mutable versions: `Theme::SliderMut()`, etc.
+
+### Changed
+- **ThemeConfig Structure**: Reorganized into component-grouped nested structures for better cohesion.
+  - Added `SliderTheme`, `ToggleTheme`, `CardTheme`, `NavTheme`, `ButtonTheme`, `WindowTheme`, `DrawTheme`, `LayoutTheme`, `NumericInputTheme`
+  - Migrated ~100 hardcoded `constexpr` constants from Internal.h into these theme structures
+  - Original `ThemeDimensions` and `ThemeEffects` retained for backward compatibility
+- Internal code organization: Added `Components/ConfigImpl.cpp` for centralized FromTheme() implementations.
+
+### Usage Examples
+
+**Per-Instance Config (partial override):**
+```cpp
+SliderConfig cfg;
+cfg.height = 48.0f;  // Only override height, rest uses Theme defaults
+ModernSliderFloat("Volume", &vol, 0, 100, "%.0f", std::nullopt, cfg);
+```
+
+**FromTheme with modification:**
+```cpp
+auto cfg = SliderConfig::FromTheme();
+cfg.height *= 1.5f;  // Scale up 50%
+cfg.knobRadius *= 1.5f;
+```
+
+**Dynamic real-time scaling:**
+```cpp
+static Animation::SmoothFloat height;
+height.SetTarget(someCondition ? 48.0f : 24.0f);
+SliderConfig cfg;
+cfg.height = height.Update();  // Smoothly animates to target
+```
+
+---
+
 ## [0.3.0] - 2025-12-28
 
 ### Added

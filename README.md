@@ -11,6 +11,43 @@ A modern, cyberpunk-themed UI framework built on top of [Dear ImGui](https://git
 - **Font Awesome Icons**: Pre-defined icon constants for easy use
 - **Cross-Platform Backend**: Abstract blur interface for multiple graphics APIs
 - **Flexible Customization**: Optional parameters for per-instance styling without breaking defaults
+- **Per-Instance Config** (v0.3.1+): Full control over individual widget appearance with Config structs
+
+---
+
+## What's New in v0.3.1
+
+**Per-Instance Configuration**: Every widget now supports a Config struct for granular customization:
+
+```cpp
+// Customize individual sliders
+EFIGUI::SliderConfig config;
+config.height = 32.0f;              // Taller slider
+config.knobRadius = 12.0f;          // Larger knob
+config.glowColor = Theme::AccentPurple();
+
+EFIGUI::ModernSliderFloat("Custom", &val, 0.0f, 1.0f, "%.2f", config);
+```
+
+**Component Theme Accessors**: Direct access to component-specific theme values:
+
+```cpp
+float sliderHeight = EFIGUI::Theme::Slider().height;  // Read
+EFIGUI::Theme::SliderMut().height = 32.0f;            // Modify at runtime
+```
+
+**Smooth Animation Helpers**: New utilities for dynamic UI transitions:
+
+```cpp
+static EFIGUI::Animation::SmoothFloat scale;
+scale.SetTarget(isHovered ? 1.2f : 1.0f);
+
+EFIGUI::GlowButtonConfig btnConfig;
+btnConfig.size = ImVec2(100 * scale.Update(), 36);
+EFIGUI::GlowButton("Dynamic", btnConfig);
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ---
 

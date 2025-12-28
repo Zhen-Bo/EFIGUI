@@ -2,9 +2,29 @@
 #include "imgui.h"
 #include "ThemeConfig.h"
 #include <cstdint>
+#include <optional>
 
 namespace EFIGUI
 {
+    // =============================================
+    // Resolve Helper (Optional Fallback Utility)
+    // =============================================
+    // Simplifies optional-to-default fallback syntax.
+    // Usage: Resolve(config.height, Theme::Slider().height)
+
+    template<typename T>
+    inline const T& Resolve(const std::optional<T>& opt, const T& defaultVal)
+    {
+        return opt.has_value() ? opt.value() : defaultVal;
+    }
+
+    // Non-optional overload (returns value directly)
+    template<typename T>
+    inline const T& Resolve(const T& value, const T& /*unused*/)
+    {
+        return value;
+    }
+
     // =============================================
     // Configurable Icons
     // =============================================
@@ -103,6 +123,33 @@ namespace EFIGUI
         inline void LoadPreset(ThemePreset preset) { ThemeManager::Instance().LoadPreset(preset); }
 
         // =============================================
+        // Component Theme Accessors (Recommended)
+        // =============================================
+        // Access component-specific theme configurations.
+        // Usage: Theme::Slider().height, Theme::Toggle().width
+
+        inline const SliderTheme& Slider() { return GetConfigConst().slider; }
+        inline const ToggleTheme& Toggle() { return GetConfigConst().toggle; }
+        inline const CardTheme& Card() { return GetConfigConst().card; }
+        inline const NavTheme& Nav() { return GetConfigConst().nav; }
+        inline const ButtonTheme& Button() { return GetConfigConst().button; }
+        inline const WindowTheme& Window() { return GetConfigConst().window; }
+        inline const DrawTheme& Draw() { return GetConfigConst().draw; }
+        inline const LayoutTheme& Layout() { return GetConfigConst().layout; }
+        inline const NumericInputTheme& NumericInput() { return GetConfigConst().numericInput; }
+
+        // Mutable accessors for runtime modification
+        inline SliderTheme& SliderMut() { return GetConfig().slider; }
+        inline ToggleTheme& ToggleMut() { return GetConfig().toggle; }
+        inline CardTheme& CardMut() { return GetConfig().card; }
+        inline NavTheme& NavMut() { return GetConfig().nav; }
+        inline ButtonTheme& ButtonMut() { return GetConfig().button; }
+        inline WindowTheme& WindowMut() { return GetConfig().window; }
+        inline DrawTheme& DrawMut() { return GetConfig().draw; }
+        inline LayoutTheme& LayoutMut() { return GetConfig().layout; }
+        inline NumericInputTheme& NumericInputMut() { return GetConfig().numericInput; }
+
+        // =============================================
         // Color Accessors (Backward Compatible)
         // =============================================
         // These accessors maintain API compatibility with existing code
@@ -149,6 +196,12 @@ namespace EFIGUI
         inline ImU32 StatusWarning()     { return GetConfigConst().colors.statusWarning; }
         inline ImU32 StatusError()       { return GetConfigConst().colors.statusError; }
         inline ImU32 StatusInfo()        { return GetConfigConst().colors.statusInfo; }
+
+        // Glassmorphism colors
+        inline ImU32 GlassBaseLayer()      { return GetConfigConst().colors.glassBaseLayer; }
+        inline ImU32 GlassOverlayActive()  { return GetConfigConst().colors.glassOverlayActive; }
+        inline ImU32 GlassOverlayDefault() { return GetConfigConst().colors.glassOverlayDefault; }
+        inline ImU32 GlassOverlayHover()   { return GetConfigConst().colors.glassOverlayHover; }
 
         // =============================================
         // Dimension Accessors (Backward Compatible)
@@ -279,5 +332,13 @@ namespace EFIGUI
         // Apply custom colors (override defaults) - Legacy API
         // Note: Prefer using GetConfig().colors.accentPrimary = ... directly
         void SetAccentColor(ImU32 primary, ImU32 secondary = 0);
+
+        // =============================================
+        // Debug Tools
+        // =============================================
+
+        // Show Theme Style Editor window for debugging and live tuning
+        // Usage: if (showEditor) Theme::ShowThemeStyleEditor(&showEditor);
+        void ShowThemeStyleEditor(bool* p_open = nullptr);
     }
 }
