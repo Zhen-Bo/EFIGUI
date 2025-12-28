@@ -8,12 +8,36 @@
 namespace EFIGUI
 {
     // =============================================
-    // Navigation
+    // Navigation Local Constants (non-configurable)
     // =============================================
 
-    bool NavItem(const char* icon, const char* label, bool selected, float width, bool collapsed, std::optional<ImU32> accentColor)
+    namespace NavLocal
     {
-        using namespace NavConstants;
+        // Currently empty - all constants moved to NavTheme
+        // This namespace exists for future non-configurable values
+    }
+
+    // =============================================
+    // Navigation (Config version - recommended)
+    // =============================================
+
+    bool NavItem(const char* icon, const char* label, bool selected, const NavItemConfig& config,
+                 float width, bool collapsed)
+    {
+        using namespace NavLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Nav();
+        const float iconPadding = Resolve(config.iconPadding, t.iconPadding);
+        const float labelSpacing = Resolve(config.labelSpacing, t.labelSpacing);
+        const float collapsedIconScale = Resolve(config.collapsedIconScale, t.collapsedIconScale);
+        const float accentBarWidth = Resolve(config.accentBarWidth, t.accentBarWidth);
+        const float accentBarHeightRatio = Resolve(config.accentBarHeightRatio, t.accentBarHeightRatio);
+        const float accentBarGlowRadius = Resolve(config.accentBarGlowRadius, t.accentBarGlowRadius);
+        const int accentGlowAlpha = Resolve(config.accentGlowAlpha, t.accentGlowAlpha);
+        const int bgAlphaMultiplier = Resolve(config.bgAlphaMultiplier, t.bgAlphaMultiplier);
+        const float rounding = Resolve(config.rounding, Theme::NavItemRounding());
+        const float itemHeight = Resolve(config.height, Theme::NavItemHeight());
 
         // Use theme default if width is 0
         float effectiveWidth = (width <= 0) ? Theme::NavbarWidth() : width;
@@ -22,7 +46,7 @@ namespace EFIGUI
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImVec2 size = ImVec2(effectiveWidth - Theme::NavItemPadding() * 2, Theme::NavItemHeight());
+        ImVec2 size = ImVec2(effectiveWidth - Theme::NavItemPadding() * 2, itemHeight);
 
         ImGui::InvisibleButton(label, size);
         bool clicked = ImGui::IsItemClicked();
@@ -33,45 +57,46 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Get effective accent color (use custom or theme default)
-        ImU32 effectiveAccent = accentColor.value_or(Theme::AccentCyan());
+        ImU32 effectiveAccent = config.accentColor.value_or(Theme::AccentCyan());
         auto accentRGB = Theme::ExtractRGB(effectiveAccent);
-        ImU32 effectiveAccentGlow = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, AccentGlowAlpha);
+        ImU32 effectiveAccentGlow = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, accentGlowAlpha);
 
         // Background
         float bgAlpha = state.hoverAnim * 0.3f + state.selectedAnim * 0.4f;
         if (bgAlpha > 0.01f)
         {
-            ImU32 bgColor = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, (int)(bgAlpha * BgAlphaMultiplier));
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding());
+            ImU32 bgColor = config.bgColor.value_or(
+                IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, (int)(bgAlpha * bgAlphaMultiplier)));
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, rounding);
         }
 
         // Left accent bar (when selected)
         if (state.selectedAnim > 0.01f)
         {
-            float barHeight = size.y * AccentBarHeightRatio * state.selectedAnim;
+            float barHeight = size.y * accentBarHeightRatio * state.selectedAnim;
             float barY = pos.y + (size.y - barHeight) * 0.5f;
 
             draw->AddRectFilled(
                 ImVec2(pos.x, barY),
-                ImVec2(pos.x + AccentBarWidth, barY + barHeight),
+                ImVec2(pos.x + accentBarWidth, barY + barHeight),
                 effectiveAccent,
-                AccentBarWidth * 0.5f
+                accentBarWidth * 0.5f
             );
 
             // Glow
             Draw::RectGlow(
                 ImVec2(pos.x, barY),
-                ImVec2(pos.x + AccentBarWidth, barY + barHeight),
+                ImVec2(pos.x + accentBarWidth, barY + barHeight),
                 effectiveAccentGlow,
                 state.selectedAnim,
-                AccentBarGlowRadius
+                accentBarGlowRadius
             );
         }
 
         // Icon - center it when collapsed, scale up when collapsed
         float baseFontSize = ImGui::GetFontSize();
-        float iconSize = collapsed ? baseFontSize * CollapsedIconScale : baseFontSize;
-        float iconX = collapsed ? pos.x + (size.x - iconSize) * 0.5f : pos.x + IconPadding;
+        float iconSize = collapsed ? baseFontSize * collapsedIconScale : baseFontSize;
+        float iconX = collapsed ? pos.x + (size.x - iconSize) * 0.5f : pos.x + iconPadding;
         float iconY = pos.y + (size.y - iconSize) * 0.5f;
 
         // Use max to prevent flash when transitioning between hover and selected states
@@ -96,7 +121,7 @@ namespace EFIGUI
         // Label (only if not collapsed)
         if (!collapsed)
         {
-            float labelX = pos.x + IconPadding + ImGui::GetFontSize() + LabelSpacing;
+            float labelX = pos.x + iconPadding + ImGui::GetFontSize() + labelSpacing;
 
             // Use max to prevent flash when transitioning between hover and selected states
             float labelHoverContrib = state.hoverAnim * 0.5f;
@@ -118,9 +143,15 @@ namespace EFIGUI
         return clicked;
     }
 
-    bool NavCollapseButton(bool collapsed, float width)
+    bool NavCollapseButton(bool collapsed, float width, const NavItemConfig& config)
     {
-        using namespace NavConstants;
+        using namespace NavLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Nav();
+        const int hoverBgAlpha = Resolve(config.hoverBgAlpha, t.hoverBgAlpha);
+        const float rounding = Resolve(config.rounding, Theme::NavItemRounding());
+        const float itemHeight = Resolve(config.height, Theme::NavItemHeight());
 
         const char* icon = collapsed ? "\xef\x81\x94" : "\xef\x81\x93";  // chevron-right : chevron-left
         const char* label = collapsed ? "Expand" : "Collapse";
@@ -129,7 +160,7 @@ namespace EFIGUI
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImVec2 size = ImVec2(width - Theme::NavItemPadding() * 2, Theme::NavItemHeight());
+        ImVec2 size = ImVec2(width - Theme::NavItemPadding() * 2, itemHeight);
 
         ImGui::InvisibleButton("##NavCollapseBtn", size);
         bool clicked = ImGui::IsItemClicked();
@@ -142,8 +173,8 @@ namespace EFIGUI
         // Background on hover
         if (state.hoverAnim > 0.01f)
         {
-            ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * HoverBgAlpha));
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding());
+            ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * hoverBgAlpha));
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, rounding);
         }
 
         // Icon - center it
@@ -165,19 +196,48 @@ namespace EFIGUI
         return clicked;
     }
 
-    void NavSectionHeader(const char* label)
+    void NavSectionHeader(const char* label, const NavItemConfig& config)
     {
-        using namespace NavConstants;
+        using namespace NavLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Nav();
+        const float sectionPaddingX = Resolve(config.sectionPaddingX, t.sectionPaddingX);
+        const float sectionPaddingY = Resolve(config.sectionPaddingY, t.sectionPaddingY);
+        const float sectionHeight = Resolve(config.sectionHeight, t.sectionHeight);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         draw->AddText(
-            ImVec2(pos.x + SectionPaddingX, pos.y + SectionPaddingY),
+            ImVec2(pos.x + sectionPaddingX, pos.y + sectionPaddingY),
             Theme::TextMuted(),
             label
         );
 
-        ImGui::Dummy(ImVec2(0, SectionHeight));
+        ImGui::Dummy(ImVec2(0, sectionHeight));
+    }
+
+    // =============================================
+    // Navigation (legacy API - for backward compatibility)
+    // =============================================
+
+    bool NavItem(const char* icon, const char* label, bool selected, float width, bool collapsed, std::optional<ImU32> accentColor)
+    {
+        NavItemConfig config;
+        config.accentColor = accentColor;
+        return NavItem(icon, label, selected, config, width, collapsed);
+    }
+
+    bool NavCollapseButton(bool collapsed, float width)
+    {
+        NavItemConfig config;
+        return NavCollapseButton(collapsed, width, config);
+    }
+
+    void NavSectionHeader(const char* label)
+    {
+        NavItemConfig config;
+        NavSectionHeader(label, config);
     }
 }
