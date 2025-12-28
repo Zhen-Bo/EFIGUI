@@ -52,9 +52,9 @@ float breathe = EFIGUI::Animation::Breathe(1.0f);  // 1 Hz frequency
 ```cpp
 // Lerp between two colors based on animation
 ImU32 color = EFIGUI::Animation::LerpColorU32(
-    Theme::TextSecondary,  // Start color
-    Theme::AccentCyan,     // End color
-    state.hoverAnim        // 0.0 to 1.0
+    Theme::TextSecondary(),  // Start color
+    Theme::AccentCyan(),     // End color
+    state.hoverAnim          // 0.0 to 1.0
 );
 ```
 

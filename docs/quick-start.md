@@ -55,7 +55,7 @@ if (EFIGUI::BeginCustomWindow("My App", nullptr))
 {
     // Navbar header with collapse button
     if (EFIGUI::NavbarHeader("Menu", EFIGUI::Icons::Expand, EFIGUI::Icons::Collapse,
-                              navCollapsed, EFIGUI::Theme::NavbarWidth))
+                              navCollapsed, EFIGUI::Theme::NavbarWidth()))
         navCollapsed = !navCollapsed;
 
     // Navigation items

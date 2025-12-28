@@ -12,7 +12,7 @@ EFIGUI uses `std::optional<T>` to distinguish between "use default" and "use spe
 GlowButton("OK");
 
 // Provide color = use red glow
-GlowButton("OK", ImVec2(0,0), Theme::StatusError);
+GlowButton("OK", ImVec2(0,0), Theme::StatusError());
 
 // Provide 0 = fully transparent (alpha = 0)
 BeginGlassPanel("panel", size, true, 0);
@@ -81,7 +81,7 @@ EFIGUI::BeginGlassPanel("invisible", ImVec2(0,0), true, 0);
 | Type | What it controls | Example values |
 |------|-----------------|----------------|
 | `std::optional<uint8_t>` | Alpha/transparency | `0` (transparent) to `255` (opaque) |
-| `std::optional<ImU32>` | Colors | `IM_COL32(r, g, b, a)` or `Theme::AccentCyan` |
+| `std::optional<ImU32>` | Colors | `IM_COL32(r, g, b, a)` or `Theme::AccentCyan()` |
 | `std::optional<float>` | Sizes/dimensions | `8.0f`, `12.0f`, etc. |
 
 ---
@@ -101,16 +101,16 @@ EFIGUI::EndGlassPanel();
 // Example 2: Navigation with custom accent color
 ImU32 myAccent = IM_COL32(255, 100, 50, 255);  // Orange
 if (EFIGUI::NavItem(Icons::Home, "Dashboard", isSelected,
-                     Theme::NavbarWidth, false, myAccent))
+                     Theme::NavbarWidth(), false, myAccent))
 {
     // clicked
 }
 
 // Example 3: Status indicator with larger dot
 EFIGUI::StatusIndicator("Server Online",
-    Theme::StatusSuccess,  // green
-    true,                  // pulse animation
-    12.0f                  // 12px dot (default is 8px)
+    Theme::StatusSuccess(),  // green
+    true,                    // pulse animation
+    12.0f                    // 12px dot (default is 8px)
 );
 
 // Example 4: Feature card with semi-transparent background
