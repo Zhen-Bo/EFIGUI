@@ -23,7 +23,8 @@ namespace EFIGUI
             int cornerSegments,
             std::vector<ImVec2>& outPoints)
         {
-            using namespace DrawConstants;
+            using namespace DrawLocal;
+            const auto& d = Theme::Draw();
 
             float straightW = size.x - 2 * rounding;
             float straightH = size.y - 2 * rounding;
@@ -35,7 +36,7 @@ namespace EFIGUI
 
             // Top edge (left to right)
             int topSegments = (int)(numSegments * straightW / perimeter);
-            if (topSegments < MarqueeMinEdgeSegments) topSegments = MarqueeMinEdgeSegments;
+            if (topSegments < d.marqueeMinEdgeSegments) topSegments = d.marqueeMinEdgeSegments;
             for (int i = 0; i <= topSegments; i++)
             {
                 float t = (float)i / topSegments;
@@ -53,7 +54,7 @@ namespace EFIGUI
 
             // Right edge (top to bottom)
             int rightSegments = (int)(numSegments * straightH / perimeter);
-            if (rightSegments < MarqueeMinEdgeSegments) rightSegments = MarqueeMinEdgeSegments;
+            if (rightSegments < d.marqueeMinEdgeSegments) rightSegments = d.marqueeMinEdgeSegments;
             for (int i = 1; i <= rightSegments; i++)
             {
                 float t = (float)i / rightSegments;
@@ -112,7 +113,7 @@ namespace EFIGUI
             float lineThickness,
             float hoverAnim)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
             int totalPoints = (int)pathPoints.size();
             for (int i = 0; i < totalPoints; i++)
@@ -134,7 +135,7 @@ namespace EFIGUI
                 alpha = alpha * alpha;
 
                 int finalAlpha = (int)(alpha * 255 * hoverAnim);
-                if (finalAlpha < MarqueeMinAlpha) finalAlpha = (int)(MarqueeMinAlpha * hoverAnim);
+                if (finalAlpha < d.marqueeMinAlpha) finalAlpha = (int)(d.marqueeMinAlpha * hoverAnim);
 
                 ImU32 segColor = IM_COL32(r, g, b, finalAlpha);
 
@@ -149,16 +150,16 @@ namespace EFIGUI
 
         void RectGlow(ImVec2 min, ImVec2 max, ImU32 color, float intensity, float radius)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
-            if (intensity < GlowMinIntensity) return;
+            if (intensity < d.glowMinIntensity) return;
 
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
-            for (int i = GlowLayerCount; i >= 1; i--)
+            for (int i = d.glowLayerCount; i >= 1; i--)
             {
-                float expand = radius * (float)i / GlowLayerCount;
-                float alpha = intensity * GlowAlphaMultiplier * (1.0f - (float)i / GlowLayerCount);
+                float expand = radius * (float)i / d.glowLayerCount;
+                float alpha = intensity * d.glowAlphaMultiplier * (1.0f - (float)i / d.glowLayerCount);
 
                 ImU32 layerColor = IM_COL32(
                     (color >> 0) & 0xFF,
@@ -173,7 +174,7 @@ namespace EFIGUI
                     layerColor,
                     Theme::FrameRounding() + expand,
                     0,
-                    GlowLineThickness
+                    d.glowLineThickness
                 );
             }
         }
@@ -202,12 +203,12 @@ namespace EFIGUI
 
         void NeonBorder(ImVec2 min, ImVec2 max, ImU32 color, float thickness, float rounding)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
             // Glow layers
-            RectGlow(min, max, color, NeonGlowIntensity, NeonGlowRadius);
+            RectGlow(min, max, color, d.neonGlowIntensity, d.neonGlowRadius);
 
             // Main border
             draw->AddRect(min, max, color, rounding, 0, thickness);
@@ -226,9 +227,9 @@ namespace EFIGUI
 
         void GlowLayers(ImVec2 pos, ImVec2 size, ImU32 color, float intensity, int layerCount, float expandBase, float rounding, std::optional<Layer> layer)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
-            if (intensity < GlowMinIntensity) return;
+            if (intensity < d.glowMinIntensity) return;
 
             // Extract RGB from color
             int r = (color >> 0) & 0xFF;
@@ -242,7 +243,7 @@ namespace EFIGUI
             for (int i = layerCount; i >= 1; i--)
             {
                 float expand = (float)i * expandBase;
-                float layerAlpha = intensity * GlowLayersAlphaMultiplier * (1.0f - (float)i / (layerCount + 1.0f));
+                float layerAlpha = intensity * d.glowLayersRectAlpha * (1.0f - (float)i / (layerCount + 1.0f));
                 ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
                 float layerRounding = rounding + expand;
 
@@ -255,9 +256,9 @@ namespace EFIGUI
 
         void GlowLayersCircle(ImVec2 center, float baseRadius, ImU32 color, float intensity, int layerCount, float expandBase, std::optional<Layer> layer)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
-            if (intensity < GlowMinIntensity) return;
+            if (intensity < d.glowMinIntensity) return;
 
             // Extract RGB from color
             int r = (color >> 0) & 0xFF;
@@ -271,7 +272,7 @@ namespace EFIGUI
             for (int i = layerCount; i >= 1; i--)
             {
                 float layerRadius = baseRadius + (float)i * expandBase;
-                float layerAlpha = intensity * GlowLayersCircleAlphaMultiplier * (1.0f - (float)i / (layerCount + 1.0f));
+                float layerAlpha = intensity * d.glowLayersCircleAlpha * (1.0f - (float)i / (layerCount + 1.0f));
                 ImU32 layerColor = IM_COL32(r, g, b, (int)(layerAlpha * 255));
 
                 Layers().AddCircleFilled(targetLayer, center, layerRadius, layerColor);
@@ -280,12 +281,12 @@ namespace EFIGUI
 
         void MarqueeBorder(ImVec2 pos, ImVec2 size, ImU32 color, float sweepPos, float sweepLengthFrac, float rounding, float lineThickness, float hoverAnim, std::optional<Layer> layer)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
             // Determine target layer
             Layer targetLayer = layer.value_or(Layers().GetConfig().defaultMarqueeBorder);
 
-            if (hoverAnim < MarqueeHoverThreshold)
+            if (hoverAnim < d.marqueeHoverThreshold)
             {
                 // Static border when not hovered
                 Layers().AddRect(targetLayer, pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault(), rounding, 0, 1.0f);
@@ -299,7 +300,7 @@ namespace EFIGUI
 
             // Build path points along rounded rect
             std::vector<ImVec2> pathPoints;
-            CalculateRoundedRectPath(pos, size, rounding, MarqueeNumSegments, MarqueeCornerSegments, pathPoints);
+            CalculateRoundedRectPath(pos, size, rounding, d.marqueeNumSegments, d.marqueeCornerSegments, pathPoints);
 
             // Draw marquee segments with alpha falloff
             DrawMarqueeSegments(targetLayer, pathPoints, r, g, b, sweepPos, sweepLengthFrac, lineThickness, hoverAnim);
@@ -307,7 +308,7 @@ namespace EFIGUI
 
         bool GlassmorphismBg(ImVec2 pos, ImVec2 size, float rounding, float hoverAnim, bool isActive, std::optional<uint8_t> bgAlpha)
         {
-            using namespace DrawConstants;
+            const auto& d = Theme::Draw();
 
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
@@ -317,7 +318,7 @@ namespace EFIGUI
             {
                 // Draw opaque base layer to prevent transparency stacking
                 // This ensures consistent alpha 200 appearance regardless of layers below
-                draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), GlassBaseLayer, rounding);
+                draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::GlassBaseLayer(), rounding);
 
                 // Calculate UV coordinates for button region
                 ImGuiIO& io = ImGui::GetIO();
@@ -333,7 +334,7 @@ namespace EFIGUI
                     pos,
                     ImVec2(pos.x + size.x, pos.y + size.y),
                     uv0, uv1,
-                    IM_COL32(255, 255, 255, GlassBlurAlpha),
+                    IM_COL32(255, 255, 255, d.glassBlurAlpha),
                     rounding
                 );
 
@@ -343,15 +344,15 @@ namespace EFIGUI
                 {
                     // Use custom alpha - apply to the appropriate overlay base color
                     uint8_t alpha = bgAlpha.value();
-                    ImU32 baseColor = isActive ? GlassOverlayActive :
-                                      Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
+                    ImU32 baseColor = isActive ? Theme::GlassOverlayActive() :
+                                      Animation::LerpColorU32(Theme::GlassOverlayDefault(), Theme::GlassOverlayHover(), hoverAnim);
                     overlayColor = Theme::ApplyAlpha(baseColor, alpha);
                 }
                 else
                 {
                     // Use default overlay colors
-                    overlayColor = isActive ? GlassOverlayActive :
-                                   Animation::LerpColorU32(GlassOverlayDefault, GlassOverlayHover, hoverAnim);
+                    overlayColor = isActive ? Theme::GlassOverlayActive() :
+                                   Animation::LerpColorU32(Theme::GlassOverlayDefault(), Theme::GlassOverlayHover(), hoverAnim);
                 }
                 draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), overlayColor, rounding);
                 return true;

@@ -13,11 +13,11 @@ namespace EFIGUI
 
     void ModernTooltip(const char* text)
     {
-        using namespace TooltipConstants;
+        const auto& l = Theme::Layout();
 
         ImGui::PushStyleColor(ImGuiCol_PopupBg, Theme::ToVec4(Theme::BackgroundPanel()));
         ImGui::PushStyleColor(ImGuiCol_Border, Theme::ToVec4(Theme::BorderDefault()));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(PaddingX, PaddingY));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(l.tooltipPaddingX, l.tooltipPaddingY));
         ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, Theme::FrameRounding());
 
         ImGui::SetTooltip("%s", text);
