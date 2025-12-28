@@ -446,15 +446,37 @@ namespace EFIGUI
             if (ImGui::CollapsingHeader("NumericInput"))
             {
                 auto& ni = config.numericInput;
+                ImGui::Text("Dimensions:");
                 ImGui::DragFloat("Default Width", &ni.defaultWidth, 1.0f, 30.0f, 100.0f);
                 ImGui::DragFloat("Default Height", &ni.defaultHeight, 0.5f, 16.0f, 40.0f);
                 ImGui::DragFloat("Rounding", &ni.rounding, 0.5f, 0.0f, 12.0f);
-                ImGui::DragFloat("Border Thickness", &ni.borderThickness, 0.25f, 0.0f, 5.0f);
-                ImGui::DragFloat("Text Padding", &ni.textPadding, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Inset", &ni.inset, 0.25f, 0.0f, 8.0f);
+                ImGui::DragFloat("Padding X", &ni.paddingX, 0.5f, 0.0f, 16.0f);
                 ImGui::Separator();
+                ImGui::Text("Effects:");
+                ImGui::DragFloat("Glow Expand Size", &ni.glowExpandSize, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Hover Threshold", &ni.hoverThreshold, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("Glow Threshold", &ni.glowThreshold, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("Editing Glow Intensity", &ni.editingGlowIntensity, 0.05f, 0.0f, 1.0f);
+                ImGui::Separator();
+                ImGui::Text("Bezel/Frame:");
                 ColorEdit4U32("Bezel Color", &ni.bezelColor);
-                ColorEdit4U32("Background Color", &ni.bgColor);
-                ColorEdit4U32("Focus Border Color", &ni.focusBorderColor);
+                ImGui::Separator();
+                ImGui::Text("Screen Background:");
+                ColorEdit4U32("Screen BG Default", &ni.screenBgDefault);
+                ColorEdit4U32("Screen BG Hover", &ni.screenBgHover);
+                ColorEdit4U32("Screen BG Editing", &ni.screenBgEditing);
+                ImGui::Separator();
+                ImGui::Text("Inner Border:");
+                ColorEdit4U32("Inner Border Top", &ni.innerBorderTop);
+                ColorEdit4U32("Inner Border Bottom", &ni.innerBorderBottom);
+                ImGui::Separator();
+                ImGui::Text("Outer Border:");
+                ColorEdit4U32("Outer Border Default", &ni.outerBorderDefault);
+                ColorEdit4U32("Outer Border Hover", &ni.outerBorderHover);
+                ImGui::Separator();
+                ImGui::Text("Text:");
+                ColorEdit4U32("Text Default", &ni.textDefault);
             }
 
             ImGui::End();

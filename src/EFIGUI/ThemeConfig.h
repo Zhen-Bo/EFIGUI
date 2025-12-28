@@ -349,13 +349,33 @@ namespace EFIGUI
         float defaultWidth      = 55.0f;            // Default input width
         float defaultHeight     = 22.0f;            // Default input height
         float rounding          = 6.0f;             // Corner rounding
-        float borderThickness   = 1.0f;             // Border line thickness
-        float textPadding       = 4.0f;             // Text padding inside box
+        float inset             = 2.0f;             // Inset for screen area
+        float paddingX          = 6.0f;             // Horizontal text padding
 
-        // Colors (component-specific, not in ThemeColors)
+        // Effects
+        float glowExpandSize    = 4.0f;             // Glow expansion size
+        float hoverThreshold    = 0.1f;             // Threshold for hover effects
+        float glowThreshold     = 0.05f;            // Threshold for glow effects
+        float editingGlowIntensity = 0.7f;          // Glow intensity when editing
+
+        // Bezel/Frame colors
         ImU32 bezelColor        = IM_COL32(25, 25, 35, 255);       // Bezel/frame color
-        ImU32 bgColor           = IM_COL32(15, 15, 25, 255);       // Background color
-        ImU32 focusBorderColor  = IM_COL32(0, 245, 255, 200);      // Border when focused
+
+        // Screen background colors
+        ImU32 screenBgDefault   = IM_COL32(15, 15, 25, 255);       // Default background
+        ImU32 screenBgHover     = IM_COL32(20, 25, 35, 255);       // Hover background
+        ImU32 screenBgEditing   = IM_COL32(20, 30, 40, 255);       // Editing background
+
+        // Inner border (bevel effect)
+        ImU32 innerBorderTop    = IM_COL32(10, 10, 15, 255);       // Top inner border
+        ImU32 innerBorderBottom = IM_COL32(50, 50, 70, 100);       // Bottom inner border
+
+        // Outer border
+        ImU32 outerBorderDefault = IM_COL32(60, 60, 80, 255);      // Default border
+        ImU32 outerBorderHover  = IM_COL32(80, 100, 120, 255);     // Hover border
+
+        // Text
+        ImU32 textDefault       = IM_COL32(180, 200, 210, 255);    // Default text color
     };
 
     // =============================================

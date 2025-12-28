@@ -64,14 +64,30 @@ namespace EFIGUI
         CardConfig cfg;
         const auto& t = Theme::Card();
 
+        // Layout dimensions
         cfg.height = t.baseHeight;
         cfg.iconSize = t.iconSize;
         cfg.iconPadding = t.iconPadding;
+        cfg.iconTextOffset = t.iconTextOffset;
+        cfg.minTextWidth = t.minTextWidth;
+        cfg.nameOffsetY = t.nameOffsetY;
+        cfg.descOffsetY = t.descOffsetY;
 
+        // Inline toggle dimensions
         cfg.toggleWidth = t.toggleWidth;
         cfg.toggleHeight = t.toggleHeight;
+        cfg.toggleRounding = t.toggleRounding;
         cfg.toggleRightMargin = t.toggleRightMargin;
+        cfg.knobRadius = t.knobRadius;
+        cfg.knobPadding = t.knobPadding;
+        cfg.knobTravel = t.knobTravel;
+        cfg.toggleAnimSpeed = t.toggleAnimSpeed;
 
+        // Section header
+        cfg.sectionLineOffset = t.sectionLineOffset;
+        cfg.sectionSpacing = t.sectionSpacing;
+
+        // Colors
         cfg.bgColor = Theme::BackgroundPanel();
 
         return cfg;
@@ -86,14 +102,28 @@ namespace EFIGUI
         NavItemConfig cfg;
         const auto& t = Theme::Nav();
 
+        // Dimensions
         cfg.height = Theme::NavItemHeight();
         cfg.iconPadding = t.iconPadding;
         cfg.labelSpacing = t.labelSpacing;
         cfg.accentBarWidth = t.accentBarWidth;
+        cfg.accentBarHeightRatio = t.accentBarHeightRatio;
+        cfg.accentBarGlowRadius = t.accentBarGlowRadius;
         cfg.rounding = Theme::NavItemRounding();
-
-        cfg.accentColor = Theme::AccentCyan();
         cfg.collapsedIconScale = t.collapsedIconScale;
+
+        // Section header
+        cfg.sectionPaddingX = t.sectionPaddingX;
+        cfg.sectionPaddingY = t.sectionPaddingY;
+        cfg.sectionHeight = t.sectionHeight;
+
+        // Colors
+        cfg.accentColor = Theme::AccentCyan();
+
+        // Alpha values
+        cfg.accentGlowAlpha = t.accentGlowAlpha;
+        cfg.bgAlphaMultiplier = t.bgAlphaMultiplier;
+        cfg.hoverBgAlpha = t.hoverBgAlpha;
 
         return cfg;
     }

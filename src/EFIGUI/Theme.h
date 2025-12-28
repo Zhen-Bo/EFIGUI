@@ -197,6 +197,12 @@ namespace EFIGUI
         inline ImU32 StatusError()       { return GetConfigConst().colors.statusError; }
         inline ImU32 StatusInfo()        { return GetConfigConst().colors.statusInfo; }
 
+        // Glassmorphism colors
+        inline ImU32 GlassBaseLayer()      { return GetConfigConst().colors.glassBaseLayer; }
+        inline ImU32 GlassOverlayActive()  { return GetConfigConst().colors.glassOverlayActive; }
+        inline ImU32 GlassOverlayDefault() { return GetConfigConst().colors.glassOverlayDefault; }
+        inline ImU32 GlassOverlayHover()   { return GetConfigConst().colors.glassOverlayHover; }
+
         // =============================================
         // Dimension Accessors (Backward Compatible)
         // =============================================

@@ -9,6 +9,14 @@
 
 namespace EFIGUI
 {
+    // =============================================
+    // Forward Declarations
+    // =============================================
+
+    struct NavItemConfig;
+    struct SliderConfig;
+    struct ToggleConfig;
+    struct CardConfig;
 
     // =============================================
     // Custom Window (Borderless with navbar)
@@ -69,7 +77,12 @@ namespace EFIGUI
     // Navigation
     // =============================================
 
-    // Left sidebar navigation item with icon
+    // Left sidebar navigation item with icon (Config version - recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool NavItem(const char* icon, const char* label, bool selected, const NavItemConfig& config,
+                 float width = 0, bool collapsed = false);
+
+    // Left sidebar navigation item with icon (legacy API - for backward compatibility)
     // Returns true if clicked
     // collapsed: if true, only show icon (no label)
     // width: item width (0 = use Theme::NavbarWidth())
@@ -77,10 +90,18 @@ namespace EFIGUI
     bool NavItem(const char* icon, const char* label, bool selected, float width = 0,
                  bool collapsed = false, std::optional<ImU32> accentColor = std::nullopt);
 
-    // Navigation section header
+    // Navigation section header (Config version - recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    void NavSectionHeader(const char* label, const NavItemConfig& config);
+
+    // Navigation section header (legacy API - for backward compatibility)
     void NavSectionHeader(const char* label);
 
-    // Collapse/Expand toggle button for navbar
+    // Collapse/Expand toggle button for navbar (uses NavItemConfig internally)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool NavCollapseButton(bool collapsed, float width, const NavItemConfig& config);
+
+    // Collapse/Expand toggle button for navbar (legacy API - for backward compatibility)
     bool NavCollapseButton(bool collapsed, float width);
 
     // =============================================
@@ -204,15 +225,28 @@ namespace EFIGUI
     // === CardConfig ===
     struct CardConfig
     {
-        // Dimensions
+        // Layout dimensions
         std::optional<float> height = std::nullopt;
         std::optional<float> iconSize = std::nullopt;
         std::optional<float> iconPadding = std::nullopt;
+        std::optional<float> iconTextOffset = std::nullopt;
+        std::optional<float> minTextWidth = std::nullopt;
+        std::optional<float> nameOffsetY = std::nullopt;
+        std::optional<float> descOffsetY = std::nullopt;
 
         // Inline toggle dimensions
         std::optional<float> toggleWidth = std::nullopt;
         std::optional<float> toggleHeight = std::nullopt;
+        std::optional<float> toggleRounding = std::nullopt;
         std::optional<float> toggleRightMargin = std::nullopt;
+        std::optional<float> knobRadius = std::nullopt;
+        std::optional<float> knobPadding = std::nullopt;
+        std::optional<float> knobTravel = std::nullopt;
+        std::optional<float> toggleAnimSpeed = std::nullopt;
+
+        // Section header
+        std::optional<float> sectionLineOffset = std::nullopt;
+        std::optional<float> sectionSpacing = std::nullopt;
 
         // Colors
         std::optional<ImU32> bgColor = std::nullopt;
@@ -229,12 +263,24 @@ namespace EFIGUI
         std::optional<float> iconPadding = std::nullopt;
         std::optional<float> labelSpacing = std::nullopt;
         std::optional<float> accentBarWidth = std::nullopt;
+        std::optional<float> accentBarHeightRatio = std::nullopt;
+        std::optional<float> accentBarGlowRadius = std::nullopt;
         std::optional<float> rounding = std::nullopt;
+        std::optional<float> collapsedIconScale = std::nullopt;
+
+        // Section header
+        std::optional<float> sectionPaddingX = std::nullopt;
+        std::optional<float> sectionPaddingY = std::nullopt;
+        std::optional<float> sectionHeight = std::nullopt;
 
         // Colors
         std::optional<ImU32> accentColor = std::nullopt;
         std::optional<ImU32> bgColor = std::nullopt;
-        std::optional<float> collapsedIconScale = std::nullopt;
+
+        // Alpha values
+        std::optional<int> accentGlowAlpha = std::nullopt;
+        std::optional<int> bgAlphaMultiplier = std::nullopt;
+        std::optional<int> hoverBgAlpha = std::nullopt;
 
         static NavItemConfig FromTheme();
     };
@@ -298,10 +344,17 @@ namespace EFIGUI
     // Toggle / Checkbox
     // =============================================
 
-    // Modern toggle switch
+    // Modern toggle switch (Config version - recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool ModernToggle(const char* label, bool* value, const ToggleConfig& config);
+
+    // Toggle with description (Config version - recommended)
+    bool ModernToggleWithDesc(const char* label, const char* description, bool* value, const ToggleConfig& config);
+
+    // Modern toggle switch (legacy API - for backward compatibility)
     bool ModernToggle(const char* label, bool* value);
 
-    // Toggle with description
+    // Toggle with description (legacy API - for backward compatibility)
     bool ModernToggleWithDesc(const char* label, const char* description, bool* value);
 
     // =============================================
@@ -354,7 +407,16 @@ namespace EFIGUI
     // Slider
     // =============================================
 
-    // Modern slider with glow
+    // Modern slider with glow (Config version - recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool ModernSliderFloat(const char* label, float* value, float min, float max,
+                           const char* format, std::optional<ImU32> glowColor,
+                           const SliderConfig& config);
+    bool ModernSliderInt(const char* label, int* value, int min, int max,
+                         const char* format, std::optional<ImU32> glowColor,
+                         const SliderConfig& config);
+
+    // Modern slider with glow (legacy API - for backward compatibility)
     // layer: rendering layer for knob and input box glow effects (omit = use LayerConfig default)
     bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format = "%.1f", std::optional<Layer> layer = std::nullopt);
     bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format = "%d", std::optional<Layer> layer = std::nullopt);
@@ -383,11 +445,19 @@ namespace EFIGUI
     // Cards / Sections
     // =============================================
 
-    // Feature card (for feature toggles with icon)
+    // Feature card (for feature toggles with icon) - Config version (recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, const CardConfig& config);
+
+    // Feature card (for feature toggles with icon) - legacy API (for backward compatibility)
     // bgAlpha: background alpha (omit = Theme default, 0-255 = custom alpha)
     bool FeatureCard(const char* icon, const char* name, const char* description, bool* enabled, std::optional<uint8_t> bgAlpha = std::nullopt);
 
-    // Section header with optional collapse
+    // Section header with optional collapse (Config version - recommended)
+    // config: per-instance configuration (omit for Theme defaults)
+    bool SectionHeader(const char* label, bool* collapsed, const CardConfig& config);
+
+    // Section header with optional collapse (legacy API - for backward compatibility)
     // accentColor: header text color (omit = Theme::TextAccent)
     bool SectionHeader(const char* label, bool* collapsed = nullptr, std::optional<ImU32> accentColor = std::nullopt);
 
