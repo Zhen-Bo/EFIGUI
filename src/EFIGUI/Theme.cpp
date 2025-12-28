@@ -162,5 +162,302 @@ namespace EFIGUI
                 colors.accentSecondaryGlow = IM_COL32(rgb.r, rgb.g, rgb.b, 80);
             }
         }
+
+        // =============================================
+        // ShowThemeStyleEditor Implementation
+        // =============================================
+
+        // Helper to edit ImU32 color as float[4]
+        static bool ColorEdit4U32(const char* label, ImU32* color)
+        {
+            ImVec4 col = ImGui::ColorConvertU32ToFloat4(*color);
+            if (ImGui::ColorEdit4(label, &col.x, ImGuiColorEditFlags_AlphaBar))
+            {
+                *color = ImGui::ColorConvertFloat4ToU32(col);
+                return true;
+            }
+            return false;
+        }
+
+        void ShowThemeStyleEditor(bool* p_open)
+        {
+            if (!ImGui::Begin("EFIGUI Theme Style Editor", p_open, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::End();
+                return;
+            }
+
+            auto& config = GetConfig();
+
+            if (ImGui::Button("Reset to Default"))
+            {
+                ResetToDefault();
+            }
+
+            ImGui::Separator();
+
+            // Colors section
+            if (ImGui::CollapsingHeader("Colors", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                auto& c = config.colors;
+                ColorEdit4U32("Background Dark", &c.backgroundDark);
+                ColorEdit4U32("Background Panel", &c.backgroundPanel);
+                ColorEdit4U32("Background Navbar", &c.backgroundNavbar);
+                ColorEdit4U32("Background Content", &c.backgroundContent);
+                ImGui::Separator();
+                ColorEdit4U32("Accent Primary", &c.accentPrimary);
+                ColorEdit4U32("Accent Secondary", &c.accentSecondary);
+                ColorEdit4U32("Accent Tertiary", &c.accentTertiary);
+                ColorEdit4U32("Accent Success", &c.accentSuccess);
+                ImGui::Separator();
+                ColorEdit4U32("Text Primary", &c.textPrimary);
+                ColorEdit4U32("Text Secondary", &c.textSecondary);
+                ColorEdit4U32("Text Muted", &c.textMuted);
+                ColorEdit4U32("Text Accent", &c.textAccent);
+                ImGui::Separator();
+                ColorEdit4U32("Border Default", &c.borderDefault);
+                ColorEdit4U32("Border Hover", &c.borderHover);
+                ColorEdit4U32("Border Active", &c.borderActive);
+                ImGui::Separator();
+                ColorEdit4U32("Title Bar Left", &c.titleBarLeft);
+                ColorEdit4U32("Title Bar Right", &c.titleBarRight);
+            }
+
+            // Dimensions section
+            if (ImGui::CollapsingHeader("Dimensions"))
+            {
+                auto& d = config.dimensions;
+                ImGui::DragFloat("Window Rounding", &d.windowRounding, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Frame Rounding", &d.frameRounding, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Button Rounding", &d.buttonRounding, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Nav Item Rounding", &d.navItemRounding, 0.5f, 0.0f, 16.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Title Bar Height", &d.titleBarHeight, 0.5f, 20.0f, 60.0f);
+                ImGui::DragFloat("Navbar Width", &d.navbarWidth, 1.0f, 100.0f, 400.0f);
+                ImGui::DragFloat("Navbar Width Collapsed", &d.navbarWidthCollapsed, 1.0f, 40.0f, 120.0f);
+                ImGui::DragFloat("Nav Item Height", &d.navItemHeight, 0.5f, 24.0f, 80.0f);
+                ImGui::DragFloat("Nav Item Padding", &d.navItemPadding, 0.5f, 0.0f, 24.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Content Padding", &d.contentPadding, 0.5f, 0.0f, 48.0f);
+                ImGui::DragFloat("Item Spacing", &d.itemSpacing, 0.5f, 0.0f, 24.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Toggle Width", &d.toggleWidth, 0.5f, 24.0f, 96.0f);
+                ImGui::DragFloat("Toggle Height", &d.toggleHeight, 0.5f, 12.0f, 48.0f);
+                ImGui::DragFloat("Toggle Knob Size", &d.toggleKnobSize, 0.5f, 8.0f, 32.0f);
+                ImGui::DragFloat("Toggle Label Gap", &d.toggleLabelGap, 0.5f, 0.0f, 32.0f);
+            }
+
+            // Effects section
+            if (ImGui::CollapsingHeader("Effects"))
+            {
+                auto& e = config.effects;
+                ImGui::DragFloat("Glow Intensity", &e.glowIntensity, 0.05f, 0.0f, 2.0f);
+                ImGui::DragFloat("Glow Radius", &e.glowRadius, 0.5f, 0.0f, 24.0f);
+                ImGui::Separator();
+                ImGui::DragInt("Button Glow Layers", &e.buttonGlowLayers, 0.2f, 1, 10);
+                ImGui::DragFloat("Button Glow Expand", &e.buttonGlowExpand, 0.1f, 0.0f, 8.0f);
+                ImGui::Separator();
+                ImGui::DragInt("Slider Glow Layers", &e.sliderGlowLayers, 0.2f, 1, 10);
+                ImGui::DragFloat("Slider Knob Glow Expand", &e.sliderKnobGlowExpand, 0.1f, 0.0f, 8.0f);
+                ImGui::DragFloat("Slider Input Glow Expand", &e.sliderInputGlowExpand, 0.1f, 0.0f, 8.0f);
+            }
+
+            // Animation section
+            if (ImGui::CollapsingHeader("Animation"))
+            {
+                auto& a = config.animation;
+                ImGui::DragFloat("Default Speed", &a.defaultSpeed, 0.5f, 1.0f, 30.0f);
+                ImGui::DragFloat("Pulse Frequency", &a.pulseFrequency, 0.1f, 0.1f, 10.0f);
+                ImGui::DragFloat("Breathe Frequency", &a.breatheFrequency, 0.1f, 0.1f, 5.0f);
+                ImGui::DragFloat("Sweep Frequency", &a.sweepFrequency, 0.1f, 0.1f, 3.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Marquee Speed", &a.marqueeSpeed, 0.01f, 0.01f, 0.5f);
+                ImGui::DragFloat("Marquee Sweep Length", &a.marqueeSweepLength, 0.01f, 0.05f, 0.5f);
+            }
+
+            // Slider Theme section
+            if (ImGui::CollapsingHeader("Slider"))
+            {
+                auto& s = config.slider;
+                ImGui::DragFloat("Height", &s.height, 0.5f, 12.0f, 48.0f);
+                ImGui::DragFloat("Track Height", &s.trackHeight, 0.5f, 2.0f, 16.0f);
+                ImGui::DragFloat("Knob Radius", &s.knobRadius, 0.5f, 4.0f, 20.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Input Width", &s.inputWidth, 1.0f, 30.0f, 100.0f);
+                ImGui::DragFloat("Input Height", &s.inputHeight, 0.5f, 16.0f, 40.0f);
+                ImGui::DragFloat("Input Gap", &s.inputGap, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Input Rounding", &s.inputRounding, 0.5f, 0.0f, 12.0f);
+                ImGui::Separator();
+                ImGui::DragInt("Glow Layers", &s.glowLayers, 0.2f, 1, 10);
+                ImGui::DragFloat("Knob Glow Expand", &s.knobGlowExpand, 0.1f, 0.0f, 8.0f);
+                ImGui::DragFloat("Input Glow Expand", &s.inputGlowExpand, 0.1f, 0.0f, 8.0f);
+            }
+
+            // Toggle Theme section
+            if (ImGui::CollapsingHeader("Toggle"))
+            {
+                auto& t = config.toggle;
+                ImGui::DragFloat("Width", &t.width, 0.5f, 24.0f, 96.0f);
+                ImGui::DragFloat("Height", &t.height, 0.5f, 12.0f, 48.0f);
+                ImGui::DragFloat("Knob Size", &t.knobSize, 0.5f, 8.0f, 32.0f);
+                ImGui::DragFloat("Label Gap", &t.labelGap, 0.5f, 0.0f, 32.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Anim Speed", &t.animSpeed, 0.5f, 1.0f, 30.0f);
+                ImGui::DragFloat("Glow Threshold", &t.glowThreshold, 0.05f, 0.0f, 1.0f);
+                ImGui::DragFloat("Glow Radius", &t.glowRadius, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Disabled Alpha", &t.disabledAlpha, 0.05f, 0.0f, 1.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Desc Offset X", &t.descOffsetX, 1.0f, 0.0f, 120.0f);
+                ImGui::DragFloat("Desc Spacing Y", &t.descSpacingY, 0.5f, 0.0f, 16.0f);
+            }
+
+            // Card Theme section
+            if (ImGui::CollapsingHeader("Card"))
+            {
+                auto& c = config.card;
+                ImGui::DragFloat("Icon Size", &c.iconSize, 0.5f, 16.0f, 64.0f);
+                ImGui::DragFloat("Icon Padding", &c.iconPadding, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Icon Text Offset", &c.iconTextOffset, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Base Height", &c.baseHeight, 1.0f, 32.0f, 120.0f);
+                ImGui::DragFloat("Min Text Width", &c.minTextWidth, 1.0f, 20.0f, 100.0f);
+                ImGui::DragFloat("Name Offset Y", &c.nameOffsetY, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Desc Offset Y", &c.descOffsetY, 0.5f, 0.0f, 48.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Toggle Width", &c.toggleWidth, 0.5f, 20.0f, 80.0f);
+                ImGui::DragFloat("Toggle Height", &c.toggleHeight, 0.5f, 12.0f, 48.0f);
+                ImGui::DragFloat("Toggle Rounding", &c.toggleRounding, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Toggle Right Margin", &c.toggleRightMargin, 1.0f, 0.0f, 100.0f);
+                ImGui::DragFloat("Knob Radius", &c.knobRadius, 0.5f, 4.0f, 20.0f);
+                ImGui::DragFloat("Knob Padding", &c.knobPadding, 0.5f, 0.0f, 12.0f);
+                ImGui::DragFloat("Knob Travel", &c.knobTravel, 0.5f, 4.0f, 32.0f);
+                ImGui::DragFloat("Toggle Anim Speed", &c.toggleAnimSpeed, 0.5f, 1.0f, 30.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Section Line Offset", &c.sectionLineOffset, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Section Spacing", &c.sectionSpacing, 0.5f, 0.0f, 32.0f);
+            }
+
+            // Nav Theme section
+            if (ImGui::CollapsingHeader("Navigation"))
+            {
+                auto& n = config.nav;
+                ImGui::DragFloat("Icon Padding", &n.iconPadding, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Label Spacing", &n.labelSpacing, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Collapsed Icon Scale", &n.collapsedIconScale, 0.05f, 0.5f, 2.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Accent Bar Width", &n.accentBarWidth, 0.5f, 1.0f, 12.0f);
+                ImGui::DragFloat("Accent Bar Height Ratio", &n.accentBarHeightRatio, 0.05f, 0.2f, 1.0f);
+                ImGui::DragFloat("Accent Bar Glow Radius", &n.accentBarGlowRadius, 0.5f, 0.0f, 16.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Section Padding X", &n.sectionPaddingX, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Section Padding Y", &n.sectionPaddingY, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Section Height", &n.sectionHeight, 0.5f, 12.0f, 48.0f);
+                ImGui::Separator();
+                ImGui::DragInt("Accent Glow Alpha", &n.accentGlowAlpha, 1.0f, 0, 255);
+                ImGui::DragInt("Bg Alpha Multiplier", &n.bgAlphaMultiplier, 1.0f, 0, 255);
+                ImGui::DragInt("Hover Bg Alpha", &n.hoverBgAlpha, 1.0f, 0, 255);
+            }
+
+            // Button Theme section
+            if (ImGui::CollapsingHeader("Button"))
+            {
+                auto& b = config.button;
+                ImGui::DragFloat("Padding X", &b.paddingX, 1.0f, 8.0f, 64.0f);
+                ImGui::DragFloat("Height", &b.height, 0.5f, 20.0f, 60.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Glow Intensity Base", &b.glowIntensityBase, 0.05f, 0.0f, 2.0f);
+                ImGui::DragFloat("Glow Intensity Active", &b.glowIntensityActive, 0.05f, 0.0f, 2.0f);
+                ImGui::Separator();
+                ImGui::Text("Cooldown Button:");
+                ImGui::DragFloat("Cooldown Threshold", &b.cooldownThreshold, 0.01f, 0.0f, 0.5f);
+                ImGui::DragInt("Cooldown Overlay Alpha", &b.cooldownOverlayAlpha, 1.0f, 0, 255);
+                ImGui::DragInt("Edge Glow Layers", &b.edgeGlowLayers, 0.2f, 1, 10);
+                ImGui::DragFloat("Edge Glow Base Width", &b.edgeGlowBaseWidth, 0.5f, 0.0f, 10.0f);
+                ImGui::DragFloat("Edge Glow Expand Step", &b.edgeGlowExpandStep, 0.5f, 0.0f, 10.0f);
+                ImGui::DragFloat("Edge Glow Base Alpha", &b.edgeGlowBaseAlpha, 0.05f, 0.0f, 1.0f);
+                ImGui::DragFloat("Particle Radius Small", &b.particleRadiusSmall, 0.5f, 1.0f, 10.0f);
+                ImGui::DragFloat("Particle Radius Large", &b.particleRadiusLarge, 0.5f, 2.0f, 20.0f);
+                ImGui::DragInt("Particle Alpha Bright", &b.particleAlphaBright, 1.0f, 0, 255);
+                ImGui::DragInt("Particle Alpha Dim", &b.particleAlphaDim, 1.0f, 0, 255);
+            }
+
+            // Window Theme section
+            if (ImGui::CollapsingHeader("Window"))
+            {
+                auto& w = config.window;
+                ImGui::DragFloat("Title Bar Height", &w.titleBarHeight, 0.5f, 20.0f, 60.0f);
+                ImGui::DragFloat("Title Text Padding", &w.titleTextPadding, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Title Button Size", &w.titleButtonSize, 0.5f, 12.0f, 40.0f);
+                ImGui::DragFloat("Title Button Margin", &w.titleButtonMargin, 0.5f, 0.0f, 32.0f);
+                ImGui::DragFloat("Title Button Spacing", &w.titleButtonSpacing, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Content Spacing Y", &w.contentSpacingY, 0.5f, 0.0f, 24.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Navbar Button Size", &w.navbarButtonSize, 0.5f, 12.0f, 40.0f);
+                ImGui::DragFloat("Navbar Icon Padding", &w.navbarIconPadding, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Navbar Button Padding", &w.navbarButtonPadding, 0.5f, 0.0f, 16.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("Glow Radius Base", &w.glowRadiusBase, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Glow Radius Expand", &w.glowRadiusExpand, 0.5f, 0.0f, 8.0f);
+                ImGui::DragInt("Glow Anim Alpha", &w.glowAnimAlpha, 1.0f, 0, 255);
+            }
+
+            // Draw Theme section
+            if (ImGui::CollapsingHeader("Draw"))
+            {
+                auto& dr = config.draw;
+                ImGui::Text("RectGlow:");
+                ImGui::DragFloat("Glow Min Intensity", &dr.glowMinIntensity, 0.01f, 0.0f, 0.5f);
+                ImGui::DragInt("Glow Layer Count", &dr.glowLayerCount, 0.2f, 1, 10);
+                ImGui::DragFloat("Glow Alpha Multiplier", &dr.glowAlphaMultiplier, 0.05f, 0.0f, 1.0f);
+                ImGui::DragFloat("Glow Line Thickness", &dr.glowLineThickness, 0.5f, 0.5f, 10.0f);
+                ImGui::Separator();
+                ImGui::Text("NeonBorder:");
+                ImGui::DragFloat("Neon Glow Intensity", &dr.neonGlowIntensity, 0.05f, 0.0f, 2.0f);
+                ImGui::DragFloat("Neon Glow Radius", &dr.neonGlowRadius, 0.5f, 0.0f, 16.0f);
+                ImGui::Separator();
+                ImGui::Text("GlowLayers:");
+                ImGui::DragFloat("Rect Alpha", &dr.glowLayersRectAlpha, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("Circle Alpha", &dr.glowLayersCircleAlpha, 0.01f, 0.0f, 1.0f);
+                ImGui::Separator();
+                ImGui::Text("MarqueeBorder:");
+                ImGui::DragInt("Num Segments", &dr.marqueeNumSegments, 1.0f, 20, 200);
+                ImGui::DragInt("Corner Segments", &dr.marqueeCornerSegments, 0.2f, 2, 20);
+                ImGui::DragInt("Min Edge Segments", &dr.marqueeMinEdgeSegments, 0.2f, 1, 10);
+                ImGui::DragInt("Min Alpha", &dr.marqueeMinAlpha, 1.0f, 0, 100);
+                ImGui::DragFloat("Hover Threshold", &dr.marqueeHoverThreshold, 0.05f, 0.0f, 1.0f);
+                ImGui::Separator();
+                ImGui::Text("Glassmorphism:");
+                ImGui::DragInt("Glass Blur Alpha", &dr.glassBlurAlpha, 1.0f, 0, 255);
+            }
+
+            // Layout Theme section
+            if (ImGui::CollapsingHeader("Layout"))
+            {
+                auto& l = config.layout;
+                ImGui::Text("Separator:");
+                ImGui::DragFloat("Offset Y", &l.separatorOffsetY, 0.5f, 0.0f, 16.0f);
+                ImGui::DragFloat("Spacing", &l.separatorSpacing, 0.5f, 0.0f, 24.0f);
+                ImGui::Separator();
+                ImGui::Text("Tooltip:");
+                ImGui::DragFloat("Padding X", &l.tooltipPaddingX, 0.5f, 0.0f, 24.0f);
+                ImGui::DragFloat("Padding Y", &l.tooltipPaddingY, 0.5f, 0.0f, 24.0f);
+            }
+
+            // NumericInput Theme section
+            if (ImGui::CollapsingHeader("NumericInput"))
+            {
+                auto& ni = config.numericInput;
+                ImGui::DragFloat("Default Width", &ni.defaultWidth, 1.0f, 30.0f, 100.0f);
+                ImGui::DragFloat("Default Height", &ni.defaultHeight, 0.5f, 16.0f, 40.0f);
+                ImGui::DragFloat("Rounding", &ni.rounding, 0.5f, 0.0f, 12.0f);
+                ImGui::DragFloat("Border Thickness", &ni.borderThickness, 0.25f, 0.0f, 5.0f);
+                ImGui::DragFloat("Text Padding", &ni.textPadding, 0.5f, 0.0f, 16.0f);
+                ImGui::Separator();
+                ColorEdit4U32("Bezel Color", &ni.bezelColor);
+                ColorEdit4U32("Background Color", &ni.bgColor);
+                ColorEdit4U32("Focus Border Color", &ni.focusBorderColor);
+            }
+
+            ImGui::End();
+        }
     }
 }
