@@ -17,6 +17,38 @@ config.animation.hoverSpeed = 15.0f;
 
 ---
 
+## Component Theme Accessors (v0.3.1+)
+
+Access component-specific theme configurations directly:
+
+```cpp
+// Component-specific theme values
+float sliderHeight = EFIGUI::Theme::Slider().height;        // 24.0f
+float toggleWidth = EFIGUI::Theme::Toggle().width;          // 48.0f
+float cardIconSize = EFIGUI::Theme::Card().iconSize;        // 32.0f
+float navAccentBar = EFIGUI::Theme::Nav().accentBarWidth;   // 3.0f
+
+// Modify component themes at runtime
+EFIGUI::Theme::SliderMut().height = 32.0f;
+EFIGUI::Theme::ToggleMut().width = 56.0f;
+```
+
+**Available Component Accessors:**
+
+| Accessor | Mutable Accessor | Description |
+|----------|------------------|-------------|
+| `Theme::Slider()` | `Theme::SliderMut()` | Slider dimensions and effects |
+| `Theme::Toggle()` | `Theme::ToggleMut()` | Toggle switch dimensions |
+| `Theme::Card()` | `Theme::CardMut()` | Feature card layout |
+| `Theme::Nav()` | `Theme::NavMut()` | Navigation item styling |
+| `Theme::Button()` | `Theme::ButtonMut()` | Button dimensions and effects |
+| `Theme::Window()` | `Theme::WindowMut()` | Window/title bar settings |
+| `Theme::Draw()` | `Theme::DrawMut()` | Glow/marquee effect settings |
+| `Theme::Layout()` | `Theme::LayoutMut()` | Spacing and layout values |
+| `Theme::NumericInput()` | `Theme::NumericInputMut()` | Numeric input box settings |
+
+---
+
 ## Using Theme Values
 
 All theme values are accessed via function calls:
