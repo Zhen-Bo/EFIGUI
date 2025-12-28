@@ -94,7 +94,7 @@ namespace EFIGUI
         draw->AddRectFilled(
             ImVec2(startX, trackY),
             ImVec2(startX + sliderWidth, trackY + TrackHeight),
-            Theme::ButtonDefault,
+            Theme::ButtonDefault(),
             TrackHeight * 0.5f
         );
 
@@ -104,8 +104,8 @@ namespace EFIGUI
             Draw::RectGradientH(
                 ImVec2(startX, trackY),
                 ImVec2(startX + fillWidth, trackY + TrackHeight),
-                Theme::AccentPurple,
-                Theme::AccentCyan,
+                Theme::AccentPurple(),
+                Theme::AccentCyan(),
                 TrackHeight * 0.5f
             );
 
@@ -116,7 +116,7 @@ namespace EFIGUI
                 Draw::RectGlow(
                     ImVec2(startX, trackY),
                     ImVec2(startX + fillWidth, trackY + TrackHeight),
-                    Theme::AccentCyanGlow,
+                    Theme::AccentCyanGlow(),
                     glowIntensity,
                     GlowExpandSize
                 );
@@ -131,11 +131,11 @@ namespace EFIGUI
         if (state.hoverAnim > HoverThreshold || sliderActive)
         {
             float glowIntensity = sliderActive ? ActiveGlowIntensity : state.hoverAnim * 0.5f;
-            Draw::GlowLayersCircle(ImVec2(knobX, knobY), KnobRadius + 2.0f, Theme::AccentCyan,
-                                    glowIntensity, Theme::SliderGlowLayers, Theme::SliderKnobGlowExpand, layer);
+            Draw::GlowLayersCircle(ImVec2(knobX, knobY), KnobRadius + 2.0f, Theme::AccentCyan(),
+                                    glowIntensity, Theme::SliderGlowLayers(), Theme::SliderKnobGlowExpand(), layer);
         }
 
-        ImU32 knobColor = sliderActive ? Theme::AccentCyan : Theme::TextPrimary;
+        ImU32 knobColor = sliderActive ? Theme::AccentCyan() : Theme::TextPrimary();
         draw->AddCircleFilled(ImVec2(knobX, knobY), KnobRadius, knobColor);
 
         return changed;
@@ -179,7 +179,7 @@ namespace EFIGUI
         // Draw label
         if (!labelHidden)
         {
-            draw->AddText(ImVec2(pos.x, pos.y + (Height - textSize.y) * 0.5f), Theme::TextPrimary, label);
+            draw->AddText(ImVec2(pos.x, pos.y + (Height - textSize.y) * 0.5f), Theme::TextPrimary(), label);
         }
 
         // Slider track area calculations

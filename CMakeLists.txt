@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.2.6 LANGUAGES CXX)
+project(EFIGUI VERSION 0.3.0 LANGUAGES CXX)
 
 # =============================================
 # Options
@@ -39,6 +39,7 @@ set(EFIGUI_SOURCES
 
 set(EFIGUI_HEADERS
     src/EFIGUI/EFIGUI.h
+    src/EFIGUI/ThemeConfig.h
     src/EFIGUI/Theme.h
     src/EFIGUI/Animation.h
     src/EFIGUI/Layer.h

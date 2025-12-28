@@ -130,8 +130,8 @@ namespace EFIGUI
         {
             float glowIntensity = isEditing ? EditingGlowIntensity : state.hoverAnim * 0.5f;
             ImVec2 boxSize = ImVec2(width, height);
-            Draw::GlowLayers(boxMin, boxSize, Theme::AccentCyan, glowIntensity,
-                              Theme::SliderGlowLayers, Theme::SliderInputGlowExpand, rounding, layer);
+            Draw::GlowLayers(boxMin, boxSize, Theme::AccentCyan(), glowIntensity,
+                              Theme::SliderGlowLayers(), Theme::SliderInputGlowExpand(), rounding, layer);
         }
 
         // Bezel (outer frame)
@@ -155,7 +155,7 @@ namespace EFIGUI
                       InnerBorderBottom, 1.0f);
 
         // Outer border
-        ImU32 borderColor = isEditing ? Theme::AccentCyan :
+        ImU32 borderColor = isEditing ? Theme::AccentCyan() :
                            Animation::LerpColorU32(OuterBorderDefault, OuterBorderHover, state.hoverAnim);
         draw->AddRect(boxMin, boxMax, borderColor, rounding, 0, 1.0f);
     }
@@ -233,8 +233,8 @@ namespace EFIGUI
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Text, isEditing ? Theme::ToVec4(Theme::AccentCyan) :
-                              Theme::ToVec4(Animation::LerpColorU32(TextDefault, Theme::TextPrimary, state.hoverAnim)));
+        ImGui::PushStyleColor(ImGuiCol_Text, isEditing ? Theme::ToVec4(Theme::AccentCyan()) :
+                              Theme::ToVec4(Animation::LerpColorU32(TextDefault, Theme::TextPrimary(), state.hoverAnim)));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, Rounding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(dynamicPaddingX, verticalPadding));

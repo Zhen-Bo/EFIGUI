@@ -36,7 +36,7 @@ namespace EFIGUI
         float cardWidth = ImGui::GetContentRegionAvail().x;
 
         // Calculate available width for description text
-        layout.availableTextWidth = cardWidth - (layout.textX - pos.x) - Theme::ToggleWidth - togglePadding;
+        layout.availableTextWidth = cardWidth - (layout.textX - pos.x) - Theme::ToggleWidth() - togglePadding;
 
         // Check if description needs wrapping
         ImVec2 descSize = ImGui::CalcTextSize(description);
@@ -67,8 +67,8 @@ namespace EFIGUI
         float hoverAnim,
         std::optional<uint8_t> bgAlpha)
     {
-        ImU32 bgBase = Theme::ButtonDefault;
-        ImU32 bgHoverTarget = Theme::ButtonHover;
+        ImU32 bgBase = Theme::ButtonDefault();
+        ImU32 bgHoverTarget = Theme::ButtonHover();
 
         // Apply custom alpha if specified
         if (bgAlpha.has_value())
@@ -78,7 +78,7 @@ namespace EFIGUI
         }
 
         ImU32 bgColor = Animation::LerpColorU32(bgBase, bgHoverTarget, hoverAnim);
-        draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
+        draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding());
     }
 
     // Draw wrapped description text
@@ -103,7 +103,7 @@ namespace EFIGUI
                 lineEnd = textStart + 1;
 
             draw->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-                ImVec2(textX, lineY), Theme::TextMuted, textStart, lineEnd);
+                ImVec2(textX, lineY), Theme::TextMuted(), textStart, lineEnd);
 
             lineY += lineHeight;
             textStart = lineEnd;
@@ -127,8 +127,8 @@ namespace EFIGUI
 
         // Toggle track
         ImU32 toggleColor = Animation::LerpColorU32(
-            Theme::ButtonDefault,
-            Theme::AccentCyan,
+            Theme::ButtonDefault(),
+            Theme::AccentCyan(),
             slideAnim
         );
         draw->AddRectFilled(
@@ -143,7 +143,7 @@ namespace EFIGUI
         draw->AddCircleFilled(
             ImVec2(knobX + KnobRadius, toggleY + ToggleHeight * 0.5f),
             KnobRadius,
-            Theme::TextPrimary
+            Theme::TextPrimary()
         );
     }
 
@@ -190,11 +190,11 @@ namespace EFIGUI
 
         // Icon
         float iconY = pos.y + (layout.size.y - IconSize) * 0.5f;
-        ImU32 iconColor = isOn ? Theme::AccentCyan : Theme::TextMuted;
+        ImU32 iconColor = isOn ? Theme::AccentCyan() : Theme::TextMuted();
         draw->AddText(ImVec2(layout.iconX + IconTextOffset, iconY + IconTextOffset), iconColor, icon);
 
         // Name
-        draw->AddText(ImVec2(layout.textX, pos.y + NameOffsetY), Theme::TextPrimary, name);
+        draw->AddText(ImVec2(layout.textX, pos.y + NameOffsetY), Theme::TextPrimary(), name);
 
         // Description
         if (layout.needsWrap && layout.availableTextWidth > MinTextWidth)
@@ -203,7 +203,7 @@ namespace EFIGUI
         }
         else
         {
-            draw->AddText(ImVec2(layout.textX, pos.y + DescOffsetY), Theme::TextMuted, description);
+            draw->AddText(ImVec2(layout.textX, pos.y + DescOffsetY), Theme::TextMuted(), description);
         }
 
         // Toggle
@@ -219,7 +219,7 @@ namespace EFIGUI
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
-        ImU32 effectiveAccentColor = accentColor.value_or(Theme::TextAccent);
+        ImU32 effectiveAccentColor = accentColor.value_or(Theme::TextAccent());
 
         draw->AddText(
             ImVec2(pos.x, pos.y),
@@ -232,7 +232,7 @@ namespace EFIGUI
         draw->AddLine(
             ImVec2(pos.x, lineY),
             ImVec2(pos.x + ImGui::GetContentRegionAvail().x, lineY),
-            Theme::BorderDefault
+            Theme::BorderDefault()
         );
 
         ImGui::Dummy(ImVec2(0, ImGui::GetFontSize() + SectionSpacing));

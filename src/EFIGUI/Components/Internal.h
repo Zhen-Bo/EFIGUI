@@ -151,7 +151,7 @@ namespace EFIGUI
     namespace ToggleConstants
     {
         // Animation
-        constexpr float AnimSpeed = 12.0f;                // Toggle slide animation speed
+        constexpr float AnimationSpeed = 12.0f;           // Toggle slide animation speed
 
         // Disabled state
         constexpr float DisabledAlpha = 0.4f;             // Alpha multiplier for disabled state

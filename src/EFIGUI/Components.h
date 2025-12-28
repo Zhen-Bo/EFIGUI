@@ -33,7 +33,22 @@ namespace EFIGUI
     // Navbar Header (Title + Collapse)
     // =============================================
 
-    // Navbar header with title and collapse button
+    // Configuration for NavbarHeader
+    struct NavbarHeaderConfig
+    {
+        const char* iconExpanded = "<<";                      // Icon when expanded
+        const char* iconCollapsed = ">>";                     // Icon when collapsed
+        bool collapsed = false;                               // Current collapse state
+        float width = 0.0f;                                   // Header width (0 = Theme::NavbarWidth())
+        bool* closeClicked = nullptr;                         // Output: close button clicked
+        std::optional<ImU32> glowColor = std::nullopt;        // Glow color (omit = Theme::AccentCyan)
+    };
+
+    // Navbar header with title and collapse button (Config struct version - recommended)
+    // Returns true if collapse button was clicked
+    bool NavbarHeader(const char* title, const NavbarHeaderConfig& config);
+
+    // Navbar header with title and collapse button (legacy API - for backward compatibility)
     // Returns true if collapse button was clicked
     // glowColor: icon glow color when collapsed (omit = use Theme::AccentCyan)
     bool NavbarHeader(const char* title, const char* iconExpanded, const char* iconCollapsed,
@@ -57,8 +72,9 @@ namespace EFIGUI
     // Left sidebar navigation item with icon
     // Returns true if clicked
     // collapsed: if true, only show icon (no label)
+    // width: item width (0 = use Theme::NavbarWidth())
     // accentColor: selected/hover accent color (omit = use Theme::AccentCyan)
-    bool NavItem(const char* icon, const char* label, bool selected, float width = Theme::NavbarWidth,
+    bool NavItem(const char* icon, const char* label, bool selected, float width = 0,
                  bool collapsed = false, std::optional<ImU32> accentColor = std::nullopt);
 
     // Navigation section header
@@ -71,7 +87,20 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
-    // Glowing button with neon effect
+    // Configuration for GlowButton
+    struct GlowButtonConfig
+    {
+        ImVec2 size = ImVec2(0, 0);                           // Button size (0 = auto-size)
+        std::optional<ImU32> glowColor = std::nullopt;        // Glow color (omit = Theme::AccentCyan)
+        bool forceHover = false;                              // Always show hover animation
+        std::optional<Layer> layer = std::nullopt;            // Rendering layer (omit = default)
+        std::optional<uint8_t> bgAlpha = std::nullopt;        // Background alpha (omit = default)
+    };
+
+    // Glowing button with neon effect (Config struct version - recommended)
+    bool GlowButton(const char* label, const GlowButtonConfig& config);
+
+    // Glowing button with neon effect (legacy API - for backward compatibility)
     // forceHover: if true, always show hover animation (marquee border)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
     // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
@@ -92,7 +121,20 @@ namespace EFIGUI
     // layer: rendering layer for glow effects (omit = use LayerConfig default)
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha = std::nullopt, std::optional<Layer> layer = std::nullopt);
 
-    // Cooldown button - shows a cooldown progress overlay
+    // Configuration for CooldownButton
+    struct CooldownButtonConfig
+    {
+        ImVec2 size = ImVec2(0, 0);                           // Button size (0 = auto-size)
+        ImU32 glowColor = IM_COL32(0, 245, 255, 255);         // Glow color (default = cyan)
+        float cooldownProgress = 0.0f;                        // 0.0 = no cooldown, 1.0 = full cooldown
+        std::optional<Layer> layer = std::nullopt;            // Rendering layer (omit = default)
+        std::optional<uint8_t> bgAlpha = std::nullopt;        // Background alpha (omit = default)
+    };
+
+    // Cooldown button - shows a cooldown progress overlay (Config struct version - recommended)
+    bool CooldownButton(const char* label, const CooldownButtonConfig& config);
+
+    // Cooldown button - shows a cooldown progress overlay (legacy API - for backward compatibility)
     // cooldownProgress: 0.0 = no cooldown, 1.0 = full cooldown (just started)
     // layer: rendering layer for glow/marquee effects (omit = use LayerConfig default)
     // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
@@ -209,7 +251,8 @@ namespace EFIGUI
     // Spacing / Layout Helpers
     // =============================================
 
-    void Spacing(float height = Theme::ItemSpacing);
+    // height: spacing height (0 = use Theme::ItemSpacing())
+    void Spacing(float height = 0);
     void Separator(std::optional<ImU32> color = std::nullopt);  // omit = Theme::BorderDefault
     void SameLine(float offset = 0.0f, float spacing = -1.0f);
 }

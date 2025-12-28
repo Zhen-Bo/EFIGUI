@@ -23,7 +23,7 @@ namespace EFIGUI
         draw->AddRectFilled(
             pos,
             ImVec2(pos.x + size.x, pos.y + size.y),
-            Theme::ButtonDefault,
+            Theme::ButtonDefault(),
             size.y * 0.5f
         );
 
@@ -34,14 +34,14 @@ namespace EFIGUI
             Draw::RectGradientH(
                 pos,
                 ImVec2(pos.x + fillWidth, pos.y + size.y),
-                Theme::AccentPurple,
-                Theme::AccentCyan,
+                Theme::AccentPurple(),
+                Theme::AccentCyan(),
                 size.y * 0.5f
             );
 
             // Glow effect using layer system
             ImVec2 fillSize = ImVec2(fillWidth, size.y);
-            Draw::GlowLayers(pos, fillSize, Theme::AccentCyan, 0.5f, Theme::ProgressGlowLayers, Theme::ProgressGlowExpand, size.y * 0.5f, layer);
+            Draw::GlowLayers(pos, fillSize, Theme::AccentCyan(), 0.5f, Theme::ProgressGlowLayers(), Theme::ProgressGlowExpand(), size.y * 0.5f, layer);
         }
 
         // Overlay text
@@ -50,7 +50,7 @@ namespace EFIGUI
             ImVec2 textSize = ImGui::CalcTextSize(overlay);
             draw->AddText(
                 ImVec2(pos.x + (size.x - textSize.x) * 0.5f, pos.y + size.y + 4.0f),
-                Theme::TextSecondary,
+                Theme::TextSecondary(),
                 overlay
             );
         }
@@ -63,7 +63,7 @@ namespace EFIGUI
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
-        float effectiveDotSize = dotSize.value_or(Theme::DefaultDotSize);
+        float effectiveDotSize = dotSize.value_or(Theme::DefaultDotSize());
         float alpha = pulse ? (Animation::Pulse(2.0f) * 0.5f + 0.5f) : 1.0f;
 
         auto colorRGB = Theme::ExtractRGB(color);
@@ -77,7 +77,7 @@ namespace EFIGUI
 
         draw->AddText(
             ImVec2(pos.x + effectiveDotSize + 8.0f, pos.y),
-            Theme::TextPrimary,
+            Theme::TextPrimary(),
             label
         );
 
