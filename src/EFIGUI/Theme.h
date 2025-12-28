@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include "ThemeConfig.h"
 #include <cstdint>
 
 namespace EFIGUI
@@ -36,142 +37,199 @@ namespace EFIGUI
         inline const char* Bolt        = "B";           // Lightning bolt/performance
     }
 
+    // =============================================
+    // Theme Manager (Singleton)
+    // =============================================
+    // Provides runtime-configurable theme settings.
+    // Access via Theme::GetConfig() or use convenience accessors.
+
+    class ThemeManager
+    {
+    public:
+        // Singleton access
+        static ThemeManager& Instance();
+
+        // Configuration access
+        ThemeConfig& GetConfig() { return m_config; }
+        const ThemeConfig& GetConfig() const { return m_config; }
+
+        // Replace entire configuration
+        void SetConfig(const ThemeConfig& config) { m_config = config; }
+
+        // Reset to default (Cyberpunk theme)
+        void ResetToDefault() { m_config = ThemeConfig{}; }
+
+        // Load preset theme
+        void LoadPreset(ThemePreset preset);
+
+        // Convenience accessors for individual sections
+        ThemeColors& Colors() { return m_config.colors; }
+        ThemeDimensions& Dimensions() { return m_config.dimensions; }
+        ThemeEffects& Effects() { return m_config.effects; }
+        ThemeAnimation& Animation() { return m_config.animation; }
+
+        const ThemeColors& Colors() const { return m_config.colors; }
+        const ThemeDimensions& Dimensions() const { return m_config.dimensions; }
+        const ThemeEffects& Effects() const { return m_config.effects; }
+        const ThemeAnimation& Animation() const { return m_config.animation; }
+
+    private:
+        ThemeManager() = default;
+        ThemeManager(const ThemeManager&) = delete;
+        ThemeManager& operator=(const ThemeManager&) = delete;
+
+        ThemeConfig m_config;
+    };
+
     namespace Theme
     {
         // =============================================
-        // Color Palette - Cyberpunk + Glassmorphism
+        // Configuration Access
         // =============================================
+
+        // Get the current theme configuration (mutable)
+        inline ThemeConfig& GetConfig() { return ThemeManager::Instance().GetConfig(); }
+
+        // Get the current theme configuration (const)
+        inline const ThemeConfig& GetConfigConst() { return ThemeManager::Instance().GetConfig(); }
+
+        // Set entire theme configuration
+        inline void SetConfig(const ThemeConfig& config) { ThemeManager::Instance().SetConfig(config); }
+
+        // Reset to default Cyberpunk theme
+        inline void ResetToDefault() { ThemeManager::Instance().ResetToDefault(); }
+
+        // Load a preset theme
+        inline void LoadPreset(ThemePreset preset) { ThemeManager::Instance().LoadPreset(preset); }
+
+        // =============================================
+        // Color Accessors (Backward Compatible)
+        // =============================================
+        // These accessors maintain API compatibility with existing code
+        // that uses Theme::AccentCyan, Theme::BackgroundDark, etc.
 
         // Background colors
-        constexpr ImU32 BackgroundDark      = IM_COL32(10, 10, 15, 255);      // #0a0a0f
-        constexpr ImU32 BackgroundPanel     = IM_COL32(20, 20, 35, 200);      // Semi-transparent panel
-        constexpr ImU32 BackgroundNavbar    = IM_COL32(15, 15, 25, 240);      // Left navbar
-        constexpr ImU32 BackgroundContent   = IM_COL32(25, 25, 45, 180);      // Content area (glass)
+        inline ImU32 BackgroundDark()    { return GetConfigConst().colors.backgroundDark; }
+        inline ImU32 BackgroundPanel()   { return GetConfigConst().colors.backgroundPanel; }
+        inline ImU32 BackgroundNavbar()  { return GetConfigConst().colors.backgroundNavbar; }
+        inline ImU32 BackgroundContent() { return GetConfigConst().colors.backgroundContent; }
 
         // Accent colors (Neon)
-        constexpr ImU32 AccentCyan          = IM_COL32(0, 245, 255, 255);     // #00f5ff
-        constexpr ImU32 AccentPurple        = IM_COL32(184, 41, 255, 255);    // #b829ff
-        constexpr ImU32 AccentPink          = IM_COL32(255, 41, 117, 255);    // #ff2975
-        constexpr ImU32 AccentGreen         = IM_COL32(57, 255, 20, 255);     // #39ff14
+        inline ImU32 AccentCyan()        { return GetConfigConst().colors.accentPrimary; }
+        inline ImU32 AccentPurple()      { return GetConfigConst().colors.accentSecondary; }
+        inline ImU32 AccentPink()        { return GetConfigConst().colors.accentTertiary; }
+        inline ImU32 AccentGreen()       { return GetConfigConst().colors.accentSuccess; }
 
         // Accent with alpha (for glow effects)
-        constexpr ImU32 AccentCyanGlow      = IM_COL32(0, 245, 255, 80);
-        constexpr ImU32 AccentPurpleGlow    = IM_COL32(184, 41, 255, 80);
+        inline ImU32 AccentCyanGlow()    { return GetConfigConst().colors.accentPrimaryGlow; }
+        inline ImU32 AccentPurpleGlow()  { return GetConfigConst().colors.accentSecondaryGlow; }
 
         // Text colors
-        constexpr ImU32 TextPrimary         = IM_COL32(255, 255, 255, 255);   // White
-        constexpr ImU32 TextSecondary       = IM_COL32(180, 180, 200, 255);   // Light gray
-        constexpr ImU32 TextMuted           = IM_COL32(100, 100, 120, 255);   // Muted
-        constexpr ImU32 TextAccent          = IM_COL32(0, 245, 255, 255);     // Cyan
+        inline ImU32 TextPrimary()       { return GetConfigConst().colors.textPrimary; }
+        inline ImU32 TextSecondary()     { return GetConfigConst().colors.textSecondary; }
+        inline ImU32 TextMuted()         { return GetConfigConst().colors.textMuted; }
+        inline ImU32 TextAccent()        { return GetConfigConst().colors.textAccent; }
 
         // Border colors
-        constexpr ImU32 BorderDefault       = IM_COL32(60, 60, 80, 255);
-        constexpr ImU32 BorderHover         = IM_COL32(0, 245, 255, 180);
-        constexpr ImU32 BorderActive        = IM_COL32(0, 245, 255, 255);
+        inline ImU32 BorderDefault()     { return GetConfigConst().colors.borderDefault; }
+        inline ImU32 BorderHover()       { return GetConfigConst().colors.borderHover; }
+        inline ImU32 BorderActive()      { return GetConfigConst().colors.borderActive; }
 
         // Button colors
-        constexpr ImU32 ButtonDefault       = IM_COL32(40, 40, 60, 200);
-        constexpr ImU32 ButtonHover         = IM_COL32(50, 50, 80, 220);
-        constexpr ImU32 ButtonActive        = IM_COL32(0, 180, 200, 255);
+        inline ImU32 ButtonDefault()     { return GetConfigConst().colors.buttonDefault; }
+        inline ImU32 ButtonHover()       { return GetConfigConst().colors.buttonHover; }
+        inline ImU32 ButtonActive()      { return GetConfigConst().colors.buttonActive; }
 
         // Title bar gradient
-        constexpr ImU32 TitleBarLeft        = IM_COL32(30, 30, 50, 255);
-        constexpr ImU32 TitleBarRight       = IM_COL32(50, 30, 70, 255);
+        inline ImU32 TitleBarLeft()      { return GetConfigConst().colors.titleBarLeft; }
+        inline ImU32 TitleBarRight()     { return GetConfigConst().colors.titleBarRight; }
 
         // Status colors
-        constexpr ImU32 StatusSuccess       = IM_COL32(57, 255, 20, 255);     // Green
-        constexpr ImU32 StatusWarning       = IM_COL32(255, 200, 0, 255);     // Yellow
-        constexpr ImU32 StatusError         = IM_COL32(255, 60, 60, 255);     // Red
-        constexpr ImU32 StatusInfo          = IM_COL32(0, 200, 255, 255);     // Cyan
+        inline ImU32 StatusSuccess()     { return GetConfigConst().colors.statusSuccess; }
+        inline ImU32 StatusWarning()     { return GetConfigConst().colors.statusWarning; }
+        inline ImU32 StatusError()       { return GetConfigConst().colors.statusError; }
+        inline ImU32 StatusInfo()        { return GetConfigConst().colors.statusInfo; }
 
         // =============================================
-        // ImVec4 versions (for ImGui style colors)
+        // Dimension Accessors (Backward Compatible)
+        // =============================================
+
+        inline float WindowRounding()       { return GetConfigConst().dimensions.windowRounding; }
+        inline float FrameRounding()        { return GetConfigConst().dimensions.frameRounding; }
+        inline float ButtonRounding()       { return GetConfigConst().dimensions.buttonRounding; }
+        inline float NavItemRounding()      { return GetConfigConst().dimensions.navItemRounding; }
+
+        inline float TitleBarHeight()       { return GetConfigConst().dimensions.titleBarHeight; }
+        inline float NavbarWidth()          { return GetConfigConst().dimensions.navbarWidth; }
+        inline float NavbarWidthCollapsed() { return GetConfigConst().dimensions.navbarWidthCollapsed; }
+        inline float NavItemHeight()        { return GetConfigConst().dimensions.navItemHeight; }
+        inline float NavItemPadding()       { return GetConfigConst().dimensions.navItemPadding; }
+
+        inline float ContentPadding()       { return GetConfigConst().dimensions.contentPadding; }
+        inline float ItemSpacing()          { return GetConfigConst().dimensions.itemSpacing; }
+
+        inline float WindowMinWidth()       { return GetConfigConst().dimensions.windowMinWidth; }
+        inline float WindowMinHeight()      { return GetConfigConst().dimensions.windowMinHeight; }
+
+        inline float ToggleWidth()          { return GetConfigConst().dimensions.toggleWidth; }
+        inline float ToggleHeight()         { return GetConfigConst().dimensions.toggleHeight; }
+        inline float ToggleKnobSize()       { return GetConfigConst().dimensions.toggleKnobSize; }
+        inline float ToggleLabelGap()       { return GetConfigConst().dimensions.toggleLabelGap; }
+
+        // Font sizes
+        inline float FontSizeDefault()      { return GetConfigConst().dimensions.fontSizeDefault; }
+        inline float FontSizeSmall()        { return GetConfigConst().dimensions.fontSizeSmall; }
+        inline float FontSizeLarge()        { return GetConfigConst().dimensions.fontSizeLarge; }
+        inline float FontSizeTitle()        { return GetConfigConst().dimensions.fontSizeTitle; }
+        inline float FontSizeIcon()         { return GetConfigConst().dimensions.fontSizeIcon; }
+
+        // =============================================
+        // Effect Accessors (Backward Compatible)
+        // =============================================
+
+        inline float GlowIntensity()        { return GetConfigConst().effects.glowIntensity; }
+        inline float GlowRadius()           { return GetConfigConst().effects.glowRadius; }
+
+        // Button glow settings
+        inline int   ButtonGlowLayers()     { return GetConfigConst().effects.buttonGlowLayers; }
+        inline float ButtonGlowExpand()     { return GetConfigConst().effects.buttonGlowExpand; }
+
+        // Colored button glow settings
+        inline int   ColoredButtonGlowLayers() { return GetConfigConst().effects.coloredButtonGlowLayers; }
+        inline float ColoredButtonGlowExpand() { return GetConfigConst().effects.coloredButtonGlowExpand; }
+
+        // Slider glow settings
+        inline int   SliderGlowLayers()     { return GetConfigConst().effects.sliderGlowLayers; }
+        inline float SliderKnobGlowExpand() { return GetConfigConst().effects.sliderKnobGlowExpand; }
+        inline float SliderInputGlowExpand(){ return GetConfigConst().effects.sliderInputGlowExpand; }
+
+        // Progress bar glow settings
+        inline int   ProgressGlowLayers()   { return GetConfigConst().effects.progressGlowLayers; }
+        inline float ProgressGlowExpand()   { return GetConfigConst().effects.progressGlowExpand; }
+
+        // Default alpha values
+        inline uint8_t DefaultOverlayAlpha()     { return GetConfigConst().effects.defaultOverlayAlpha; }
+        inline uint8_t DefaultBgAlpha()          { return GetConfigConst().effects.defaultBgAlpha; }
+        inline uint8_t DefaultButtonBgAlpha()    { return GetConfigConst().effects.defaultButtonBgAlpha; }
+        inline uint8_t DefaultButtonHoverAlpha() { return GetConfigConst().effects.defaultButtonHoverAlpha; }
+        inline float   DefaultDotSize()          { return GetConfigConst().effects.defaultDotSize; }
+        inline float   DefaultGlowMaxAlpha()     { return GetConfigConst().effects.defaultGlowMaxAlpha; }
+        inline float   DefaultGlowBaseAlpha()    { return GetConfigConst().effects.defaultGlowBaseAlpha; }
+
+        // =============================================
+        // Animation Accessors (Backward Compatible)
+        // =============================================
+
+        inline float AnimationSpeed()       { return GetConfigConst().animation.defaultSpeed; }
+        inline float PulseFrequency()       { return GetConfigConst().animation.pulseFrequency; }
+
+        // =============================================
+        // ImVec4 Conversion Utility
         // =============================================
 
         inline ImVec4 ToVec4(ImU32 color) {
             return ImGui::ColorConvertU32ToFloat4(color);
         }
-
-        // =============================================
-        // Dimensions
-        // =============================================
-
-        constexpr float WindowRounding      = 12.0f;
-        constexpr float FrameRounding       = 8.0f;
-        constexpr float ButtonRounding      = 8.0f;
-        constexpr float NavItemRounding     = 10.0f;
-
-        constexpr float TitleBarHeight      = 36.0f;
-        constexpr float NavbarWidth         = 200.0f;
-        constexpr float NavbarWidthCollapsed = 65.0f;
-        constexpr float NavItemHeight       = 40.0f;
-        constexpr float NavItemPadding      = 8.0f;
-
-        constexpr float ContentPadding      = 18.0f;
-        constexpr float ItemSpacing         = 8.0f;
-
-        constexpr float GlowIntensity       = 0.6f;
-        constexpr float GlowRadius          = 8.0f;
-
-        // Window constraints
-        constexpr float WindowMinWidth      = 700.0f;
-        constexpr float WindowMinHeight     = 550.0f;
-
-        // Toggle dimensions
-        constexpr float ToggleWidth         = 48.0f;
-        constexpr float ToggleHeight        = 24.0f;
-        constexpr float ToggleKnobSize      = 18.0f;
-        constexpr float ToggleLabelGap      = 12.0f;
-
-        // =============================================
-        // Font sizes
-        // =============================================
-
-        constexpr float FontSizeDefault     = 16.0f;
-        constexpr float FontSizeSmall       = 14.0f;
-        constexpr float FontSizeLarge       = 18.0f;
-        constexpr float FontSizeTitle       = 20.0f;
-        constexpr float FontSizeIcon        = 18.0f;
-
-        // =============================================
-        // Animation
-        // =============================================
-
-        constexpr float AnimationSpeed      = 8.0f;
-        constexpr float PulseFrequency      = 2.0f;
-
-        // =============================================
-        // Default Values (for optional parameters)
-        // =============================================
-
-        constexpr uint8_t DefaultOverlayAlpha       = 200;      // Borderless window overlay
-        constexpr uint8_t DefaultBgAlpha            = 30;       // Icon button hover background
-        constexpr uint8_t DefaultButtonBgAlpha      = 200;      // Colored button background
-        constexpr uint8_t DefaultButtonHoverAlpha   = 220;      // Colored button hover background
-        constexpr float   DefaultDotSize            = 8.0f;     // Status indicator dot size
-        constexpr float   DefaultGlowMaxAlpha       = 75.0f;    // Glow animation max alpha delta
-        constexpr float   DefaultGlowBaseAlpha      = 180.0f;   // Glow animation base alpha
-
-        // =============================================
-        // Glow Effect Parameters
-        // =============================================
-
-        // GlowButton / CooldownButton glow settings
-        constexpr int   ButtonGlowLayers            = 5;        // Number of glow layers for buttons
-        constexpr float ButtonGlowExpand            = 2.0f;     // Expansion per layer (pixels)
-
-        // ColoredButton glow settings (more subtle)
-        constexpr int   ColoredButtonGlowLayers     = 4;        // Fewer layers for subtle effect
-        constexpr float ColoredButtonGlowExpand     = 1.5f;     // Smaller expansion
-
-        // Slider glow settings
-        constexpr int   SliderGlowLayers            = 4;        // Layers for slider knob/input box
-        constexpr float SliderKnobGlowExpand        = 2.0f;     // Knob glow expansion
-        constexpr float SliderInputGlowExpand       = 1.5f;     // Input box glow expansion
-
-        // Progress bar glow settings
-        constexpr int   ProgressGlowLayers          = 4;        // Layers for progress bar
-        constexpr float ProgressGlowExpand          = 1.5f;     // Progress bar glow expansion
 
         // =============================================
         // Color Utilities
@@ -218,7 +276,8 @@ namespace EFIGUI
         // Apply EFIGUI theme to ImGui
         void Apply();
 
-        // Apply custom colors (override defaults)
+        // Apply custom colors (override defaults) - Legacy API
+        // Note: Prefer using GetConfig().colors.accentPrimary = ... directly
         void SetAccentColor(ImU32 primary, ImU32 secondary = 0);
     }
 }

@@ -13,7 +13,9 @@ namespace EFIGUI
 
     void Spacing(float height)
     {
-        ImGui::Dummy(ImVec2(0, height));
+        // Use theme default if height is 0
+        float effectiveHeight = (height <= 0) ? Theme::ItemSpacing() : height;
+        ImGui::Dummy(ImVec2(0, effectiveHeight));
     }
 
     void Separator(std::optional<ImU32> color)
@@ -23,7 +25,7 @@ namespace EFIGUI
         ImVec2 pos = ImGui::GetCursorScreenPos();
         float width = ImGui::GetContentRegionAvail().x;
 
-        ImU32 effectiveColor = color.value_or(Theme::BorderDefault);
+        ImU32 effectiveColor = color.value_or(Theme::BorderDefault());
 
         ImGui::GetWindowDrawList()->AddLine(
             ImVec2(pos.x, pos.y + SeparatorOffsetY),
