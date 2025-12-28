@@ -22,20 +22,20 @@ namespace EFIGUI
         ImVec2 titleMax = ImVec2(windowPos.x + windowSize.x, windowPos.y + titleHeight);
 
         // Gradient background
-        Draw::RectGradientH(titleMin, titleMax, Theme::TitleBarLeft, Theme::TitleBarRight, Theme::WindowRounding);
+        Draw::RectGradientH(titleMin, titleMax, Theme::TitleBarLeft(), Theme::TitleBarRight(), Theme::WindowRounding());
 
         // Only round top corners - fill the rest
         draw->AddRectFilled(
-            ImVec2(titleMin.x, titleMin.y + Theme::WindowRounding),
+            ImVec2(titleMin.x, titleMin.y + Theme::WindowRounding()),
             ImVec2(titleMax.x, titleMax.y),
-            Theme::TitleBarLeft
+            Theme::TitleBarLeft()
         );
 
         // Neon accent line at bottom of title
         draw->AddLine(
             ImVec2(titleMin.x, titleMax.y),
             ImVec2(titleMax.x, titleMax.y),
-            Theme::AccentCyan,
+            Theme::AccentCyan(),
             1.0f
         );
     }
@@ -63,7 +63,7 @@ namespace EFIGUI
             ImVec2(closeX + TitleButtonSize, btnY + TitleButtonSize)
         );
 
-        ImU32 closeColor = closeHovered ? Theme::StatusError : Theme::TextSecondary;
+        ImU32 closeColor = closeHovered ? Theme::StatusError() : Theme::TextSecondary();
         if (closeHovered && ImGui::IsMouseClicked(0))
         {
             if (p_open) *p_open = false;
@@ -87,7 +87,7 @@ namespace EFIGUI
             ImVec2(minX + TitleButtonSize, btnY + TitleButtonSize)
         );
 
-        ImU32 minColor = minHovered ? Theme::AccentCyan : Theme::TextSecondary;
+        ImU32 minColor = minHovered ? Theme::AccentCyan() : Theme::TextSecondary();
         Draw::IconCentered(
             ImVec2(minX, btnY),
             ImVec2(minX + TitleButtonSize, btnY + TitleButtonSize),
@@ -151,7 +151,7 @@ namespace EFIGUI
         flags |= ImGuiWindowFlags_NoTitleBar;
         flags |= ImGuiWindowFlags_NoCollapse;
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(Theme::WindowMinWidth, Theme::WindowMinHeight), ImVec2(FLT_MAX, FLT_MAX));
+        ImGui::SetNextWindowSizeConstraints(ImVec2(Theme::WindowMinWidth(), Theme::WindowMinHeight()), ImVec2(FLT_MAX, FLT_MAX));
 
         if (!ImGui::Begin(name, p_open, flags))
         {
@@ -162,14 +162,14 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
         ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 windowSize = ImGui::GetWindowSize();
-        float titleHeight = Theme::TitleBarHeight;
+        float titleHeight = Theme::TitleBarHeight();
 
         // Draw title bar background
         DrawTitleBarBackground(draw, windowPos, windowSize, titleHeight);
 
         // Title text
         ImVec2 textPos = ImVec2(windowPos.x + TitleTextPadding, windowPos.y + (titleHeight - ImGui::GetFontSize()) * 0.5f);
-        draw->AddText(textPos, Theme::TextPrimary, name);
+        draw->AddText(textPos, Theme::TextPrimary(), name);
 
         // Draw window controls and get leftmost button position
         float leftmostBtnX = DrawWindowControls(draw, windowPos, windowSize, titleHeight, p_open);
@@ -202,7 +202,7 @@ namespace EFIGUI
         flags |= ImGuiWindowFlags_NoResize;  // We handle resize manually (no top edge)
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, Theme::WindowRounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, Theme::WindowRounding());
         ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
 
         if (!ImGui::Begin(name, p_open, flags))
@@ -222,7 +222,7 @@ namespace EFIGUI
         ImVec2 windowSize = ImGui::GetWindowSize();
 
         // Determine overlay alpha (nullopt = use Theme default)
-        uint8_t effectiveOverlayAlpha = overlayAlpha.value_or(Theme::DefaultOverlayAlpha);
+        uint8_t effectiveOverlayAlpha = overlayAlpha.value_or(Theme::DefaultOverlayAlpha());
 
         // Try to use blurred background for glassmorphism effect
         void* blurredBg = GetBlurResult();
@@ -243,7 +243,7 @@ namespace EFIGUI
                 ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y),
                 uv0, uv1,
                 IM_COL32(255, 255, 255, 255),
-                Theme::WindowRounding
+                Theme::WindowRounding()
             );
 
             // Dark overlay for better contrast and cyberpunk look
@@ -251,7 +251,7 @@ namespace EFIGUI
                 windowPos,
                 ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y),
                 IM_COL32(10, 10, 20, effectiveOverlayAlpha),
-                Theme::WindowRounding
+                Theme::WindowRounding()
             );
         }
         else
@@ -260,8 +260,8 @@ namespace EFIGUI
             draw->AddRectFilled(
                 windowPos,
                 ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y),
-                Theme::BackgroundDark,
-                Theme::WindowRounding
+                Theme::BackgroundDark(),
+                Theme::WindowRounding()
             );
         }
 
@@ -269,8 +269,8 @@ namespace EFIGUI
         draw->AddRect(
             windowPos,
             ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y),
-            Theme::BorderDefault,
-            Theme::WindowRounding,
+            Theme::BorderDefault(),
+            Theme::WindowRounding(),
             0,
             1.0f
         );
@@ -287,6 +287,12 @@ namespace EFIGUI
     // Navbar Header
     // =============================================
 
+    bool NavbarHeader(const char* title, const NavbarHeaderConfig& config)
+    {
+        return NavbarHeader(title, config.iconExpanded, config.iconCollapsed,
+                           config.collapsed, config.width, config.closeClicked, config.glowColor);
+    }
+
     bool NavbarHeader(const char* title, const char* iconExpanded, const char* iconCollapsed,
                       bool collapsed, float width, bool* closeClicked, std::optional<ImU32> glowColor)
     {
@@ -296,18 +302,18 @@ namespace EFIGUI
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        float headerHeight = Theme::TitleBarHeight;
-        ImVec2 size = ImVec2(width - Theme::NavItemPadding * 2, headerHeight);
+        float headerHeight = Theme::TitleBarHeight();
+        ImVec2 size = ImVec2(width - Theme::NavItemPadding() * 2, headerHeight);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Get effective glow color
-        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
+        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan());
         auto glowRGB = Theme::ExtractRGB(effectiveGlowColor);
 
         // Header background (gradient)
         Draw::RectGradientH(pos, ImVec2(pos.x + size.x, pos.y + size.y),
-                           Theme::TitleBarLeft, Theme::TitleBarRight, Theme::NavItemRounding);
+                           Theme::TitleBarLeft(), Theme::TitleBarRight(), Theme::NavItemRounding());
 
         // Bottom accent line
         draw->AddLine(
@@ -343,7 +349,7 @@ namespace EFIGUI
             else
             {
                 // Pulsing glow effect
-                int glowAlpha = (int)(Theme::DefaultGlowBaseAlpha + glowAnim * Theme::DefaultGlowMaxAlpha);
+                int glowAlpha = (int)(Theme::DefaultGlowBaseAlpha() + glowAnim * Theme::DefaultGlowMaxAlpha());
                 iconColor = IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, glowAlpha);
             }
 
@@ -382,7 +388,7 @@ namespace EFIGUI
 
             // Title text
             float textX = iconX + ImGui::GetFontSize() + NavbarIconPadding;
-            draw->AddText(ImVec2(textX, contentY), Theme::TextPrimary, title);
+            draw->AddText(ImVec2(textX, contentY), Theme::TextPrimary(), title);
 
             // Collapse button on far right
             float collapseX = pos.x + size.x - NavbarButtonSize - NavbarButtonPadding;
@@ -393,7 +399,7 @@ namespace EFIGUI
             bool collapseHovered = ImGui::IsItemHovered();
             bool collapseClicked = ImGui::IsItemClicked();
 
-            ImU32 collapseColor = collapseHovered ? effectiveGlowColor : Theme::TextSecondary;
+            ImU32 collapseColor = collapseHovered ? effectiveGlowColor : Theme::TextSecondary();
             Draw::IconCentered(
                 ImVec2(collapseX, btnY),
                 ImVec2(collapseX + NavbarButtonSize, btnY + NavbarButtonSize),
