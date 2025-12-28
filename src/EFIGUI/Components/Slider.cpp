@@ -8,16 +8,11 @@
 namespace EFIGUI
 {
     // =============================================
-    // Slider Layout Constants
+    // Slider Local Constants (non-configurable)
     // =============================================
 
-    namespace SliderLayout
+    namespace SliderLocal
     {
-        constexpr float Height = 24.0f;
-        constexpr float TrackHeight = 6.0f;
-        constexpr float KnobRadius = 8.0f;
-        constexpr float ValueInputWidth = 55.0f;
-        constexpr float InputGap = 8.0f;
         constexpr float LabelGap = 12.0f;
         constexpr float MinSliderWidth = 80.0f;
         constexpr float GlowExpandSize = 4.0f;
@@ -54,9 +49,10 @@ namespace EFIGUI
     static bool SliderTrack(const char* label, float* value, float min, float max,
                             float startX, float trackY, float sliderWidth,
                             const Animation::WidgetState& state, bool sliderActive,
-                            std::optional<Layer> layer)
+                            float trackHeight, float knobRadius, ImU32 glowColor,
+                            int glowLayers, float knobGlowExpand, std::optional<Layer> layer)
     {
-        using namespace SliderLayout;
+        using namespace SliderLocal;
 
         if (!value) return false;
 
@@ -93,9 +89,9 @@ namespace EFIGUI
         // Draw background track
         draw->AddRectFilled(
             ImVec2(startX, trackY),
-            ImVec2(startX + sliderWidth, trackY + TrackHeight),
+            ImVec2(startX + sliderWidth, trackY + trackHeight),
             Theme::ButtonDefault(),
-            TrackHeight * 0.5f
+            trackHeight * 0.5f
         );
 
         // Draw filled portion with gradient
@@ -103,10 +99,10 @@ namespace EFIGUI
         {
             Draw::RectGradientH(
                 ImVec2(startX, trackY),
-                ImVec2(startX + fillWidth, trackY + TrackHeight),
+                ImVec2(startX + fillWidth, trackY + trackHeight),
                 Theme::AccentPurple(),
                 Theme::AccentCyan(),
-                TrackHeight * 0.5f
+                trackHeight * 0.5f
             );
 
             // Glow effect on hover/active
@@ -115,7 +111,7 @@ namespace EFIGUI
                 float glowIntensity = sliderActive ? ActiveGlowIntensity : state.hoverAnim * 0.5f;
                 Draw::RectGlow(
                     ImVec2(startX, trackY),
-                    ImVec2(startX + fillWidth, trackY + TrackHeight),
+                    ImVec2(startX + fillWidth, trackY + trackHeight),
                     Theme::AccentCyanGlow(),
                     glowIntensity,
                     GlowExpandSize
@@ -125,29 +121,43 @@ namespace EFIGUI
 
         // Draw knob
         float knobX = startX + fillWidth;
-        float knobY = trackY + TrackHeight * 0.5f;
+        float knobY = trackY + trackHeight * 0.5f;
 
         // Knob glow effect
         if (state.hoverAnim > HoverThreshold || sliderActive)
         {
             float glowIntensity = sliderActive ? ActiveGlowIntensity : state.hoverAnim * 0.5f;
-            Draw::GlowLayersCircle(ImVec2(knobX, knobY), KnobRadius + 2.0f, Theme::AccentCyan(),
-                                    glowIntensity, Theme::SliderGlowLayers(), Theme::SliderKnobGlowExpand(), layer);
+            Draw::GlowLayersCircle(ImVec2(knobX, knobY), knobRadius + 2.0f, glowColor,
+                                    glowIntensity, glowLayers, knobGlowExpand, layer);
         }
 
         ImU32 knobColor = sliderActive ? Theme::AccentCyan() : Theme::TextPrimary();
-        draw->AddCircleFilled(ImVec2(knobX, knobY), KnobRadius, knobColor);
+        draw->AddCircleFilled(ImVec2(knobX, knobY), knobRadius, knobColor);
 
         return changed;
     }
 
     // =============================================
-    // Public Slider Functions
+    // Public Slider Functions (Config version - recommended)
     // =============================================
 
-    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format, std::optional<Layer> layer)
+    bool ModernSliderFloat(const char* label, float* value, float min, float max,
+                           const char* format, std::optional<ImU32> glowColor,
+                           const SliderConfig& config)
     {
-        using namespace SliderLayout;
+        using namespace SliderLocal;
+
+        // Resolve config values with Theme defaults
+        const auto& t = Theme::Slider();
+        const float height = Resolve(config.height, t.height);
+        const float trackHeight = Resolve(config.trackHeight, t.trackHeight);
+        const float knobRadius = Resolve(config.knobRadius, t.knobRadius);
+        const float inputWidth = Resolve(config.inputWidth, t.inputWidth);
+        const float inputGap = Resolve(config.inputGap, t.inputGap);
+        const int glowLayers = Resolve(config.glowLayers, t.glowLayers);
+        const float knobGlowExpand = Resolve(config.knobGlowExpand, t.knobGlowExpand);
+        const ImU32 effectiveGlowColor = glowColor.value_or(
+            config.glowColor.value_or(Theme::AccentCyan()));
 
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -169,9 +179,9 @@ namespace EFIGUI
         }
 
         // Calculate layout dimensions
-        float knobPadding = KnobRadius + 2.0f;
-        float valueInputHeight = Height - 2.0f;
-        float sliderWidth = ImGui::GetContentRegionAvail().x - labelWidth - ValueInputWidth - knobPadding * 2 - InputGap;
+        float knobPadding = knobRadius + 2.0f;
+        float valueInputHeight = height - 2.0f;
+        float sliderWidth = ImGui::GetContentRegionAvail().x - labelWidth - inputWidth - knobPadding * 2 - inputGap;
         sliderWidth = std::max(sliderWidth, MinSliderWidth);
 
         bool changed = false;
@@ -179,50 +189,89 @@ namespace EFIGUI
         // Draw label
         if (!labelHidden)
         {
-            draw->AddText(ImVec2(pos.x, pos.y + (Height - textSize.y) * 0.5f), Theme::TextPrimary(), label);
+            draw->AddText(ImVec2(pos.x, pos.y + (height - textSize.y) * 0.5f), Theme::TextPrimary(), label);
         }
 
         // Slider track area calculations
         float sliderStartX = pos.x + labelWidth + knobPadding;
-        float trackY = pos.y + (Height - TrackHeight) * 0.5f;
+        float trackY = pos.y + (height - trackHeight) * 0.5f;
 
         // Create invisible button for slider interaction
         ImGui::SetCursorScreenPos(ImVec2(sliderStartX - knobPadding, pos.y));
-        ImGui::InvisibleButton((std::string(label) + "_slider").c_str(), ImVec2(sliderWidth + knobPadding * 2, Height));
+        ImGui::InvisibleButton((std::string(label) + "_slider").c_str(), ImVec2(sliderWidth + knobPadding * 2, height));
         bool sliderHovered = ImGui::IsItemHovered();
         bool sliderActive = ImGui::IsItemActive();
 
         Animation::UpdateWidgetState(state, sliderHovered, sliderActive, false);
 
         // Draw and handle slider track
-        if (SliderTrack(label, value, min, max, sliderStartX, trackY, sliderWidth, state, sliderActive, layer))
+        if (SliderTrack(label, value, min, max, sliderStartX, trackY, sliderWidth, state, sliderActive,
+                        trackHeight, knobRadius, effectiveGlowColor, glowLayers, knobGlowExpand, config.layer))
         {
             changed = true;
         }
 
-        // Value input box - using NumericInput component
-        float inputX = sliderStartX + sliderWidth + knobPadding + InputGap;
-        float inputY = pos.y + (Height - valueInputHeight) * 0.5f;
-
-        ImGui::SetCursorScreenPos(ImVec2(inputX, inputY));
-
-        NumericInputConfig inputConfig;
-        inputConfig.min = min;
-        inputConfig.max = max;
-        inputConfig.precision = precision;
-        inputConfig.width = ValueInputWidth;
-
-        // Use unique ID for the input to avoid collision with slider
-        std::string inputLabel = std::string("##") + label + "_value";
-        if (NumericInput(inputLabel.c_str(), value, inputConfig, layer))
+        // Value input box - using NumericInput component (if enabled)
+        if (config.showInput)
         {
-            changed = true;
+            float inputX = sliderStartX + sliderWidth + knobPadding + inputGap;
+            float inputY = pos.y + (height - valueInputHeight) * 0.5f;
+
+            ImGui::SetCursorScreenPos(ImVec2(inputX, inputY));
+
+            NumericInputConfig inputConfig;
+            inputConfig.min = min;
+            inputConfig.max = max;
+            inputConfig.precision = precision;
+            inputConfig.width = inputWidth;
+
+            // Use unique ID for the input to avoid collision with slider
+            std::string inputLabel = std::string("##") + label + "_value";
+            if (NumericInput(inputLabel.c_str(), value, inputConfig, config.layer))
+            {
+                changed = true;
+            }
         }
 
         // Restore cursor for next element
-        ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + Height + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x, pos.y + height + ImGui::GetStyle().ItemSpacing.y));
 
         return changed;
+    }
+
+    bool ModernSliderInt(const char* label, int* value, int min, int max,
+                         const char* format, std::optional<ImU32> glowColor,
+                         const SliderConfig& config)
+    {
+        int originalValue = value ? *value : 0;
+
+        // Clamp input value first
+        if (value)
+        {
+            *value = std::clamp(*value, min, max);
+        }
+
+        float floatValue = value ? (float)*value : 0.0f;
+        bool changed = ModernSliderFloat(label, &floatValue, (float)min, (float)max, "%.0f", glowColor, config);
+
+        if (value)
+        {
+            int newValue = std::clamp((int)(floatValue + 0.5f), min, max);
+            *value = newValue;
+            changed = (newValue != originalValue);
+        }
+        return changed;
+    }
+
+    // =============================================
+    // Public Slider Functions (legacy API - for backward compatibility)
+    // =============================================
+
+    bool ModernSliderFloat(const char* label, float* value, float min, float max, const char* format, std::optional<Layer> layer)
+    {
+        SliderConfig config;
+        config.layer = layer;
+        return ModernSliderFloat(label, value, min, max, format, std::nullopt, config);
     }
 
     bool ModernSliderInt(const char* label, int* value, int min, int max, const char* format, std::optional<Layer> layer)
