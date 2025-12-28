@@ -7,7 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.6] - 2025-12-27 [`532e4ad`]
+## [0.3.0] - 2025-12-28
+
+### Added
+- **Runtime Theme Customization System**: Complete overhaul of the theme system from compile-time `constexpr` to runtime-configurable settings.
+  - `ThemeConfig` struct containing `ThemeColors`, `ThemeDimensions`, `ThemeEffects`, and `ThemeAnimation` sub-structs
+  - `ThemeManager` singleton for centralized theme configuration
+  - `ThemePreset` enum for preset themes (currently: `Cyberpunk`)
+  - `RoundingStyle` enum for quick rounding presets (`Sharp`, `Subtle`, `Rounded`, `Pill`)
+  - `AnimSpeed` enum for animation speed presets (`Instant`, `Fast`, `Normal`, `Slow`, `Relaxed`)
+- **New API Functions**:
+  - `Theme::GetConfig()` - Access mutable theme configuration
+  - `Theme::SetConfig()` - Replace entire theme configuration
+  - `Theme::ResetToDefault()` - Reset to default Cyberpunk theme
+  - `Theme::LoadPreset()` - Load a preset theme
+  - `ThemeManager::Instance()` - Access the singleton
+- **ThemeConfig.h**: New header file defining all configuration structures with sensible defaults.
+- **Config Struct API**: New config struct versions for components with many parameters (recommended over legacy positional APIs):
+  - `GlowButtonConfig` - Config struct for `GlowButton()` with fields: `size`, `glowColor`, `forceHover`, `layer`, `bgAlpha`
+  - `CooldownButtonConfig` - Config struct for `CooldownButton()` with fields: `size`, `glowColor`, `cooldownProgress`, `layer`, `bgAlpha`
+  - `NavbarHeaderConfig` - Config struct for `NavbarHeader()` with fields: `iconExpanded`, `iconCollapsed`, `collapsed`, `width`, `closeClicked`, `glowColor`
+
+### Changed
+- **BREAKING**: Theme values are now accessed via function calls instead of direct constants:
+  - `Theme::AccentCyan` → `Theme::AccentCyan()`
+  - `Theme::WindowRounding` → `Theme::WindowRounding()`
+  - All other theme accessors follow the same pattern
+- **BREAKING**: Default parameter values in `Components.h` changed:
+  - `NavItem(..., float width = Theme::NavbarWidth, ...)` → `NavItem(..., float width = 0, ...)` (0 = use theme default)
+  - `Spacing(float height = Theme::ItemSpacing)` → `Spacing(float height = 0)` (0 = use theme default)
+- All component implementations updated to use function-style theme accessors.
+- Theme system refactored from 40+ `constexpr` values to hierarchical configuration structure.
+- Theme accessor functions now use `GetConfigConst()` for const correctness.
+
+### Migration Guide
+To migrate from v0.2.x:
+1. If you were using `Theme::AccentCyan` directly in your code, change to `Theme::AccentCyan()`
+2. If you were passing `Theme::NavbarWidth` to `NavItem()`, change to `0` or remove the parameter
+3. If you were passing `Theme::ItemSpacing` to `Spacing()`, change to `0` or remove the parameter
+4. To customize theme at runtime:
+   ```cpp
+   auto& config = EFIGUI::Theme::GetConfig();
+   config.colors.accentPrimary = IM_COL32(255, 100, 50, 255);  // Custom orange accent
+   config.dimensions.windowRounding = 16.0f;  // More rounded windows
+   ```
+
+---
+
+## [0.2.6] - 2025-12-27 [`2e31a04`]
 
 ### Fixed
 - **Glassmorphism alpha stacking**: Changed `GlassOverlay*` alpha values from 250-255 to 200 and `GlassBaseLayer` to transparent (alpha 0) to prevent transparency stacking issues where multiple layers would accumulate incorrectly.

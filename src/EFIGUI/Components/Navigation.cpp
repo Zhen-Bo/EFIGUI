@@ -15,11 +15,14 @@ namespace EFIGUI
     {
         using namespace NavConstants;
 
+        // Use theme default if width is 0
+        float effectiveWidth = (width <= 0) ? Theme::NavbarWidth() : width;
+
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImVec2 size = ImVec2(width - Theme::NavItemPadding * 2, Theme::NavItemHeight);
+        ImVec2 size = ImVec2(effectiveWidth - Theme::NavItemPadding() * 2, Theme::NavItemHeight());
 
         ImGui::InvisibleButton(label, size);
         bool clicked = ImGui::IsItemClicked();
@@ -30,7 +33,7 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Get effective accent color (use custom or theme default)
-        ImU32 effectiveAccent = accentColor.value_or(Theme::AccentCyan);
+        ImU32 effectiveAccent = accentColor.value_or(Theme::AccentCyan());
         auto accentRGB = Theme::ExtractRGB(effectiveAccent);
         ImU32 effectiveAccentGlow = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, AccentGlowAlpha);
 
@@ -39,7 +42,7 @@ namespace EFIGUI
         if (bgAlpha > 0.01f)
         {
             ImU32 bgColor = IM_COL32(accentRGB.r, accentRGB.g, accentRGB.b, (int)(bgAlpha * BgAlphaMultiplier));
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding);
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding());
         }
 
         // Left accent bar (when selected)
@@ -75,7 +78,7 @@ namespace EFIGUI
         float hoverContrib = state.hoverAnim * 0.5f;
         float iconLerpFactor = state.selectedAnim > hoverContrib ? state.selectedAnim : hoverContrib;
         ImU32 iconColor = Animation::LerpColorU32(
-            Theme::TextSecondary,
+            Theme::TextSecondary(),
             effectiveAccent,
             iconLerpFactor
         );
@@ -99,8 +102,8 @@ namespace EFIGUI
             float labelHoverContrib = state.hoverAnim * 0.5f;
             float labelLerpFactor = state.selectedAnim > labelHoverContrib ? state.selectedAnim : labelHoverContrib;
             ImU32 labelColor = Animation::LerpColorU32(
-                Theme::TextSecondary,
-                Theme::TextPrimary,
+                Theme::TextSecondary(),
+                Theme::TextPrimary(),
                 labelLerpFactor
             );
             draw->AddText(ImVec2(labelX, iconY), labelColor, label);
@@ -126,7 +129,7 @@ namespace EFIGUI
         Animation::WidgetState& state = Animation::GetState(id);
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImVec2 size = ImVec2(width - Theme::NavItemPadding * 2, Theme::NavItemHeight);
+        ImVec2 size = ImVec2(width - Theme::NavItemPadding() * 2, Theme::NavItemHeight());
 
         ImGui::InvisibleButton("##NavCollapseBtn", size);
         bool clicked = ImGui::IsItemClicked();
@@ -140,15 +143,15 @@ namespace EFIGUI
         if (state.hoverAnim > 0.01f)
         {
             ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * HoverBgAlpha));
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding);
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::NavItemRounding());
         }
 
         // Icon - center it
         float iconX = pos.x + (size.x - ImGui::GetFontSize()) * 0.5f;
         float iconY = pos.y + (size.y - ImGui::GetFontSize()) * 0.5f;
         ImU32 iconColor = Animation::LerpColorU32(
-            Theme::TextMuted,
-            Theme::TextPrimary,
+            Theme::TextMuted(),
+            Theme::TextPrimary(),
             state.hoverAnim
         );
         draw->AddText(ImVec2(iconX, iconY), iconColor, icon);
@@ -171,7 +174,7 @@ namespace EFIGUI
 
         draw->AddText(
             ImVec2(pos.x + SectionPaddingX, pos.y + SectionPaddingY),
-            Theme::TextMuted,
+            Theme::TextMuted(),
             label
         );
 

@@ -15,10 +15,10 @@ namespace EFIGUI
     {
         using namespace TooltipConstants;
 
-        ImGui::PushStyleColor(ImGuiCol_PopupBg, Theme::ToVec4(Theme::BackgroundPanel));
-        ImGui::PushStyleColor(ImGuiCol_Border, Theme::ToVec4(Theme::BorderDefault));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, Theme::ToVec4(Theme::BackgroundPanel()));
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::ToVec4(Theme::BorderDefault()));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(PaddingX, PaddingY));
-        ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, Theme::FrameRounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, Theme::FrameRounding());
 
         ImGui::SetTooltip("%s", text);
 

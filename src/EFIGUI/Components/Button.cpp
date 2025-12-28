@@ -65,6 +65,11 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
+    bool GlowButton(const char* label, const GlowButtonConfig& config)
+    {
+        return GlowButton(label, config.size, config.glowColor, config.forceHover, config.layer, config.bgAlpha);
+    }
+
     bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
         using namespace ButtonConstants;
@@ -94,19 +99,19 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Get effective glow color
-        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan);
+        ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan());
 
         // Glow effect (outer glow when hovered or forceHover)
         float glowIntensity = forceHover ? GlowIntensityBase : (state.hoverAnim * GlowIntensityBase + state.activeAnim * GlowIntensityActive);
-        Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, Theme::ButtonGlowLayers, Theme::ButtonGlowExpand, Theme::ButtonRounding, layer);
+        Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, Theme::ButtonGlowLayers(), Theme::ButtonGlowExpand(), Theme::ButtonRounding(), layer);
 
         // Glassmorphism background
         float effectiveHoverAnim = forceHover ? 1.0f : state.hoverAnim;
-        Draw::GlassmorphismBg(pos, size, Theme::ButtonRounding, effectiveHoverAnim, active, bgAlpha);
+        Draw::GlassmorphismBg(pos, size, Theme::ButtonRounding(), effectiveHoverAnim, active, bgAlpha);
 
         // Marquee border
         float sweepPos = Animation::Sweep(0.12f);
-        Draw::MarqueeBorder(pos, size, effectiveGlowColor, sweepPos, 0.22f, Theme::ButtonRounding, 1.5f, effectiveHoverAnim, layer);
+        Draw::MarqueeBorder(pos, size, effectiveGlowColor, sweepPos, 0.22f, Theme::ButtonRounding(), 1.5f, effectiveHoverAnim, layer);
 
         // Text
         ImVec2 textSize = ImGui::CalcTextSize(label);
@@ -114,7 +119,7 @@ namespace EFIGUI
             pos.x + (size.x - textSize.x) * 0.5f,
             pos.y + (size.y - textSize.y) * 0.5f
         );
-        draw->AddText(textPos, Theme::TextPrimary, label);
+        draw->AddText(textPos, Theme::TextPrimary(), label);
 
         return clicked;
     }
@@ -137,18 +142,18 @@ namespace EFIGUI
         ImDrawList* draw = ImGui::GetWindowDrawList();
 
         // Get effective color
-        ImU32 effectiveColor = color.value_or(Theme::TextSecondary);
-        uint8_t effectiveBgAlpha = bgAlpha.value_or(Theme::DefaultBgAlpha);
+        ImU32 effectiveColor = color.value_or(Theme::TextSecondary());
+        uint8_t effectiveBgAlpha = bgAlpha.value_or(Theme::DefaultBgAlpha());
 
         // Background on hover
         if (state.hoverAnim > 0.01f)
         {
             ImU32 bgColor = IM_COL32(255, 255, 255, (int)(state.hoverAnim * effectiveBgAlpha));
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding);
+            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bgColor, Theme::FrameRounding());
         }
 
         // Icon
-        ImU32 iconColor = Animation::LerpColorU32(effectiveColor, Theme::AccentCyan, state.hoverAnim);
+        ImU32 iconColor = Animation::LerpColorU32(effectiveColor, Theme::AccentCyan(), state.hoverAnim);
         Draw::IconCentered(pos, ImVec2(pos.x + size.x, pos.y + size.y), icon, iconColor);
 
         return clicked;
@@ -157,7 +162,7 @@ namespace EFIGUI
     bool DangerButton(const char* label, ImVec2 size, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
         // DangerButton always shows hover effect (forceHover = true)
-        return GlowButton(label, size, Theme::StatusError, true, layer, bgAlpha);
+        return GlowButton(label, size, Theme::StatusError(), true, layer, bgAlpha);
     }
 
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
@@ -184,14 +189,14 @@ namespace EFIGUI
         Animation::UpdateWidgetState(state, hovered && !isDisabled, active, false);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
-        float rounding = Theme::ButtonRounding;
+        float rounding = Theme::ButtonRounding();
 
         // Extract RGB from border color
         auto borderRGB = Theme::ExtractRGB(borderColor);
 
         // Get effective background alpha (if provided, override default)
-        uint8_t baseBgAlpha = bgAlpha.value_or(Theme::DefaultButtonBgAlpha);
-        uint8_t hoverBgAlpha = bgAlpha.value_or(Theme::DefaultButtonHoverAlpha);
+        uint8_t baseBgAlpha = bgAlpha.value_or(Theme::DefaultButtonBgAlpha());
+        uint8_t hoverBgAlpha = bgAlpha.value_or(Theme::DefaultButtonHoverAlpha());
 
         // Alpha multiplier for disabled state
         float alphaMult = isDisabled ? 0.35f : 1.0f;
@@ -199,7 +204,7 @@ namespace EFIGUI
         // Subtle glow effect on hover only (not when disabled)
         if (!isDisabled)
         {
-            Draw::GlowLayers(pos, size, borderColor, state.hoverAnim * 0.8f, Theme::ColoredButtonGlowLayers, Theme::ColoredButtonGlowExpand, rounding, layer);
+            Draw::GlowLayers(pos, size, borderColor, state.hoverAnim * 0.8f, Theme::ColoredButtonGlowLayers(), Theme::ColoredButtonGlowExpand(), rounding, layer);
         }
 
         // Background - slightly tinted with border color
@@ -228,10 +233,15 @@ namespace EFIGUI
             pos.x + (size.x - textSize.x) * 0.5f,
             pos.y + (size.y - textSize.y) * 0.5f
         );
-        ImU32 textColor = isDisabled ? Theme::TextMuted : Theme::TextPrimary;
+        ImU32 textColor = isDisabled ? Theme::TextMuted() : Theme::TextPrimary();
         draw->AddText(textPos, textColor, label);
 
         return clicked && !isDisabled;
+    }
+
+    bool CooldownButton(const char* label, const CooldownButtonConfig& config)
+    {
+        return CooldownButton(label, config.size, config.glowColor, config.cooldownProgress, config.layer, config.bgAlpha);
     }
 
     bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
@@ -265,12 +275,12 @@ namespace EFIGUI
         }
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
-        float rounding = Theme::ButtonRounding;
+        float rounding = Theme::ButtonRounding();
 
         // Glow effect (outer glow when hovered, NOT on cooldown)
         if (!isOnCooldown)
         {
-            Draw::GlowLayers(pos, size, glowColor, state.hoverAnim, Theme::ButtonGlowLayers, Theme::ButtonGlowExpand, rounding, layer);
+            Draw::GlowLayers(pos, size, glowColor, state.hoverAnim, Theme::ButtonGlowLayers(), Theme::ButtonGlowExpand(), rounding, layer);
         }
 
         // Glassmorphism background (skip when on cooldown for simpler look)
@@ -281,7 +291,7 @@ namespace EFIGUI
         else
         {
             // Fallback: solid background when on cooldown
-            ImU32 cooldownBg = Theme::ButtonDefault;
+            ImU32 cooldownBg = Theme::ButtonDefault();
             if (bgAlpha.has_value())
             {
                 cooldownBg = Theme::ApplyAlpha(cooldownBg, bgAlpha.value());
@@ -309,7 +319,7 @@ namespace EFIGUI
             pos.x + (size.x - textSize.x) * 0.5f,
             pos.y + (size.y - textSize.y) * 0.5f
         );
-        ImU32 textColor = isOnCooldown ? Theme::TextMuted : Theme::TextPrimary;
+        ImU32 textColor = isOnCooldown ? Theme::TextMuted() : Theme::TextPrimary();
         draw->AddText(textPos, textColor, label);
 
         return clicked && !isOnCooldown;

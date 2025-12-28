@@ -2,29 +2,50 @@
 
 namespace EFIGUI
 {
+    // =============================================
+    // ThemeManager Singleton Implementation
+    // =============================================
+
+    ThemeManager& ThemeManager::Instance()
+    {
+        static ThemeManager instance;
+        return instance;
+    }
+
+    void ThemeManager::LoadPreset(ThemePreset preset)
+    {
+        switch (preset)
+        {
+        case ThemePreset::Cyberpunk:
+        default:
+            // Reset to default Cyberpunk theme (struct default values)
+            m_config = ThemeConfig{};
+            break;
+        }
+    }
+
     namespace Theme
     {
-        // Custom accent colors (can be overridden by user)
-        static ImU32 s_customAccentPrimary = 0;
-        static ImU32 s_customAccentSecondary = 0;
-
         void Apply()
         {
             ImGuiStyle& style = ImGui::GetStyle();
+            const auto& config = GetConfig();
+            const auto& dim = config.dimensions;
+            const auto& colors = config.colors;
 
             // Rounding
-            style.WindowRounding = WindowRounding;
-            style.FrameRounding = FrameRounding;
-            style.GrabRounding = FrameRounding;
-            style.TabRounding = FrameRounding;
-            style.ScrollbarRounding = FrameRounding;
-            style.ChildRounding = FrameRounding;
-            style.PopupRounding = FrameRounding;
+            style.WindowRounding = dim.windowRounding;
+            style.FrameRounding = dim.frameRounding;
+            style.GrabRounding = dim.frameRounding;
+            style.TabRounding = dim.frameRounding;
+            style.ScrollbarRounding = dim.frameRounding;
+            style.ChildRounding = dim.frameRounding;
+            style.PopupRounding = dim.frameRounding;
 
             // Spacing and padding
             style.WindowPadding = ImVec2(0.0f, 0.0f);  // We handle padding manually
             style.FramePadding = ImVec2(12.0f, 8.0f);
-            style.ItemSpacing = ImVec2(ItemSpacing, ItemSpacing);
+            style.ItemSpacing = ImVec2(dim.itemSpacing, dim.itemSpacing);
             style.ItemInnerSpacing = ImVec2(8.0f, 4.0f);
             style.ScrollbarSize = 12.0f;
             style.GrabMinSize = 10.0f;
@@ -35,101 +56,111 @@ namespace EFIGUI
             style.PopupBorderSize = 1.0f;
 
             // Colors
-            ImVec4* colors = style.Colors;
-
-            // Use custom accent if set
-            ImU32 accentPrimary = s_customAccentPrimary ? s_customAccentPrimary : AccentCyan;
-            ImU32 accentSecondary = s_customAccentSecondary ? s_customAccentSecondary : AccentPurple;
+            ImVec4* imColors = style.Colors;
 
             // Window
-            colors[ImGuiCol_WindowBg] = ToVec4(BackgroundDark);
-            colors[ImGuiCol_ChildBg] = ImVec4(0, 0, 0, 0);  // Transparent by default
-            colors[ImGuiCol_PopupBg] = ToVec4(BackgroundPanel);
+            imColors[ImGuiCol_WindowBg] = ToVec4(colors.backgroundDark);
+            imColors[ImGuiCol_ChildBg] = ImVec4(0, 0, 0, 0);  // Transparent by default
+            imColors[ImGuiCol_PopupBg] = ToVec4(colors.backgroundPanel);
 
             // Title (we use custom title bar, but set these just in case)
-            colors[ImGuiCol_TitleBg] = ToVec4(TitleBarLeft);
-            colors[ImGuiCol_TitleBgActive] = ToVec4(TitleBarRight);
-            colors[ImGuiCol_TitleBgCollapsed] = ToVec4(TitleBarLeft);
+            imColors[ImGuiCol_TitleBg] = ToVec4(colors.titleBarLeft);
+            imColors[ImGuiCol_TitleBgActive] = ToVec4(colors.titleBarRight);
+            imColors[ImGuiCol_TitleBgCollapsed] = ToVec4(colors.titleBarLeft);
 
             // Text
-            colors[ImGuiCol_Text] = ToVec4(TextPrimary);
-            colors[ImGuiCol_TextDisabled] = ToVec4(TextMuted);
+            imColors[ImGuiCol_Text] = ToVec4(colors.textPrimary);
+            imColors[ImGuiCol_TextDisabled] = ToVec4(colors.textMuted);
 
             // Border
-            colors[ImGuiCol_Border] = ToVec4(BorderDefault);
-            colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+            imColors[ImGuiCol_Border] = ToVec4(colors.borderDefault);
+            imColors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
 
             // Frame (input boxes, etc)
-            colors[ImGuiCol_FrameBg] = ToVec4(ButtonDefault);
-            colors[ImGuiCol_FrameBgHovered] = ToVec4(ButtonHover);
-            colors[ImGuiCol_FrameBgActive] = ToVec4(ButtonActive);
+            imColors[ImGuiCol_FrameBg] = ToVec4(colors.buttonDefault);
+            imColors[ImGuiCol_FrameBgHovered] = ToVec4(colors.buttonHover);
+            imColors[ImGuiCol_FrameBgActive] = ToVec4(colors.buttonActive);
 
             // Button
-            colors[ImGuiCol_Button] = ToVec4(ButtonDefault);
-            colors[ImGuiCol_ButtonHovered] = ToVec4(ButtonHover);
-            colors[ImGuiCol_ButtonActive] = ToVec4(ButtonActive);
+            imColors[ImGuiCol_Button] = ToVec4(colors.buttonDefault);
+            imColors[ImGuiCol_ButtonHovered] = ToVec4(colors.buttonHover);
+            imColors[ImGuiCol_ButtonActive] = ToVec4(colors.buttonActive);
 
             // Header (collapsing headers, selectables)
-            colors[ImGuiCol_Header] = ToVec4(ButtonDefault);
-            colors[ImGuiCol_HeaderHovered] = ToVec4(ButtonHover);
-            colors[ImGuiCol_HeaderActive] = ToVec4(ButtonActive);
+            imColors[ImGuiCol_Header] = ToVec4(colors.buttonDefault);
+            imColors[ImGuiCol_HeaderHovered] = ToVec4(colors.buttonHover);
+            imColors[ImGuiCol_HeaderActive] = ToVec4(colors.buttonActive);
 
             // Tab
-            colors[ImGuiCol_Tab] = ToVec4(ButtonDefault);
-            colors[ImGuiCol_TabHovered] = ToVec4(accentPrimary);
-            colors[ImGuiCol_TabActive] = ToVec4(ButtonActive);
-            colors[ImGuiCol_TabUnfocused] = ToVec4(ButtonDefault);
-            colors[ImGuiCol_TabUnfocusedActive] = ToVec4(ButtonHover);
+            imColors[ImGuiCol_Tab] = ToVec4(colors.buttonDefault);
+            imColors[ImGuiCol_TabHovered] = ToVec4(colors.accentPrimary);
+            imColors[ImGuiCol_TabActive] = ToVec4(colors.buttonActive);
+            imColors[ImGuiCol_TabUnfocused] = ToVec4(colors.buttonDefault);
+            imColors[ImGuiCol_TabUnfocusedActive] = ToVec4(colors.buttonHover);
 
             // Scrollbar
-            colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.04f, 0.5f);
-            colors[ImGuiCol_ScrollbarGrab] = ToVec4(BorderDefault);
-            colors[ImGuiCol_ScrollbarGrabHovered] = ToVec4(BorderHover);
-            colors[ImGuiCol_ScrollbarGrabActive] = ToVec4(accentPrimary);
+            imColors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.04f, 0.5f);
+            imColors[ImGuiCol_ScrollbarGrab] = ToVec4(colors.borderDefault);
+            imColors[ImGuiCol_ScrollbarGrabHovered] = ToVec4(colors.borderHover);
+            imColors[ImGuiCol_ScrollbarGrabActive] = ToVec4(colors.accentPrimary);
 
             // Slider
-            colors[ImGuiCol_SliderGrab] = ToVec4(accentPrimary);
-            colors[ImGuiCol_SliderGrabActive] = ToVec4(accentSecondary);
+            imColors[ImGuiCol_SliderGrab] = ToVec4(colors.accentPrimary);
+            imColors[ImGuiCol_SliderGrabActive] = ToVec4(colors.accentSecondary);
 
             // Check mark
-            colors[ImGuiCol_CheckMark] = ToVec4(accentPrimary);
+            imColors[ImGuiCol_CheckMark] = ToVec4(colors.accentPrimary);
 
             // Separator
-            colors[ImGuiCol_Separator] = ToVec4(BorderDefault);
-            colors[ImGuiCol_SeparatorHovered] = ToVec4(BorderHover);
-            colors[ImGuiCol_SeparatorActive] = ToVec4(accentPrimary);
+            imColors[ImGuiCol_Separator] = ToVec4(colors.borderDefault);
+            imColors[ImGuiCol_SeparatorHovered] = ToVec4(colors.borderHover);
+            imColors[ImGuiCol_SeparatorActive] = ToVec4(colors.accentPrimary);
 
             // Resize grip
-            colors[ImGuiCol_ResizeGrip] = ToVec4(BorderDefault);
-            colors[ImGuiCol_ResizeGripHovered] = ToVec4(BorderHover);
-            colors[ImGuiCol_ResizeGripActive] = ToVec4(accentPrimary);
+            imColors[ImGuiCol_ResizeGrip] = ToVec4(colors.borderDefault);
+            imColors[ImGuiCol_ResizeGripHovered] = ToVec4(colors.borderHover);
+            imColors[ImGuiCol_ResizeGripActive] = ToVec4(colors.accentPrimary);
 
             // Plot
-            colors[ImGuiCol_PlotLines] = ToVec4(accentPrimary);
-            colors[ImGuiCol_PlotLinesHovered] = ToVec4(accentSecondary);
-            colors[ImGuiCol_PlotHistogram] = ToVec4(accentPrimary);
-            colors[ImGuiCol_PlotHistogramHovered] = ToVec4(accentSecondary);
+            imColors[ImGuiCol_PlotLines] = ToVec4(colors.accentPrimary);
+            imColors[ImGuiCol_PlotLinesHovered] = ToVec4(colors.accentSecondary);
+            imColors[ImGuiCol_PlotHistogram] = ToVec4(colors.accentPrimary);
+            imColors[ImGuiCol_PlotHistogramHovered] = ToVec4(colors.accentSecondary);
 
             // Table
-            colors[ImGuiCol_TableHeaderBg] = ToVec4(BackgroundPanel);
-            colors[ImGuiCol_TableBorderStrong] = ToVec4(BorderDefault);
-            colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
-            colors[ImGuiCol_TableRowBg] = ImVec4(0, 0, 0, 0);
-            colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 1.0f, 1.0f, 0.03f);
+            imColors[ImGuiCol_TableHeaderBg] = ToVec4(colors.backgroundPanel);
+            imColors[ImGuiCol_TableBorderStrong] = ToVec4(colors.borderDefault);
+            imColors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+            imColors[ImGuiCol_TableRowBg] = ImVec4(0, 0, 0, 0);
+            imColors[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 1.0f, 1.0f, 0.03f);
 
             // Drag/Drop
-            colors[ImGuiCol_DragDropTarget] = ToVec4(accentPrimary);
+            imColors[ImGuiCol_DragDropTarget] = ToVec4(colors.accentPrimary);
 
             // Nav
-            colors[ImGuiCol_NavWindowingHighlight] = ToVec4(accentPrimary);
-            colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
-            colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
+            imColors[ImGuiCol_NavWindowingHighlight] = ToVec4(colors.accentPrimary);
+            imColors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
+            imColors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
         }
 
         void SetAccentColor(ImU32 primary, ImU32 secondary)
         {
-            s_customAccentPrimary = primary;
-            s_customAccentSecondary = secondary;
+            auto& colors = GetConfig().colors;
+            if (primary != 0)
+            {
+                colors.accentPrimary = primary;
+                // Update derived glow color
+                auto rgb = ExtractRGB(primary);
+                colors.accentPrimaryGlow = IM_COL32(rgb.r, rgb.g, rgb.b, 80);
+                colors.textAccent = primary;
+            }
+            if (secondary != 0)
+            {
+                colors.accentSecondary = secondary;
+                // Update derived glow color
+                auto rgb = ExtractRGB(secondary);
+                colors.accentSecondaryGlow = IM_COL32(rgb.r, rgb.g, rgb.b, 80);
+            }
         }
     }
 }

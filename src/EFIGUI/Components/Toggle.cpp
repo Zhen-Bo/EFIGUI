@@ -18,9 +18,9 @@ namespace EFIGUI
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        float toggleWidth = Theme::ToggleWidth;
-        float toggleHeight = Theme::ToggleHeight;
-        float knobSize = Theme::ToggleKnobSize;
+        float toggleWidth = Theme::ToggleWidth();
+        float toggleHeight = Theme::ToggleHeight();
+        float knobSize = Theme::ToggleKnobSize();
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImVec2 textSize = ImGui::CalcTextSize(label);
@@ -30,7 +30,7 @@ namespace EFIGUI
         bool isDisabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
 
         // Total area
-        float totalWidth = toggleWidth + Theme::ToggleLabelGap + textSize.x;
+        float totalWidth = toggleWidth + Theme::ToggleLabelGap() + textSize.x;
         ImGui::InvisibleButton(label, ImVec2(totalWidth, toggleHeight));
 
         bool clicked = ImGui::IsItemClicked();
@@ -45,7 +45,7 @@ namespace EFIGUI
 
         // Update slide animation
         float targetSlide = isOn ? 1.0f : 0.0f;
-        state.slideAnim = Animation::Lerp(state.slideAnim, targetSlide, AnimSpeed);
+        state.slideAnim = Animation::Lerp(state.slideAnim, targetSlide, AnimationSpeed);
 
         Animation::UpdateWidgetState(state, hovered && !isDisabled, false, isOn);
 
@@ -56,8 +56,8 @@ namespace EFIGUI
 
         // Track background
         ImU32 trackColorBase = Animation::LerpColorU32(
-            Theme::ButtonDefault,
-            Theme::AccentCyan,
+            Theme::ButtonDefault(),
+            Theme::AccentCyan(),
             state.slideAnim
         );
 
@@ -79,7 +79,7 @@ namespace EFIGUI
             Draw::RectGlow(
                 pos,
                 ImVec2(pos.x + toggleWidth, pos.y + toggleHeight),
-                Theme::AccentCyanGlow,
+                Theme::AccentCyanGlow(),
                 state.slideAnim * 0.5f,
                 GlowRadius
             );
@@ -103,9 +103,9 @@ namespace EFIGUI
         );
 
         // Label with disabled alpha
-        ImU32 textColor = isDisabled ? Theme::TextMuted : Theme::TextPrimary;
+        ImU32 textColor = isDisabled ? Theme::TextMuted() : Theme::TextPrimary();
         draw->AddText(
-            ImVec2(pos.x + toggleWidth + Theme::ToggleLabelGap, pos.y + (toggleHeight - textSize.y) * 0.5f),
+            ImVec2(pos.x + toggleWidth + Theme::ToggleLabelGap(), pos.y + (toggleHeight - textSize.y) * 0.5f),
             textColor,
             label
         );
@@ -127,7 +127,7 @@ namespace EFIGUI
 
         // Use TextWrapped for automatic line breaking
         ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
-        ImGui::PushStyleColor(ImGuiCol_Text, Theme::ToVec4(Theme::TextMuted));
+        ImGui::PushStyleColor(ImGuiCol_Text, Theme::ToVec4(Theme::TextMuted()));
         ImGui::TextWrapped("%s", description);
         ImGui::PopStyleColor();
         ImGui::PopTextWrapPos();

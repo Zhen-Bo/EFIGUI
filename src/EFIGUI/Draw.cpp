@@ -171,7 +171,7 @@ namespace EFIGUI
                     ImVec2(min.x - expand, min.y - expand),
                     ImVec2(max.x + expand, max.y + expand),
                     layerColor,
-                    Theme::FrameRounding + expand,
+                    Theme::FrameRounding() + expand,
                     0,
                     GlowLineThickness
                 );
@@ -288,7 +288,7 @@ namespace EFIGUI
             if (hoverAnim < MarqueeHoverThreshold)
             {
                 // Static border when not hovered
-                Layers().AddRect(targetLayer, pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault, rounding, 0, 1.0f);
+                Layers().AddRect(targetLayer, pos, ImVec2(pos.x + size.x, pos.y + size.y), Theme::BorderDefault(), rounding, 0, 1.0f);
                 return;
             }
 
@@ -360,13 +360,13 @@ namespace EFIGUI
             {
                 // Fallback: solid background
                 ImU32 bgColor = Animation::LerpColorU32(
-                    Theme::ButtonDefault,
-                    Theme::ButtonHover,
+                    Theme::ButtonDefault(),
+                    Theme::ButtonHover(),
                     hoverAnim
                 );
                 if (isActive)
                 {
-                    bgColor = Theme::ButtonActive;
+                    bgColor = Theme::ButtonActive();
                 }
                 // Apply custom alpha if provided
                 if (bgAlpha.has_value())
