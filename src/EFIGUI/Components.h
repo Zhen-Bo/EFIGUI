@@ -141,6 +141,160 @@ namespace EFIGUI
     bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
     // =============================================
+    // Per-Instance Config Structures
+    // =============================================
+    // These structures allow per-instance customization of component appearance.
+    // Use std::optional fields to selectively override Theme defaults.
+    // Usage: SliderConfig cfg; cfg.height = 48.0f; ModernSliderFloat(..., cfg);
+
+    // === SliderConfig ===
+    struct SliderConfig
+    {
+        // Dimensions (nullopt = use Theme::Slider() default)
+        std::optional<float> height = std::nullopt;
+        std::optional<float> trackHeight = std::nullopt;
+        std::optional<float> knobRadius = std::nullopt;
+        std::optional<float> inputWidth = std::nullopt;
+        std::optional<float> inputHeight = std::nullopt;
+        std::optional<float> inputGap = std::nullopt;
+        std::optional<float> inputRounding = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> trackColor = std::nullopt;
+        std::optional<ImU32> fillColor = std::nullopt;
+        std::optional<ImU32> knobColor = std::nullopt;
+        std::optional<ImU32> glowColor = std::nullopt;
+
+        // Effects
+        std::optional<int> glowLayers = std::nullopt;
+        std::optional<float> knobGlowExpand = std::nullopt;
+        std::optional<float> inputGlowExpand = std::nullopt;
+
+        // Behavior
+        bool showInput = true;
+        std::optional<Layer> layer = std::nullopt;
+
+        // Create config with all Theme defaults filled in
+        static SliderConfig FromTheme();
+    };
+
+    // === ToggleConfig ===
+    struct ToggleConfig
+    {
+        // Dimensions
+        std::optional<float> width = std::nullopt;
+        std::optional<float> height = std::nullopt;
+        std::optional<float> knobSize = std::nullopt;
+        std::optional<float> labelGap = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> trackOnColor = std::nullopt;
+        std::optional<ImU32> trackOffColor = std::nullopt;
+        std::optional<ImU32> knobColor = std::nullopt;
+        std::optional<ImU32> glowColor = std::nullopt;
+
+        // Effects
+        std::optional<float> animSpeed = std::nullopt;
+        std::optional<float> glowRadius = std::nullopt;
+        bool disabled = false;
+
+        static ToggleConfig FromTheme();
+    };
+
+    // === CardConfig ===
+    struct CardConfig
+    {
+        // Dimensions
+        std::optional<float> height = std::nullopt;
+        std::optional<float> iconSize = std::nullopt;
+        std::optional<float> iconPadding = std::nullopt;
+
+        // Inline toggle dimensions
+        std::optional<float> toggleWidth = std::nullopt;
+        std::optional<float> toggleHeight = std::nullopt;
+        std::optional<float> toggleRightMargin = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<uint8_t> bgAlpha = std::nullopt;
+
+        static CardConfig FromTheme();
+    };
+
+    // === NavItemConfig ===
+    struct NavItemConfig
+    {
+        // Dimensions
+        std::optional<float> height = std::nullopt;
+        std::optional<float> iconPadding = std::nullopt;
+        std::optional<float> labelSpacing = std::nullopt;
+        std::optional<float> accentBarWidth = std::nullopt;
+        std::optional<float> rounding = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> accentColor = std::nullopt;
+        std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<float> collapsedIconScale = std::nullopt;
+
+        static NavItemConfig FromTheme();
+    };
+
+    // === WindowConfig ===
+    struct WindowConfig
+    {
+        // Dimensions
+        std::optional<float> titleBarHeight = std::nullopt;
+        std::optional<float> titleTextPadding = std::nullopt;
+        std::optional<float> titleButtonSize = std::nullopt;
+        std::optional<float> rounding = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> titleBarLeftColor = std::nullopt;
+        std::optional<ImU32> titleBarRightColor = std::nullopt;
+        std::optional<uint8_t> overlayAlpha = std::nullopt;
+
+        static WindowConfig FromTheme();
+    };
+
+    // === PanelConfig ===
+    struct PanelConfig
+    {
+        std::optional<float> rounding = std::nullopt;
+        std::optional<uint8_t> bgAlpha = std::nullopt;
+        std::optional<ImU32> borderColor = std::nullopt;
+        std::optional<ImU32> glowColor = std::nullopt;
+        bool showBorder = true;
+
+        static PanelConfig FromTheme();
+    };
+
+    // === ProgressConfig ===
+    struct ProgressConfig
+    {
+        std::optional<float> height = std::nullopt;
+        std::optional<float> rounding = std::nullopt;
+        std::optional<ImU32> trackColor = std::nullopt;
+        std::optional<ImU32> fillColor = std::nullopt;
+        std::optional<ImU32> glowColor = std::nullopt;
+        std::optional<int> glowLayers = std::nullopt;
+        std::optional<Layer> layer = std::nullopt;
+
+        static ProgressConfig FromTheme();
+    };
+
+    // === InputConfig ===
+    struct InputConfig
+    {
+        std::optional<float> rounding = std::nullopt;
+        std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<ImU32> borderColor = std::nullopt;
+        std::optional<ImU32> focusBorderColor = std::nullopt;
+        std::optional<ImU32> textColor = std::nullopt;
+
+        static InputConfig FromTheme();
+    };
+
+    // =============================================
     // Toggle / Checkbox
     // =============================================
 
