@@ -8,6 +8,16 @@
 namespace EFIGUI
 {
     // =============================================
+    // Button Local Constants (non-configurable)
+    // =============================================
+
+    namespace ButtonLocal
+    {
+        // Currently empty - all constants moved to ButtonTheme
+        // This namespace exists for future non-configurable values
+    }
+
+    // =============================================
     // Helper Functions
     // =============================================
 
@@ -21,7 +31,19 @@ namespace EFIGUI
         ImU32 glowColor,
         float sweepPos)
     {
-        using namespace ButtonConstants;
+        using namespace ButtonLocal;
+
+        // Resolve values from ButtonTheme
+        const auto& t = Theme::Button();
+        const int cooldownOverlayAlpha = t.cooldownOverlayAlpha;
+        const int edgeGlowLayers = t.edgeGlowLayers;
+        const float edgeGlowBaseWidth = t.edgeGlowBaseWidth;
+        const float edgeGlowExpandStep = t.edgeGlowExpandStep;
+        const float edgeGlowBaseAlpha = t.edgeGlowBaseAlpha;
+        const float particleRadiusSmall = t.particleRadiusSmall;
+        const float particleRadiusLarge = t.particleRadiusLarge;
+        const int particleAlphaBright = t.particleAlphaBright;
+        const int particleAlphaDim = t.particleAlphaDim;
 
         float cooldownWidth = size.x * progress;
 
@@ -29,7 +51,7 @@ namespace EFIGUI
         draw->AddRectFilled(
             pos,
             ImVec2(pos.x + cooldownWidth, pos.y + size.y),
-            IM_COL32(0, 0, 0, CooldownOverlayAlpha),
+            IM_COL32(0, 0, 0, cooldownOverlayAlpha),
             rounding,
             cooldownWidth >= size.x - rounding ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft
         );
@@ -42,10 +64,10 @@ namespace EFIGUI
         if (edgeX > pos.x + rounding && edgeX < pos.x + size.x - rounding)
         {
             // Vertical gradient line with glow
-            for (int i = EdgeGlowLayers - 1; i >= 0; i--)
+            for (int i = edgeGlowLayers - 1; i >= 0; i--)
             {
-                float glowWidth = EdgeGlowBaseWidth + (float)i * EdgeGlowExpandStep;
-                float alpha = EdgeGlowBaseAlpha * (1.0f - (float)i / EdgeGlowLayers);
+                float glowWidth = edgeGlowBaseWidth + (float)i * edgeGlowExpandStep;
+                float alpha = edgeGlowBaseAlpha * (1.0f - (float)i / edgeGlowLayers);
                 draw->AddRectFilled(
                     ImVec2(edgeX, pos.y),
                     ImVec2(edgeX + glowWidth, pos.y + size.y),
@@ -56,8 +78,8 @@ namespace EFIGUI
 
             // Flowing light particles along the edge
             float particleY = pos.y + size.y * sweepPos;
-            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), ParticleRadiusSmall, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, ParticleAlphaBright));
-            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), ParticleRadiusLarge, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, ParticleAlphaDim));
+            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), particleRadiusSmall, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, particleAlphaBright));
+            draw->AddCircleFilled(ImVec2(edgeX + 1, particleY), particleRadiusLarge, IM_COL32(glowRGB.r, glowRGB.g, glowRGB.b, particleAlphaDim));
         }
     }
 
@@ -72,13 +94,20 @@ namespace EFIGUI
 
     bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
-        using namespace ButtonConstants;
+        using namespace ButtonLocal;
+
+        // Resolve values from ButtonTheme
+        const auto& t = Theme::Button();
+        const float defaultPaddingX = t.paddingX;
+        const float defaultHeight = t.height;
+        const float glowIntensityBase = t.glowIntensityBase;
+        const float glowIntensityActive = t.glowIntensityActive;
 
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
-        if (size.y <= 0) size.y = DefaultButtonHeight;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + defaultPaddingX;
+        if (size.y <= 0) size.y = defaultHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -102,7 +131,7 @@ namespace EFIGUI
         ImU32 effectiveGlowColor = glowColor.value_or(Theme::AccentCyan());
 
         // Glow effect (outer glow when hovered or forceHover)
-        float glowIntensity = forceHover ? GlowIntensityBase : (state.hoverAnim * GlowIntensityBase + state.activeAnim * GlowIntensityActive);
+        float glowIntensity = forceHover ? glowIntensityBase : (state.hoverAnim * glowIntensityBase + state.activeAnim * glowIntensityActive);
         Draw::GlowLayers(pos, size, effectiveGlowColor, glowIntensity, Theme::ButtonGlowLayers(), Theme::ButtonGlowExpand(), Theme::ButtonRounding(), layer);
 
         // Glassmorphism background
@@ -167,13 +196,18 @@ namespace EFIGUI
 
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
     {
-        using namespace ButtonConstants;
+        using namespace ButtonLocal;
+
+        // Resolve values from ButtonTheme
+        const auto& t = Theme::Button();
+        const float defaultPaddingX = t.paddingX;
+        const float defaultHeight = t.height;
 
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
-        if (size.y <= 0) size.y = DefaultButtonHeight;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + defaultPaddingX;
+        if (size.y <= 0) size.y = defaultHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -246,18 +280,24 @@ namespace EFIGUI
 
     bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
-        using namespace ButtonConstants;
+        using namespace ButtonLocal;
+
+        // Resolve values from ButtonTheme
+        const auto& t = Theme::Button();
+        const float defaultPaddingX = t.paddingX;
+        const float defaultHeight = t.height;
+        const float cooldownThreshold = t.cooldownThreshold;
 
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + DefaultButtonPaddingX;
-        if (size.y <= 0) size.y = DefaultButtonHeight;
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + defaultPaddingX;
+        if (size.y <= 0) size.y = defaultHeight;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
         // Button is disabled during cooldown
-        bool isOnCooldown = cooldownProgress > CooldownThreshold;
+        bool isOnCooldown = cooldownProgress > cooldownThreshold;
         if (isOnCooldown) ImGui::BeginDisabled();
 
         ImGui::InvisibleButton(label, size);
