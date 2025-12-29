@@ -9,8 +9,8 @@
 // Version
 #define EFIGUI_VERSION_MAJOR 0
 #define EFIGUI_VERSION_MINOR 3
-#define EFIGUI_VERSION_PATCH 1
-#define EFIGUI_VERSION_STRING "0.3.1"
+#define EFIGUI_VERSION_PATCH 2
+#define EFIGUI_VERSION_STRING "0.3.2"
 
 // Core headers
 #include "Theme.h"
