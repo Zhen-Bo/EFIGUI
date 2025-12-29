@@ -225,6 +225,11 @@ namespace EFIGUI
     // === CardConfig ===
     struct CardConfig
     {
+        // Semantic padding parameters (v0.4.0+, recommended)
+        std::optional<float> topPadding = std::nullopt;
+        std::optional<float> bottomPadding = std::nullopt;
+        std::optional<float> titleDescGap = std::nullopt;
+
         // Layout dimensions
         std::optional<float> height = std::nullopt;
         std::optional<float> iconSize = std::nullopt;

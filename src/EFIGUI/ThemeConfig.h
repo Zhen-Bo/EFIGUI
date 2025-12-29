@@ -214,14 +214,22 @@ namespace EFIGUI
 
     struct CardTheme
     {
-        // Layout dimensions
+        // ===== Semantic padding parameters (v0.3.2+, recommended) =====
+        float topPadding        = 10.0f;            // Card top padding (space above title)
+        float bottomPadding     = 12.0f;            // Card bottom padding (space below description)
+        float titleDescGap      = 2.0f;             // Gap between title and description
+
+        // ===== Layout dimensions =====
         float iconSize          = 32.0f;            // Icon display size
         float iconPadding       = 12.0f;            // Padding around icon
         float iconTextOffset    = 6.0f;             // Icon text offset within icon area
-        float baseHeight        = 56.0f;            // Base card height
         float minTextWidth      = 50.0f;            // Minimum width for text
-        float nameOffsetY       = 10.0f;            // Name text Y offset from top
-        float descOffsetY       = 28.0f;            // Description Y offset from top
+
+        // ===== Legacy parameters (deprecated, kept for backward compatibility) =====
+        // When baseHeight > 0, uses legacy fixed-height calculation
+        float baseHeight        = 0.0f;             // deprecated: set to 0 to use dynamic calculation
+        float nameOffsetY       = 10.0f;            // deprecated: used when baseHeight > 0
+        float descOffsetY       = 28.0f;            // deprecated: used when baseHeight > 0
 
         // Inline toggle dimensions
         float toggleWidth       = 40.0f;            // Toggle track width
