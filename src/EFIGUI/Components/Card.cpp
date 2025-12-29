@@ -48,6 +48,11 @@ namespace EFIGUI
         const float baseHeight = Resolve(config.height, t.baseHeight);
         const float minTextWidth = Resolve(config.minTextWidth, t.minTextWidth);
 
+        // Semantic padding parameters
+        const float topPadding = Resolve(config.topPadding, t.topPadding);
+        const float bottomPadding = Resolve(config.bottomPadding, t.bottomPadding);
+        const float titleDescGap = Resolve(config.titleDescGap, t.titleDescGap);
+
         CardLayout layout;
 
         layout.iconX = pos.x + iconPadding;
@@ -63,17 +68,56 @@ namespace EFIGUI
         ImVec2 descSize = ImGui::CalcTextSize(description);
         layout.needsWrap = descSize.x > layout.availableTextWidth;
 
-        // Calculate card height based on whether text wraps
-        layout.cardHeight = baseHeight;
+        // Dual-path height calculation
+        const bool useLegacy = (baseHeight > 0.0f);
 
-        if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
+        if (useLegacy)
         {
-            ImVec2 wrappedSize = ImGui::CalcTextSize(description, nullptr, false, layout.availableTextWidth);
-            float extraHeight = wrappedSize.y - ImGui::GetFontSize();
-            if (extraHeight > 0)
+            // Legacy: fixed height + extra height for wrapped text
+            layout.cardHeight = baseHeight;
+
+            if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
             {
-                layout.cardHeight = baseHeight + extraHeight;
+                ImVec2 wrappedSize = ImGui::CalcTextSize(description, nullptr, false, layout.availableTextWidth);
+                float extraHeight = wrappedSize.y - ImGui::GetFontSize();
+                if (extraHeight > 0)
+                {
+                    layout.cardHeight = baseHeight + extraHeight;
+                }
             }
+        }
+        else
+        {
+            // Semantic: content-driven calculation with consistent padding
+            const float fontSize = ImGui::GetFontSize();
+            float descHeight = fontSize;
+
+            if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
+            {
+                // Count actual lines using the same algorithm as DrawWrappedDescription
+                const char* textStart = description;
+                const char* textEnd = description + strlen(description);
+                int lineCount = 0;
+
+                while (textStart < textEnd)
+                {
+                    const char* lineEnd = ImGui::GetFont()->CalcWordWrapPositionA(
+                        1.0f, textStart, textEnd, layout.availableTextWidth);
+
+                    if (lineEnd == textStart)
+                        lineEnd = textStart + 1;
+
+                    lineCount++;
+                    textStart = lineEnd;
+
+                    while (textStart < textEnd && *textStart == ' ')
+                        textStart++;
+                }
+
+                descHeight = lineCount * fontSize;
+            }
+
+            layout.cardHeight = topPadding + fontSize + titleDescGap + descHeight + bottomPadding;
         }
 
         layout.size = ImVec2(cardWidth, layout.cardHeight);
@@ -191,10 +235,30 @@ namespace EFIGUI
         const auto& t = Theme::Card();
         const float iconSize = Resolve(config.iconSize, t.iconSize);
         const float iconTextOffset = Resolve(config.iconTextOffset, t.iconTextOffset);
-        const float nameOffsetY = Resolve(config.nameOffsetY, t.nameOffsetY);
-        const float descOffsetY = Resolve(config.descOffsetY, t.descOffsetY);
         const float minTextWidth = Resolve(config.minTextWidth, t.minTextWidth);
         const float toggleAnimSpeed = Resolve(config.toggleAnimSpeed, t.toggleAnimSpeed);
+
+        // Dual-path text positioning
+        const float baseHeight = Resolve(config.height, t.baseHeight);
+        const bool useLegacy = (baseHeight > 0.0f);
+
+        float nameY, descY;
+        if (useLegacy)
+        {
+            // Legacy: use fixed offsets
+            nameY = Resolve(config.nameOffsetY, t.nameOffsetY);
+            descY = Resolve(config.descOffsetY, t.descOffsetY);
+        }
+        else
+        {
+            // Semantic: calculate from padding parameters
+            const float topPadding = Resolve(config.topPadding, t.topPadding);
+            const float titleDescGap = Resolve(config.titleDescGap, t.titleDescGap);
+            const float fontSize = ImGui::GetFontSize();
+
+            nameY = topPadding;
+            descY = topPadding + fontSize + titleDescGap;
+        }
 
         ImGuiID id = ImGui::GetID(name);
         Animation::WidgetState& state = Animation::GetState(id);
@@ -235,16 +299,16 @@ namespace EFIGUI
         draw->AddText(ImVec2(layout.iconX + iconTextOffset, iconY + iconTextOffset), iconColor, icon);
 
         // Name
-        draw->AddText(ImVec2(layout.textX, pos.y + nameOffsetY), Theme::TextPrimary(), name);
+        draw->AddText(ImVec2(layout.textX, pos.y + nameY), Theme::TextPrimary(), name);
 
         // Description
         if (layout.needsWrap && layout.availableTextWidth > minTextWidth)
         {
-            DrawWrappedDescription(draw, description, layout.textX, pos.y + descOffsetY, layout.availableTextWidth);
+            DrawWrappedDescription(draw, description, layout.textX, pos.y + descY, layout.availableTextWidth);
         }
         else
         {
-            draw->AddText(ImVec2(layout.textX, pos.y + descOffsetY), Theme::TextMuted(), description);
+            draw->AddText(ImVec2(layout.textX, pos.y + descY), Theme::TextMuted(), description);
         }
 
         // Toggle
