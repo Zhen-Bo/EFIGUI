@@ -12,6 +12,30 @@ A modern, cyberpunk-themed UI framework built on top of [Dear ImGui](https://git
 - **Cross-Platform Backend**: Abstract blur interface for multiple graphics APIs
 - **Flexible Customization**: Optional parameters for per-instance styling without breaking defaults
 - **Per-Instance Config** (v0.3.1+): Full control over individual widget appearance with Config structs
+- **Semantic Card Layout** (v0.3.2+): Consistent card heights at all DPI scales with semantic padding parameters
+
+---
+
+## What's New in v0.3.2
+
+**FeatureCard Height Fix**: Cards now render with consistent bottom margins at 150%/200% UI scale:
+
+```cpp
+// New semantic padding parameters in CardTheme
+EFIGUI::Theme::CardMut().topPadding = 10.0f;
+EFIGUI::Theme::CardMut().bottomPadding = 12.0f;
+EFIGUI::Theme::CardMut().titleDescGap = 2.0f;
+
+// Per-instance override via CardConfig
+EFIGUI::CardConfig config;
+config.topPadding = 15.0f;
+config.bottomPadding = 15.0f;
+EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection mode", &enabled, config);
+```
+
+The fix uses `CalcWordWrapPositionA` for consistent line counting instead of `CalcTextSize`, ensuring accurate height calculation across all DPI scales.
+
+See [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ---
 

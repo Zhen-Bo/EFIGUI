@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.2] - 2025-12-29
+
+### Fixed
+- **FeatureCard height inconsistency at high DPI scales**: Fixed issue where card bottom margins were inconsistent at 150%/200% UI scale. Root cause was `CalcTextSize` returning different heights than `CalcWordWrapPositionA` used for actual rendering.
+
+### Added
+- **Semantic padding parameters for CardTheme** (recommended for new code):
+  - `topPadding` - Space above title (default: 10.0f)
+  - `bottomPadding` - Space below description (default: 12.0f)
+  - `titleDescGap` - Gap between title and description (default: 2.0f)
+- **CardConfig semantic fields**: Corresponding `std::optional<float>` fields in `CardConfig` for per-instance override.
+
+### Changed
+- **CardTheme.baseHeight default**: Changed from `56.0f` to `0.0f` to enable semantic height calculation by default.
+- **Dual-path height calculation**: When `baseHeight > 0`, uses legacy fixed-height calculation for backward compatibility. When `baseHeight == 0` (new default), uses semantic padding-based calculation with `CalcWordWrapPositionA` for consistent line counting.
+
+### Deprecated
+- `CardTheme.baseHeight`, `nameOffsetY`, `descOffsetY` - These legacy parameters are kept for backward compatibility but semantic padding parameters are recommended for new code.
+
+### Note
+No action required for most users. The new semantic calculation is enabled by default and provides consistent card heights at all DPI scales.
+
+To use legacy behavior:
+```cpp
+EFIGUI::Theme::CardMut().baseHeight = 56.0f;  // Restore legacy fixed-height mode
+```
+
+---
+
 ## [0.3.1] - 2025-12-29
 
 ### Added

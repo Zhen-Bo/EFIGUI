@@ -413,7 +413,9 @@ EFIGUI::ModernCombo("Select", &current, items, 3, 230);
 ```cpp
 // Custom feature card configuration
 EFIGUI::CardConfig config;
-config.height = 72.0f;              // Taller card
+config.topPadding = 15.0f;          // Custom top padding (v0.3.2+)
+config.bottomPadding = 15.0f;       // Custom bottom padding (v0.3.2+)
+config.titleDescGap = 4.0f;         // Gap between title and description (v0.3.2+)
 config.iconSize = 40.0f;            // Larger icon
 config.bgAlpha = 180;               // Custom transparency
 
@@ -422,7 +424,10 @@ EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection mode", &featureOn, conf
 ```
 
 **CardConfig fields:**
-- `height` - Card height (default: Theme::Card().baseHeight)
+- `topPadding` - Space above title (v0.3.2+, default: Theme::Card().topPadding)
+- `bottomPadding` - Space below description (v0.3.2+, default: Theme::Card().bottomPadding)
+- `titleDescGap` - Gap between title and description (v0.3.2+, default: Theme::Card().titleDescGap)
+- `height` - Card height (deprecated, use semantic padding instead)
 - `iconSize` - Icon size (default: Theme::Card().iconSize)
 - `iconPadding` - Icon padding (default: Theme::Card().iconPadding)
 - `toggleWidth` - Embedded toggle width
