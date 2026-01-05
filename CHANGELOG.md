@@ -56,6 +56,10 @@ ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt,
 #### Safety Improvements
 - **Null device pointer validation**: `Init()` now validates device pointer for hardware backends with assert (debug) and graceful fallback (release)
 
+#### Unit Testing
+- **doctest integration**: Added doctest header-only testing framework
+- **ThemeConfig tests**: Unit tests for `EdgeInsets`, `Spacing`, `CornerRadius`, `BorderStyle`, `SizeConstraints`, and `Resolve` helper
+
 ### Changed
 - Theme structs now use `EdgeInsets` for padding/margin instead of separate float values (legacy accessors preserved for backward compatibility)
 - `ButtonTheme.paddingX` deprecated in favor of `ButtonTheme.padding`
