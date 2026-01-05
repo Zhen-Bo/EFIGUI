@@ -1,5 +1,7 @@
 # Components Reference
 
+> **v0.4.0 Update**: All Config structs now support fluent builder patterns. See [Migration Guide](migration-0.4.0.md) for details.
+
 ## Windows
 
 | Function | Description |
@@ -101,17 +103,61 @@ if (EFIGUI::NavbarHeader("My App", headerConfig))
 
 | Function | Description |
 |----------|-------------|
-| `GlowButton(label, config)` | Primary glowing button (Config struct) |
+| `GlowButton(label, config)` | Primary glowing button (ButtonConfig - v0.4.0+) |
+| `GlowButton(label, config)` | Primary glowing button (GlowButtonConfig) |
 | `GlowButton(label, size, glowColor, forceHover, layer, bgAlpha)` | Primary glowing button (legacy) |
 | `IconButton(icon, size, color, bgAlpha, uniqueId)` | Icon-only button |
-| `DangerButton(label, size, layer, bgAlpha)` | Red destructive button |
-| `ColoredButton(label, size, borderColor, bgAlpha, layer)` | Custom colored button |
+| `DangerButton(label, config)` | Red destructive button (ButtonConfig - v0.4.0+) |
+| `DangerButton(label, size, layer, bgAlpha)` | Red destructive button (legacy) |
+| `ColoredButton(label, borderColor, config)` | Custom colored button (ButtonConfig - v0.4.0+) |
+| `ColoredButton(label, size, borderColor, bgAlpha, layer)` | Custom colored button (legacy) |
 | `CooldownButton(label, config)` | Button with cooldown (Config struct) |
 | `CooldownButton(label, size, glowColor, cooldownProgress, layer, bgAlpha)` | Button with cooldown (legacy) |
 
 ### GlowButton
 
-**GlowButton (Config struct - recommended):**
+**GlowButton with ButtonConfig (v0.4.0+ - recommended):**
+
+```cpp
+// Using ButtonConfig with builder pattern
+if (EFIGUI::GlowButton("Confirm", EFIGUI::ButtonConfig()
+        .withSize(120, 36)
+        .withGlowColor(Theme::StatusSuccess())
+        .withRounding(12.0f)
+        .withPadding(EFIGUI::EdgeInsets::Symmetric(8, 24))))
+{
+    // Button clicked
+}
+
+// ButtonConfig with full customization
+EFIGUI::ButtonConfig cfg;
+cfg.size = ImVec2(150, 40);
+cfg.glowColor = Theme::AccentPurple();
+cfg.rounding = 16.0f;
+cfg.glowLayers = 6;
+cfg.glowExpand = 3.0f;
+cfg.forceHover = true;
+EFIGUI::GlowButton("Custom", cfg);
+```
+
+**ButtonConfig fields:**
+- `size` - Button size, ImVec2(0,0) = auto-size (default: ImVec2(0,0))
+- `padding` - Padding around text (default: Theme::Button().padding)
+- `rounding` - Corner rounding (default: Theme::Button().rounding)
+- `minWidth` - Minimum button width (default: 0)
+- `bgColor` - Background color (default: Theme)
+- `bgHoverColor` - Hover background color
+- `bgActiveColor` - Active/pressed background color
+- `textColor` - Text color
+- `glowColor` - Glow color (default: Theme::AccentCyan())
+- `bgAlpha` - Background transparency 0-255
+- `glowLayers` - Number of glow layers (default: 5)
+- `glowExpand` - Glow expansion per layer (default: 2.0)
+- `glowIntensity` - Glow intensity
+- `forceHover` - Always show hover animation (default: false)
+- `layer` - Rendering layer for glow/marquee effects
+
+**GlowButton (GlowButtonConfig version):**
 
 ```cpp
 // Using GlowButtonConfig struct
@@ -185,7 +231,19 @@ EFIGUI::ColoredButton("Action", ImVec2(100,36), Theme::AccentCyan());
 EFIGUI::ColoredButton("Action", ImVec2(100,36), Theme::AccentCyan(), 100);
 ```
 
-**DangerButton optional parameters:**
+**DangerButton with ButtonConfig (v0.4.0+):**
+
+```cpp
+// DangerButton with full customization
+if (EFIGUI::DangerButton("Delete", EFIGUI::ButtonConfig()
+        .withSize(100, 36)
+        .withRounding(8.0f)))
+{
+    // Delete action
+}
+```
+
+**DangerButton optional parameters (legacy):**
 - `layer` - Rendering layer for glow/marquee effects (default: LayerConfig::defaultWidgetGlow)
 - `bgAlpha` - Background transparency 0-255 (default: uses GlassOverlay defaults)
 
@@ -195,6 +253,19 @@ EFIGUI::DangerButton("Delete");
 
 // With custom background transparency
 EFIGUI::DangerButton("Delete", ImVec2(0,0), std::nullopt, 150);
+```
+
+**ColoredButton with ButtonConfig (v0.4.0+):**
+
+```cpp
+// ColoredButton with full customization
+if (EFIGUI::ColoredButton("Custom", Theme::AccentPurple(), EFIGUI::ButtonConfig()
+        .withSize(150, 40)
+        .withGlowLayers(6)
+        .withGlowExpand(3.0f)))
+{
+    // Action
+}
 ```
 
 **CooldownButton (Config struct - recommended):**
@@ -288,19 +359,27 @@ EFIGUI::EndGlassPanel();
 Per-instance configuration allows customizing individual sliders:
 
 ```cpp
-// Create a custom slider config
+// Using builder pattern (v0.4.0+ - recommended)
+static float val = 0.5f;
+EFIGUI::ModernSliderFloat("Custom", &val, 0.0f, 1.0f, "%.2f", std::nullopt,
+    EFIGUI::SliderConfig()
+        .withHeight(32.0f)
+        .withKnobRadius(12.0f)
+        .withPadding(EFIGUI::EdgeInsets::Symmetric(4, 8))
+        .withGlowColor(Theme::AccentPurple()));
+
+// Create a custom slider config (legacy style)
 EFIGUI::SliderConfig config;
 config.height = 32.0f;              // Taller slider
 config.knobRadius = 12.0f;          // Larger knob
 config.glowColor = Theme::AccentPurple();  // Purple glow
 
-static float val = 0.5f;
-EFIGUI::ModernSliderFloat("Custom", &val, 0.0f, 1.0f, "%.2f", config);
+EFIGUI::ModernSliderFloat("Custom", &val, 0.0f, 1.0f, "%.2f", std::nullopt, config);
 
 // Use FromTheme() to start from defaults and modify
 auto scaledConfig = EFIGUI::SliderConfig::FromTheme();
 scaledConfig.height = scaledConfig.height.value() * 1.5f;  // 50% larger
-EFIGUI::ModernSliderFloat("Scaled", &val, 0.0f, 1.0f, "%.2f", scaledConfig);
+EFIGUI::ModernSliderFloat("Scaled", &val, 0.0f, 1.0f, "%.2f", std::nullopt, scaledConfig);
 ```
 
 **SliderConfig fields:**
@@ -309,7 +388,11 @@ EFIGUI::ModernSliderFloat("Scaled", &val, 0.0f, 1.0f, "%.2f", scaledConfig);
 - `knobRadius` - Knob radius (default: Theme::Slider().knobRadius)
 - `inputWidth` - Input box width (default: Theme::Slider().inputWidth)
 - `inputHeight` - Input box height (default: Theme::Slider().inputHeight)
-- `rounding` - Corner rounding (default: Theme::Slider().inputRounding)
+- `labelGap` - Gap between label and slider (default: Theme::Slider().labelGap)
+- `padding` - Padding around slider area (v0.4.0+, `EdgeInsets`)
+- `trackColor` - Track background color (v0.4.0+)
+- `fillColor` - Track fill color (v0.4.0+)
+- `knobColor` - Knob color (v0.4.0+)
 - `glowColor` - Glow effect color (default: Theme::AccentCyan())
 - `showInput` - Show numeric input box (default: true)
 - `layer` - Rendering layer for glow effects
@@ -317,13 +400,20 @@ EFIGUI::ModernSliderFloat("Scaled", &val, 0.0f, 1.0f, "%.2f", scaledConfig);
 ### ModernToggle with Config (v0.3.1+)
 
 ```cpp
-// Custom toggle configuration
+// Using builder pattern (v0.4.0+ - recommended)
+static bool enabled = false;
+EFIGUI::ModernToggle("Feature", &enabled, EFIGUI::ToggleConfig()
+    .withWidth(56.0f)
+    .withHeight(28.0f)
+    .withMargin(EFIGUI::EdgeInsets::All(4))
+    .withGlowColor(Theme::StatusSuccess()));
+
+// Custom toggle configuration (legacy style)
 EFIGUI::ToggleConfig config;
 config.width = 56.0f;               // Wider toggle
 config.height = 28.0f;              // Taller toggle
 config.glowColor = Theme::StatusSuccess();  // Green glow
 
-static bool enabled = false;
 EFIGUI::ModernToggle("Feature", &enabled, config);
 ```
 
@@ -331,8 +421,14 @@ EFIGUI::ModernToggle("Feature", &enabled, config);
 - `width` - Toggle width (default: Theme::Toggle().width)
 - `height` - Toggle height (default: Theme::Toggle().height)
 - `knobSize` - Knob diameter (default: Theme::Toggle().knobSize)
-- `rounding` - Corner rounding
+- `labelGap` - Gap between toggle and label
+- `margin` - Margin around toggle (v0.4.0+, `EdgeInsets`)
+- `trackOnColor` - Track color when on (v0.4.0+)
+- `trackOffColor` - Track color when off (v0.4.0+)
+- `knobColor` - Knob color (v0.4.0+)
 - `glowColor` - Glow effect color
+- `animSpeed` - Animation speed
+- `glowRadius` - Glow radius
 - `disabled` - Disable interaction (default: false)
 
 **ModernSliderFloat/Int optional parameters:**
@@ -411,22 +507,35 @@ EFIGUI::ModernCombo("Select", &current, items, 3, 230);
 ### FeatureCard with Config (v0.3.1+)
 
 ```cpp
-// Custom feature card configuration
+// Using builder pattern (v0.4.0+ - recommended)
+static bool featureOn = false;
+EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection mode", &featureOn,
+    EFIGUI::CardConfig()
+        .withPadding(EFIGUI::EdgeInsets::Symmetric(12, 16))
+        .withRounding(12.0f)
+        .withBgAlpha(180));
+
+// Custom feature card configuration (legacy style)
 EFIGUI::CardConfig config;
-config.topPadding = 15.0f;          // Custom top padding (v0.3.2+)
-config.bottomPadding = 15.0f;       // Custom bottom padding (v0.3.2+)
-config.titleDescGap = 4.0f;         // Gap between title and description (v0.3.2+)
+config.padding = EFIGUI::EdgeInsets(15, 16, 15, 16);  // v0.4.0+
+config.rounding = 12.0f;            // v0.4.0+
 config.iconSize = 40.0f;            // Larger icon
 config.bgAlpha = 180;               // Custom transparency
 
-static bool featureOn = false;
 EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection mode", &featureOn, config);
 ```
 
 **CardConfig fields:**
-- `topPadding` - Space above title (v0.3.2+, default: Theme::Card().topPadding)
-- `bottomPadding` - Space below description (v0.3.2+, default: Theme::Card().bottomPadding)
-- `titleDescGap` - Gap between title and description (v0.3.2+, default: Theme::Card().titleDescGap)
+- `padding` - Padding inside card (v0.4.0+, `EdgeInsets`)
+- `margin` - Margin around card (v0.4.0+, `EdgeInsets`)
+- `rounding` - Corner rounding (v0.4.0+)
+- `titleDescGap` - Gap between title and description (v0.3.2+)
+- `bgColor` - Background color (v0.4.0+)
+- `borderColor` - Border color (v0.4.0+)
+- `titleColor` - Title text color (v0.4.0+)
+- `descColor` - Description text color (v0.4.0+)
+- `topPadding` - Space above title (deprecated, use `padding.top`)
+- `bottomPadding` - Space below description (deprecated, use `padding.bottom`)
 - `height` - Card height (deprecated, use semantic padding instead)
 - `iconSize` - Icon size (default: Theme::Card().iconSize)
 - `iconPadding` - Icon padding (default: Theme::Card().iconPadding)

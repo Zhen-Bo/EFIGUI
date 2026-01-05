@@ -17,6 +17,54 @@ config.animation.hoverSpeed = 15.0f;
 
 ---
 
+## Core Layout Types (v0.4.0+)
+
+v0.4.0 introduces unified layout types for consistent padding, margin, and spacing:
+
+### EdgeInsets
+
+Represents padding or margin on all four edges:
+
+```cpp
+// Named constructors
+EdgeInsets::All(16.0f)                    // {16, 16, 16, 16}
+EdgeInsets::Symmetric(8.0f, 16.0f)        // vertical=8, horizontal=16
+EdgeInsets::Horizontal(24.0f)             // {0, 24, 0, 24}
+EdgeInsets::Vertical(8.0f)                // {8, 0, 8, 0}
+EdgeInsets::Only(10, 20, 10, 20)          // top, right, bottom, left
+
+// Utility methods
+EdgeInsets padding(10, 20, 10, 20);
+float h = padding.horizontal();      // left + right = 40
+float v = padding.vertical();        // top + bottom = 20
+ImVec2 tl = padding.topLeft();       // {20, 10}
+ImVec2 sz = padding.size();          // {40, 20}
+```
+
+### Spacing
+
+Represents spacing between elements:
+
+```cpp
+Spacing::Both(8.0f)                       // {8, 8}
+Spacing(12.0f, 8.0f)                      // x=12, y=8
+ImVec2 v = spacing.toVec2();              // Convert to ImVec2
+```
+
+### CornerRadius
+
+Represents corner rounding for rounded rectangles:
+
+```cpp
+CornerRadius::All(8.0f)                   // All corners
+CornerRadius::Top(12.0f)                  // Top corners only
+CornerRadius::Bottom(12.0f)               // Bottom corners only
+CornerRadius::None()                      // No rounding
+CornerRadius::Pill()                      // Maximum rounding
+```
+
+---
+
 ## Component Theme Accessors (v0.3.1+)
 
 Access component-specific theme configurations directly:
@@ -31,6 +79,11 @@ float navAccentBar = EFIGUI::Theme::Nav().accentBarWidth;   // 3.0f
 // Modify component themes at runtime
 EFIGUI::Theme::SliderMut().height = 32.0f;
 EFIGUI::Theme::ToggleMut().width = 56.0f;
+
+// v0.4.0+: Use EdgeInsets for padding/margin
+EFIGUI::Theme::ButtonMut().padding = EFIGUI::EdgeInsets::Symmetric(8, 24);
+EFIGUI::Theme::CardMut().padding = EFIGUI::EdgeInsets(12, 16, 12, 16);
+EFIGUI::Theme::NavMut().itemPadding = EFIGUI::EdgeInsets::Horizontal(16);
 ```
 
 **Available Component Accessors:**
@@ -315,15 +368,19 @@ void InitializeCustomTheme()
 
 ---
 
-## Migration from v0.2.x
+## Migration from v0.2.x / v0.3.x
 
-See [Migration Guide](migration-0.3.0.md) for detailed instructions on updating from v0.2.x.
+See [Migration Guide v0.3.0](migration-0.3.0.md) for migrating from v0.2.x.
+See [Migration Guide v0.4.0](migration-0.4.0.md) for migrating from v0.3.x.
 
 **Quick reference:**
 ```cpp
 // Old (v0.2.x)
 ImU32 color = Theme::AccentCyan;
 
-// New (v0.3.0)
+// v0.3.0+
 ImU32 color = Theme::AccentCyan();
+
+// v0.4.0+ (using EdgeInsets)
+Theme::ButtonMut().padding = EdgeInsets::Symmetric(8, 24);
 ```
