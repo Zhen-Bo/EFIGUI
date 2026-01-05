@@ -8,16 +8,6 @@
 namespace EFIGUI
 {
     // =============================================
-    // Button Local Constants (non-configurable)
-    // =============================================
-
-    namespace ButtonLocal
-    {
-        // Currently empty - all constants moved to ButtonTheme
-        // This namespace exists for future non-configurable values
-    }
-
-    // =============================================
     // Helper Functions
     // =============================================
 
@@ -31,8 +21,6 @@ namespace EFIGUI
         ImU32 glowColor,
         float sweepPos)
     {
-        using namespace ButtonLocal;
-
         // Resolve values from ButtonTheme
         const auto& t = Theme::Button();
         const int cooldownOverlayAlpha = t.cooldownOverlayAlpha;
@@ -95,8 +83,6 @@ namespace EFIGUI
     bool GlowButton(const char* label, const ButtonConfig& config)
     {
         // Use ButtonConfig with full customization support
-        using namespace ButtonLocal;
-
         const auto& t = Theme::Button();
 
         ImGuiID id = ImGui::GetID(label);
@@ -164,8 +150,6 @@ namespace EFIGUI
 
     bool GlowButton(const char* label, ImVec2 size, std::optional<ImU32> glowColor, bool forceHover, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
-        using namespace ButtonLocal;
-
         // Resolve values from ButtonTheme
         const auto& t = Theme::Button();
         const float defaultPaddingX = t.paddingX;
@@ -278,8 +262,6 @@ namespace EFIGUI
 
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha, std::optional<Layer> layer)
     {
-        using namespace ButtonLocal;
-
         // Resolve values from ButtonTheme
         const auto& t = Theme::Button();
         const float defaultPaddingX = t.paddingX;
@@ -358,8 +340,6 @@ namespace EFIGUI
     bool ColoredButton(const char* label, ImU32 borderColor, const ButtonConfig& config)
     {
         // ColoredButton with full customization via ButtonConfig
-        using namespace ButtonLocal;
-
         const auto& t = Theme::Button();
 
         ImGuiID id = ImGui::GetID(label);
@@ -444,8 +424,6 @@ namespace EFIGUI
 
     bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
     {
-        using namespace ButtonLocal;
-
         // Resolve values from ButtonTheme
         const auto& t = Theme::Button();
         const float defaultPaddingX = t.paddingX;

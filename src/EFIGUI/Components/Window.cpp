@@ -8,16 +8,6 @@
 namespace EFIGUI
 {
     // =============================================
-    // Window Local Constants (non-configurable)
-    // =============================================
-
-    namespace WindowLocal
-    {
-        // Currently empty - all constants moved to WindowTheme
-        // This namespace exists for future non-configurable values
-    }
-
-    // =============================================
     // Helper Functions
     // =============================================
 
@@ -59,8 +49,6 @@ namespace EFIGUI
         float titleHeight,
         bool* p_open)
     {
-        using namespace WindowLocal;
-
         // Resolve values from WindowTheme
         const auto& t = Theme::Window();
         const float titleButtonSize = t.titleButtonSize;
@@ -122,8 +110,6 @@ namespace EFIGUI
         ImVec2 titleMin,
         ImVec2 titleMax)
     {
-        using namespace WindowLocal;
-
         bool inTitleBar = ImGui::IsMouseHoveringRect(titleMin, titleMax);
 
         bool& isDragging = GetIsDraggingTitleBar();
@@ -161,8 +147,6 @@ namespace EFIGUI
 
     bool BeginCustomWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
     {
-        using namespace WindowLocal;
-
         // Resolve values from WindowTheme
         const auto& t = Theme::Window();
         const float titleTextPadding = t.titleTextPadding;

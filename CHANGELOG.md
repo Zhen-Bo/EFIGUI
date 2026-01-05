@@ -53,6 +53,11 @@ ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt,
 - Theme structs now use `EdgeInsets` for padding/margin instead of separate float values (legacy accessors preserved for backward compatibility)
 - `ButtonTheme.paddingX` deprecated in favor of `ButtonTheme.padding`
 
+### Removed
+- **Empty local namespaces**: Removed unused `ButtonLocal` and `WindowLocal` namespaces from Button.cpp and Window.cpp
+- **Redundant code**: Simplified `RectGradientH` function by removing unnecessary if/else branch with identical content
+- **Non-existent API references**: Removed documentation references to `ApplyRoundingStyle()` and `ApplySpeedPreset()` methods that were never implemented
+
 ### Breaking Changes
 This is a major refactoring release. While legacy APIs are preserved for backward compatibility, the following may require attention:
 - Theme struct field organization has changed (fields grouped by category)

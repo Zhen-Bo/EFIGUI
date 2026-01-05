@@ -134,49 +134,6 @@ EFIGUI::Theme::ResetToDefault();
 
 ---
 
-## Quick Styling Helpers
-
-### Rounding Styles
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Sharp corners (0 rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Sharp);
-
-// Subtle rounding (4px)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Subtle);
-
-// Rounded (8px) - default
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Rounded);
-
-// Pill shape (maximum rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
-```
-
-### Animation Speed Presets
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Instant transitions (no animation)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Instant);
-
-// Fast (2x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
-
-// Normal - default
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Normal);
-
-// Slow (0.5x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Slow);
-
-// Relaxed (0.25x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Relaxed);
-```
-
----
-
 ## Available Theme Colors
 
 | Accessor Function | Description |
@@ -288,8 +245,6 @@ struct ThemeDimensions
     float toggleLabelGap;
     float itemSpacing;
     // ... more dimensions
-
-    void ApplyRoundingStyle(RoundingStyle style);
 };
 ```
 
@@ -319,8 +274,6 @@ struct ThemeAnimation
     float pulseFrequency;
     float sweepDuration;
     float breatheFrequency;
-
-    void ApplySpeedPreset(AnimSpeed speed);
 };
 ```
 
@@ -354,15 +307,18 @@ void InitializeCustomTheme()
     config.colors.accentSecondary = IM_COL32(255, 50, 100, 255);  // Red-pink
     config.colors.backgroundDark = IM_COL32(20, 15, 15, 255);     // Warm dark
 
-    // Rounder UI elements
-    config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
+    // Rounder UI elements - manually set rounding values
+    config.dimensions.windowRounding = 999.0f;  // Pill shape
+    config.dimensions.frameRounding = 999.0f;
+    config.dimensions.buttonRounding = 999.0f;
+    config.dimensions.navItemRounding = 999.0f;
 
     // Stronger glow effects
     config.effects.glowIntensity = 0.8f;
     config.effects.glowRadius = 12.0f;
 
-    // Snappy animations
-    config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
+    // Snappy animations - adjust speed values directly
+    config.animation.defaultSpeed = 16.0f;  // 2x faster
 }
 ```
 
