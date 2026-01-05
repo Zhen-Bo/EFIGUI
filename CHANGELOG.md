@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-01-05
+
+### Added
+
+#### Core Layout Types
+- **`EdgeInsets`** - Unified padding/margin type with named constructors (`All`, `Symmetric`, `Horizontal`, `Vertical`, `Only`) and utility methods
+- **`Spacing`** - Represents spacing between elements (horizontal and vertical)
+- **`CornerRadius`** - Per-corner rounding with presets (`All`, `Top`, `Bottom`, `Pill`, `None`)
+- **`BorderStyle`** - Border width and color configuration
+- **`SizeConstraints`** - Min/max size constraints with named constructors (`MinSize`, `MaxSize`, `Fixed`)
+
+#### Builder Pattern for Config Structs
+All Config structs now support fluent builder pattern for easier configuration:
+```cpp
+// Before (v0.3.x)
+SliderConfig cfg;
+cfg.height = 32.0f;
+cfg.glowColor = Theme::StatusError();
+ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt, cfg);
+
+// After (v0.4.0)
+ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt,
+    SliderConfig().withHeight(32.0f).withGlowColor(Theme::StatusError()));
+```
+
+#### New Config Struct: ButtonConfig
+- Full customization support for buttons including size, padding, rounding, colors, glow effects
+- New function overloads: `GlowButton(label, ButtonConfig)`, `DangerButton(label, ButtonConfig)`, `ColoredButton(label, borderColor, ButtonConfig)`
+
+#### Enhanced Theme Structs
+- **ButtonTheme**: Added `padding` (EdgeInsets), `rounding`, `minWidth`, color properties (`bgDefault`, `bgHover`, `bgActive`, `textColor`, `glowColor`), and glow configuration
+- **SliderTheme**: Added `padding` (EdgeInsets), `labelGap`, `trackRounding`, track and knob color properties
+- **ToggleTheme**: Added `margin` (EdgeInsets), color properties (`trackOnColor`, `trackOffColor`, `knobColor`, `glowColor`)
+- **CardTheme**: Added `padding` and `margin` (EdgeInsets), `rounding`, `contentSpacing`, color properties (`bgColor`, `borderColor`, `titleColor`, `descColor`)
+- **NavTheme**: Added `itemPadding` (EdgeInsets), `itemHeight`, `itemRounding`, `sectionPadding` (EdgeInsets), color properties
+- **WindowTheme**: Added `padding` (EdgeInsets), `rounding`, `titleBarPadding` (EdgeInsets), color properties
+- **LayoutTheme**: Added `itemSpacing` and `innerSpacing` (Spacing), `contentPadding` (EdgeInsets), `separatorThickness`, tooltip configuration with colors
+
+#### Config Struct Enhancements
+- Added `padding` and/or `margin` fields (using `std::optional<EdgeInsets>`) to: `SliderConfig`, `ToggleConfig`, `CardConfig`, `NavItemConfig`, `ButtonConfig`, `WindowConfig`, `PanelConfig`, `ProgressConfig`, `InputConfig`
+- Added builder methods to all Config structs (e.g., `withPadding()`, `withRounding()`, `withGlowColor()`)
+
+### Changed
+- Theme structs now use `EdgeInsets` for padding/margin instead of separate float values (legacy accessors preserved for backward compatibility)
+- `ButtonTheme.paddingX` deprecated in favor of `ButtonTheme.padding`
+
+### Breaking Changes
+This is a major refactoring release. While legacy APIs are preserved for backward compatibility, the following may require attention:
+- Theme struct field organization has changed (fields grouped by category)
+- Some internal implementations now use `EdgeInsets` instead of individual float values
+
+---
+
 ## [0.3.2] - 2025-12-29
 
 ### Fixed
