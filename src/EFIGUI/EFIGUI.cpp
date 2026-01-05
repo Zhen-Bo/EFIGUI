@@ -46,6 +46,16 @@ namespace EFIGUI
         // Apply theme
         Theme::Apply();
 
+        // Defensive check: hardware backends require valid device pointer
+        if (backend != BackendType::None)
+        {
+            IM_ASSERT(device != nullptr && "EFIGUI: Device pointer cannot be null for hardware backend");
+
+            // Graceful fallback in Release builds
+            if (device == nullptr)
+                return false;
+        }
+
         // Create blur backend based on type
         switch (backend)
         {

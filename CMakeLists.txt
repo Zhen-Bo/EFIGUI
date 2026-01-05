@@ -78,7 +78,18 @@ target_include_directories(EFIGUI PUBLIC
 # =============================================
 
 # ImGui - user must provide imgui target or include path
-# Example: target_link_libraries(EFIGUI PUBLIC imgui)
+# Option 1: Set IMGUI_INCLUDE_DIR to point to imgui headers
+# Option 2: Link an imgui target (target_link_libraries(EFIGUI PUBLIC imgui))
+# Option 3: Use local imgui folder if exists
+if(IMGUI_INCLUDE_DIR)
+    target_include_directories(EFIGUI PUBLIC
+        $<BUILD_INTERFACE:${IMGUI_INCLUDE_DIR}>
+    )
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h")
+    target_include_directories(EFIGUI PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/imgui>
+    )
+endif()
 
 # Windows-specific libraries
 if(WIN32)
@@ -146,3 +157,14 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/EFIGUIConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/EFIGUI
 )
+
+# =============================================
+# Unit Tests
+# =============================================
+
+option(EFIGUI_BUILD_TESTS "Build unit tests" OFF)
+
+if(EFIGUI_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

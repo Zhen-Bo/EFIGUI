@@ -49,6 +49,13 @@ ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt,
 - Added `padding` and/or `margin` fields (using `std::optional<EdgeInsets>`) to: `SliderConfig`, `ToggleConfig`, `CardConfig`, `NavItemConfig`, `ButtonConfig`, `WindowConfig`, `PanelConfig`, `ProgressConfig`, `InputConfig`
 - Added builder methods to all Config structs (e.g., `withPadding()`, `withRounding()`, `withGlowColor()`)
 
+#### Build System
+- **ImGui include path auto-detection**: CMake now automatically detects ImGui headers via `IMGUI_INCLUDE_DIR` variable or local `imgui/` folder
+- **Unit test infrastructure**: Added `EFIGUI_BUILD_TESTS` CMake option and test subdirectory support
+
+#### Safety Improvements
+- **Null device pointer validation**: `Init()` now validates device pointer for hardware backends with assert (debug) and graceful fallback (release)
+
 ### Changed
 - Theme structs now use `EdgeInsets` for padding/margin instead of separate float values (legacy accessors preserved for backward compatibility)
 - `ButtonTheme.paddingX` deprecated in favor of `ButtonTheme.padding`
