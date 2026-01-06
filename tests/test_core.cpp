@@ -1,10 +1,12 @@
 #include "doctest.h"
 #include "EFIGUI/ThemeConfig.h" // EdgeInsets, Spacing, CornerRadius (depends on imgui.h)
 #include "EFIGUI/Theme.h"       // Resolve helper (depends on imgui.h)
-#include "EFIGUI/Components.h"  // Config structs with Builder pattern
 
 // Note: These tests verify pure data structures and template utilities.
 // No ImGui Context is required - we only need imgui.h for ImVec2 type.
+
+// Tests for ThemeConfig types (EdgeInsets, CornerRadius, etc.)
+// Spacing tests are moved to after Components.h is included due to name conflict
 
 TEST_CASE("EdgeInsets Calculation") {
     using namespace EFIGUI;
@@ -73,23 +75,26 @@ TEST_CASE("EdgeInsets Calculation") {
 }
 
 TEST_CASE("Spacing Calculation") {
-    using namespace EFIGUI;
+    // Note: Each SUBCASE needs its own typedef to avoid scope issues with doctest
 
     SUBCASE("Default Constructor") {
-        Spacing s;
-        CHECK(s.x == 0.0f);
-        CHECK(s.y == 0.0f);
+        typedef EFIGUI::Spacing SpacingType;
+        SpacingType spacing1;
+        CHECK(spacing1.x == 0.0f);
+        CHECK(spacing1.y == 0.0f);
     }
 
     SUBCASE("Both Constructor") {
-        Spacing s = Spacing::Both(8.0f);
-        CHECK(s.x == 8.0f);
-        CHECK(s.y == 8.0f);
+        typedef EFIGUI::Spacing SpacingType;
+        SpacingType spacing2 = SpacingType::Both(8.0f);
+        CHECK(spacing2.x == 8.0f);
+        CHECK(spacing2.y == 8.0f);
     }
 
     SUBCASE("ToVec2 Conversion") {
-        Spacing s(12.0f, 16.0f);
-        ImVec2 v = s.toVec2();
+        typedef EFIGUI::Spacing SpacingType;
+        SpacingType spacing3(12.0f, 16.0f);
+        ImVec2 v = spacing3.toVec2();
         CHECK(v.x == 12.0f);
         CHECK(v.y == 16.0f);
     }
@@ -193,6 +198,10 @@ TEST_CASE("SizeConstraints") {
 // =============================================
 // Config Builder Pattern Tests
 // =============================================
+
+// Include Components.h here to avoid Spacing name conflict
+// (EFIGUI::Spacing struct vs EFIGUI::Spacing() function)
+#include "EFIGUI/Components.h"
 
 TEST_CASE("SliderConfig Builder Pattern") {
     using namespace EFIGUI;
@@ -315,20 +324,20 @@ TEST_CASE("CardConfig Builder Pattern") {
     SUBCASE("Padding Builder Overloads") {
         // Single float
         CardConfig cfg1 = CardConfig().withPadding(12.0f);
-        CHECK(cfg1.padding.top == 12.0f);
-        CHECK(cfg1.padding.left == 12.0f);
+        CHECK(cfg1.padding.value().top == 12.0f);
+        CHECK(cfg1.padding.value().left == 12.0f);
 
         // Two floats (vertical, horizontal)
         CardConfig cfg2 = CardConfig().withPadding(8.0f, 16.0f);
-        CHECK(cfg2.padding.top == 8.0f);
-        CHECK(cfg2.padding.left == 16.0f);
+        CHECK(cfg2.padding.value().top == 8.0f);
+        CHECK(cfg2.padding.value().left == 16.0f);
 
         // EdgeInsets
         CardConfig cfg3 = CardConfig().withPadding(EdgeInsets::Only(1.0f, 2.0f, 3.0f, 4.0f));
-        CHECK(cfg3.padding.top == 1.0f);
-        CHECK(cfg3.padding.right == 2.0f);
-        CHECK(cfg3.padding.bottom == 3.0f);
-        CHECK(cfg3.padding.left == 4.0f);
+        CHECK(cfg3.padding.value().top == 1.0f);
+        CHECK(cfg3.padding.value().right == 2.0f);
+        CHECK(cfg3.padding.value().bottom == 3.0f);
+        CHECK(cfg3.padding.value().left == 4.0f);
     }
 
     SUBCASE("Chained Configuration") {
@@ -339,11 +348,11 @@ TEST_CASE("CardConfig Builder Pattern") {
             .withBgColor(IM_COL32(30, 30, 50, 200))
             .withBgAlpha(180);
 
-        CHECK(cfg.padding.top == 10.0f);
-        CHECK(cfg.margin.top == 8.0f);
-        CHECK(cfg.margin.left == 0.0f);
-        CHECK(cfg.rounding == 8.0f);
-        CHECK(cfg.bgColor == IM_COL32(30, 30, 50, 200));
+        CHECK(cfg.padding.value().top == 10.0f);
+        CHECK(cfg.margin.value().top == 8.0f);
+        CHECK(cfg.margin.value().left == 0.0f);
+        CHECK(cfg.rounding.value() == 8.0f);
+        CHECK(cfg.bgColor.value() == IM_COL32(30, 30, 50, 200));
         CHECK(cfg.bgAlpha.value() == 180);
     }
 }
@@ -353,8 +362,8 @@ TEST_CASE("ToggleConfig Builder Pattern") {
 
     SUBCASE("Default Values") {
         ToggleConfig cfg;
-        CHECK(cfg.width == 0.0f);
-        CHECK(cfg.height == 0.0f);
+        CHECK(cfg.width.has_value() == false);
+        CHECK(cfg.height.has_value() == false);
     }
 
     SUBCASE("Chained Configuration") {
@@ -365,11 +374,11 @@ TEST_CASE("ToggleConfig Builder Pattern") {
             .withMargin(EdgeInsets::All(4.0f))
             .withAnimSpeed(0.15f);
 
-        CHECK(cfg.width == 56.0f);
-        CHECK(cfg.height == 28.0f);
-        CHECK(cfg.knobSize == 20.0f);
-        CHECK(cfg.margin.top == 4.0f);
-        CHECK(cfg.animSpeed == 0.15f);
+        CHECK(cfg.width.value() == 56.0f);
+        CHECK(cfg.height.value() == 28.0f);
+        CHECK(cfg.knobSize.value() == 20.0f);
+        CHECK(cfg.margin.value().top == 4.0f);
+        CHECK(cfg.animSpeed.value() == 0.15f);
     }
 }
 
@@ -383,11 +392,11 @@ TEST_CASE("NavItemConfig Builder Pattern") {
             .withRounding(12.0f)
             .withAccentColor(IM_COL32(255, 0, 255, 255));
 
-        CHECK(cfg.height == 48.0f);
-        CHECK(cfg.padding.left == 16.0f);
-        CHECK(cfg.padding.top == 0.0f);
-        CHECK(cfg.rounding == 12.0f);
-        CHECK(cfg.accentColor == IM_COL32(255, 0, 255, 255));
+        CHECK(cfg.height.value() == 48.0f);
+        CHECK(cfg.padding.value().left == 16.0f);
+        CHECK(cfg.padding.value().top == 0.0f);
+        CHECK(cfg.rounding.value() == 12.0f);
+        CHECK(cfg.accentColor.value() == IM_COL32(255, 0, 255, 255));
     }
 }
 
@@ -401,11 +410,11 @@ TEST_CASE("WindowConfig Builder Pattern") {
             .withPadding(EdgeInsets::All(8.0f))
             .withTitleBarPadding(EdgeInsets::Symmetric(0.0f, 20.0f));
 
-        CHECK(cfg.titleBarHeight == 40.0f);
-        CHECK(cfg.rounding == 16.0f);
-        CHECK(cfg.padding.top == 8.0f);
-        CHECK(cfg.titleBarPadding.left == 20.0f);
-        CHECK(cfg.titleBarPadding.top == 0.0f);
+        CHECK(cfg.titleBarHeight.value() == 40.0f);
+        CHECK(cfg.rounding.value() == 16.0f);
+        CHECK(cfg.padding.value().top == 8.0f);
+        CHECK(cfg.titleBarPadding.value().left == 20.0f);
+        CHECK(cfg.titleBarPadding.value().top == 0.0f);
     }
 }
 
@@ -420,11 +429,11 @@ TEST_CASE("PanelConfig Builder Pattern") {
             .withBorderColor(IM_COL32(100, 100, 100, 255))
             .withGlowColor(IM_COL32(0, 245, 255, 255));
 
-        CHECK(cfg.rounding == 12.0f);
-        CHECK(cfg.padding.top == 16.0f);
-        CHECK(cfg.bgAlpha == 200);
-        CHECK(cfg.borderColor == IM_COL32(100, 100, 100, 255));
-        CHECK(cfg.glowColor == IM_COL32(0, 245, 255, 255));
+        CHECK(cfg.rounding.value() == 12.0f);
+        CHECK(cfg.padding.value().top == 16.0f);
+        CHECK(cfg.bgAlpha.value() == 200);
+        CHECK(cfg.borderColor.value() == IM_COL32(100, 100, 100, 255));
+        CHECK(cfg.glowColor.value() == IM_COL32(0, 245, 255, 255));
     }
 }
 
@@ -439,12 +448,12 @@ TEST_CASE("ProgressConfig Builder Pattern") {
             .withFillColor(IM_COL32(0, 200, 255, 255))
             .withGlowLayers(4);
 
-        CHECK(cfg.height == 8.0f);
-        CHECK(cfg.rounding == 4.0f);
-        CHECK(cfg.margin.top == 4.0f);
-        CHECK(cfg.margin.left == 0.0f);
-        CHECK(cfg.fillColor == IM_COL32(0, 200, 255, 255));
-        CHECK(cfg.glowLayers == 4);
+        CHECK(cfg.height.value() == 8.0f);
+        CHECK(cfg.rounding.value() == 4.0f);
+        CHECK(cfg.margin.value().top == 4.0f);
+        CHECK(cfg.margin.value().left == 0.0f);
+        CHECK(cfg.fillColor.value() == IM_COL32(0, 200, 255, 255));
+        CHECK(cfg.glowLayers.value() == 4);
     }
 }
 
@@ -458,10 +467,10 @@ TEST_CASE("InputConfig Builder Pattern") {
             .withBgColor(IM_COL32(40, 40, 60, 200))
             .withFocusBorderColor(IM_COL32(0, 245, 255, 255));
 
-        CHECK(cfg.rounding == 8.0f);
-        CHECK(cfg.padding.top == 6.0f);
-        CHECK(cfg.padding.left == 12.0f);
-        CHECK(cfg.bgColor == IM_COL32(40, 40, 60, 200));
-        CHECK(cfg.focusBorderColor == IM_COL32(0, 245, 255, 255));
+        CHECK(cfg.rounding.value() == 8.0f);
+        CHECK(cfg.padding.value().top == 6.0f);
+        CHECK(cfg.padding.value().left == 12.0f);
+        CHECK(cfg.bgColor.value() == IM_COL32(40, 40, 60, 200));
+        CHECK(cfg.focusBorderColor.value() == IM_COL32(0, 245, 255, 255));
     }
 }
