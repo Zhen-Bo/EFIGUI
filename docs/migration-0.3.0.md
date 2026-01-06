@@ -172,49 +172,6 @@ EFIGUI::Theme::LoadPreset(EFIGUI::ThemePreset::Cyberpunk);
 EFIGUI::Theme::ResetToDefault();
 ```
 
-### Quick Rounding Styles
-
-Apply consistent rounding across all components:
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Sharp corners (0 rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Sharp);
-
-// Subtle rounding (4px)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Subtle);
-
-// Rounded (8px) - default
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Rounded);
-
-// Pill shape (maximum rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
-```
-
-### Animation Speed Presets
-
-Adjust animation speeds globally:
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Instant transitions (no animation)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Instant);
-
-// Fast (2x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
-
-// Normal - default
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Normal);
-
-// Slow (0.5x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Slow);
-
-// Relaxed (0.25x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Relaxed);
-```
-
 ---
 
 ## Configuration Structure Reference
@@ -370,11 +327,13 @@ void InitializeTheme()
     // Custom color scheme
     config.colors.accentPrimary = IM_COL32(255, 100, 50, 255);
 
-    // Rounder corners
-    config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
+    // Rounder corners - manually set rounding values
+    config.dimensions.windowRounding = 999.0f;  // Pill shape
+    config.dimensions.frameRounding = 999.0f;
+    config.dimensions.buttonRounding = 999.0f;
 
-    // Faster animations
-    config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
+    // Faster animations - adjust speed values directly
+    config.animation.defaultSpeed = 16.0f;  // 2x faster
 }
 ```
 

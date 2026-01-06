@@ -17,6 +17,11 @@ namespace EFIGUI
     struct SliderConfig;
     struct ToggleConfig;
     struct CardConfig;
+    struct ButtonConfig;
+    struct WindowConfig;
+    struct PanelConfig;
+    struct ProgressConfig;
+    struct InputConfig;
 
     // =============================================
     // Custom Window (Borderless with navbar)
@@ -108,7 +113,7 @@ namespace EFIGUI
     // Buttons
     // =============================================
 
-    // Configuration for GlowButton
+    // Configuration for GlowButton (legacy struct - prefer ButtonConfig)
     struct GlowButtonConfig
     {
         ImVec2 size = ImVec2(0, 0);                           // Button size (0 = auto-size)
@@ -118,7 +123,10 @@ namespace EFIGUI
         std::optional<uint8_t> bgAlpha = std::nullopt;        // Background alpha (omit = default)
     };
 
-    // Glowing button with neon effect (Config struct version - recommended)
+    // Glowing button with neon effect (ButtonConfig version - recommended)
+    bool GlowButton(const char* label, const ButtonConfig& config);
+
+    // Glowing button with neon effect (GlowButtonConfig version)
     bool GlowButton(const char* label, const GlowButtonConfig& config);
 
     // Glowing button with neon effect (legacy API - for backward compatibility)
@@ -137,19 +145,43 @@ namespace EFIGUI
     // bgAlpha: background alpha (omit = use GlassOverlay defaults, 0-255 = custom alpha)
     bool DangerButton(const char* label, ImVec2 size = ImVec2(0, 0), std::optional<Layer> layer = std::nullopt, std::optional<uint8_t> bgAlpha = std::nullopt);
 
+    // Danger button with ButtonConfig
+    bool DangerButton(const char* label, const ButtonConfig& config);
+
     // Colored button - always shows colored border, no marquee effect
     // bgAlpha: background alpha (omit = use default)
     // layer: rendering layer for glow effects (omit = use LayerConfig default)
     bool ColoredButton(const char* label, ImVec2 size, ImU32 borderColor, std::optional<uint8_t> bgAlpha = std::nullopt, std::optional<Layer> layer = std::nullopt);
 
+    // Colored button with ButtonConfig
+    bool ColoredButton(const char* label, ImU32 borderColor, const ButtonConfig& config);
+
     // Configuration for CooldownButton
     struct CooldownButtonConfig
     {
+        // Layout
         ImVec2 size = ImVec2(0, 0);                           // Button size (0 = auto-size)
+        std::optional<EdgeInsets> padding = std::nullopt;     // Padding (omit = Theme default)
+        std::optional<float> rounding = std::nullopt;         // Rounding (omit = Theme default)
+        std::optional<float> minWidth = std::nullopt;         // Min width (omit = Theme default)
+
+        // Colors & Effects
         ImU32 glowColor = IM_COL32(0, 245, 255, 255);         // Glow color (default = cyan)
+        std::optional<ImU32> textColor = std::nullopt;        // Text color (omit = Theme default)
         float cooldownProgress = 0.0f;                        // 0.0 = no cooldown, 1.0 = full cooldown
         std::optional<Layer> layer = std::nullopt;            // Rendering layer (omit = default)
         std::optional<uint8_t> bgAlpha = std::nullopt;        // Background alpha (omit = default)
+
+        // Builder pattern methods
+        CooldownButtonConfig& withSize(ImVec2 s) { size = s; return *this; }
+        CooldownButtonConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        CooldownButtonConfig& withRounding(float r) { rounding = r; return *this; }
+        CooldownButtonConfig& withMinWidth(float w) { minWidth = w; return *this; }
+        CooldownButtonConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        CooldownButtonConfig& withTextColor(ImU32 c) { textColor = c; return *this; }
+        CooldownButtonConfig& withProgress(float p) { cooldownProgress = p; return *this; }
+        CooldownButtonConfig& withLayer(Layer l) { layer = l; return *this; }
+        CooldownButtonConfig& withBgAlpha(uint8_t a) { bgAlpha = a; return *this; }
     };
 
     // Cooldown button - shows a cooldown progress overlay (Config struct version - recommended)
@@ -166,7 +198,8 @@ namespace EFIGUI
     // =============================================
     // These structures allow per-instance customization of component appearance.
     // Use std::optional fields to selectively override Theme defaults.
-    // Usage: SliderConfig cfg; cfg.height = 48.0f; ModernSliderFloat(..., cfg);
+    // Builder pattern: ButtonConfig().withSize(200, 40).withGlowColor(color)
+    // Direct: config.size = ImVec2(200, 40); config.glowColor = color;
 
     // === SliderConfig ===
     struct SliderConfig
@@ -179,6 +212,10 @@ namespace EFIGUI
         std::optional<float> inputHeight = std::nullopt;
         std::optional<float> inputGap = std::nullopt;
         std::optional<float> inputRounding = std::nullopt;
+        std::optional<float> labelGap = std::nullopt;
+
+        // Padding/Margin
+        std::optional<EdgeInsets> padding = std::nullopt;
 
         // Colors
         std::optional<ImU32> trackColor = std::nullopt;
@@ -195,6 +232,24 @@ namespace EFIGUI
         bool showInput = true;
         std::optional<Layer> layer = std::nullopt;
 
+        // Builder pattern methods
+        SliderConfig& withHeight(float h) { height = h; return *this; }
+        SliderConfig& withTrackHeight(float h) { trackHeight = h; return *this; }
+        SliderConfig& withKnobRadius(float r) { knobRadius = r; return *this; }
+        SliderConfig& withInputWidth(float w) { inputWidth = w; return *this; }
+        SliderConfig& withInputHeight(float h) { inputHeight = h; return *this; }
+        SliderConfig& withInputGap(float g) { inputGap = g; return *this; }
+        SliderConfig& withLabelGap(float g) { labelGap = g; return *this; }
+        SliderConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        SliderConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        SliderConfig& withTrackColor(ImU32 c) { trackColor = c; return *this; }
+        SliderConfig& withFillColor(ImU32 c) { fillColor = c; return *this; }
+        SliderConfig& withKnobColor(ImU32 c) { knobColor = c; return *this; }
+        SliderConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        SliderConfig& withGlowLayers(int n) { glowLayers = n; return *this; }
+        SliderConfig& withShowInput(bool show) { showInput = show; return *this; }
+        SliderConfig& withLayer(Layer l) { layer = l; return *this; }
+
         // Create config with all Theme defaults filled in
         static SliderConfig FromTheme();
     };
@@ -208,6 +263,9 @@ namespace EFIGUI
         std::optional<float> knobSize = std::nullopt;
         std::optional<float> labelGap = std::nullopt;
 
+        // Padding/Margin
+        std::optional<EdgeInsets> margin = std::nullopt;
+
         // Colors
         std::optional<ImU32> trackOnColor = std::nullopt;
         std::optional<ImU32> trackOffColor = std::nullopt;
@@ -219,6 +277,21 @@ namespace EFIGUI
         std::optional<float> glowRadius = std::nullopt;
         bool disabled = false;
 
+        // Builder pattern methods
+        ToggleConfig& withWidth(float w) { width = w; return *this; }
+        ToggleConfig& withHeight(float h) { height = h; return *this; }
+        ToggleConfig& withKnobSize(float s) { knobSize = s; return *this; }
+        ToggleConfig& withLabelGap(float g) { labelGap = g; return *this; }
+        ToggleConfig& withMargin(EdgeInsets m) { margin = m; return *this; }
+        ToggleConfig& withMargin(float all) { margin = EdgeInsets::All(all); return *this; }
+        ToggleConfig& withTrackOnColor(ImU32 c) { trackOnColor = c; return *this; }
+        ToggleConfig& withTrackOffColor(ImU32 c) { trackOffColor = c; return *this; }
+        ToggleConfig& withKnobColor(ImU32 c) { knobColor = c; return *this; }
+        ToggleConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        ToggleConfig& withAnimSpeed(float s) { animSpeed = s; return *this; }
+        ToggleConfig& withGlowRadius(float r) { glowRadius = r; return *this; }
+        ToggleConfig& withDisabled(bool d) { disabled = d; return *this; }
+
         static ToggleConfig FromTheme();
     };
 
@@ -226,6 +299,9 @@ namespace EFIGUI
     struct CardConfig
     {
         // Semantic padding parameters (v0.4.0+, recommended)
+        std::optional<EdgeInsets> padding = std::nullopt;
+        std::optional<EdgeInsets> margin = std::nullopt;
+        std::optional<float> rounding = std::nullopt;
         std::optional<float> topPadding = std::nullopt;
         std::optional<float> bottomPadding = std::nullopt;
         std::optional<float> titleDescGap = std::nullopt;
@@ -255,7 +331,25 @@ namespace EFIGUI
 
         // Colors
         std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<ImU32> borderColor = std::nullopt;
+        std::optional<ImU32> titleColor = std::nullopt;
+        std::optional<ImU32> descColor = std::nullopt;
         std::optional<uint8_t> bgAlpha = std::nullopt;
+
+        // Builder pattern methods
+        CardConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        CardConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        CardConfig& withPadding(float vertical, float horizontal) { padding = EdgeInsets::Symmetric(vertical, horizontal); return *this; }
+        CardConfig& withMargin(EdgeInsets m) { margin = m; return *this; }
+        CardConfig& withMargin(float all) { margin = EdgeInsets::All(all); return *this; }
+        CardConfig& withRounding(float r) { rounding = r; return *this; }
+        CardConfig& withHeight(float h) { height = h; return *this; }
+        CardConfig& withIconSize(float s) { iconSize = s; return *this; }
+        CardConfig& withBgColor(ImU32 c) { bgColor = c; return *this; }
+        CardConfig& withBorderColor(ImU32 c) { borderColor = c; return *this; }
+        CardConfig& withTitleColor(ImU32 c) { titleColor = c; return *this; }
+        CardConfig& withDescColor(ImU32 c) { descColor = c; return *this; }
+        CardConfig& withBgAlpha(uint8_t a) { bgAlpha = a; return *this; }
 
         static CardConfig FromTheme();
     };
@@ -273,7 +367,11 @@ namespace EFIGUI
         std::optional<float> rounding = std::nullopt;
         std::optional<float> collapsedIconScale = std::nullopt;
 
+        // Padding/Margin
+        std::optional<EdgeInsets> padding = std::nullopt;
+
         // Section header
+        std::optional<EdgeInsets> sectionPadding = std::nullopt;
         std::optional<float> sectionPaddingX = std::nullopt;
         std::optional<float> sectionPaddingY = std::nullopt;
         std::optional<float> sectionHeight = std::nullopt;
@@ -281,13 +379,72 @@ namespace EFIGUI
         // Colors
         std::optional<ImU32> accentColor = std::nullopt;
         std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<ImU32> textColor = std::nullopt;
 
         // Alpha values
         std::optional<int> accentGlowAlpha = std::nullopt;
         std::optional<int> bgAlphaMultiplier = std::nullopt;
         std::optional<int> hoverBgAlpha = std::nullopt;
 
+        // Builder pattern methods
+        NavItemConfig& withHeight(float h) { height = h; return *this; }
+        NavItemConfig& withRounding(float r) { rounding = r; return *this; }
+        NavItemConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        NavItemConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        NavItemConfig& withAccentColor(ImU32 c) { accentColor = c; return *this; }
+        NavItemConfig& withBgColor(ImU32 c) { bgColor = c; return *this; }
+        NavItemConfig& withTextColor(ImU32 c) { textColor = c; return *this; }
+        NavItemConfig& withAccentBarWidth(float w) { accentBarWidth = w; return *this; }
+
         static NavItemConfig FromTheme();
+    };
+
+    // === ButtonConfig ===
+    struct ButtonConfig
+    {
+        // Layout
+        ImVec2 size = ImVec2(0, 0);                          // Button size (0 = auto-size)
+        std::optional<EdgeInsets> padding = std::nullopt;
+        std::optional<float> rounding = std::nullopt;
+        std::optional<float> minWidth = std::nullopt;
+
+        // Colors
+        std::optional<ImU32> bgColor = std::nullopt;
+        std::optional<ImU32> bgHoverColor = std::nullopt;
+        std::optional<ImU32> bgActiveColor = std::nullopt;
+        std::optional<ImU32> textColor = std::nullopt;
+        std::optional<ImU32> glowColor = std::nullopt;
+        std::optional<uint8_t> bgAlpha = std::nullopt;
+
+        // Effects
+        std::optional<int> glowLayers = std::nullopt;
+        std::optional<float> glowExpand = std::nullopt;
+        std::optional<float> glowIntensity = std::nullopt;
+
+        // Behavior
+        bool forceHover = false;                             // Always show hover animation
+        std::optional<Layer> layer = std::nullopt;           // Rendering layer
+
+        // Builder pattern methods
+        ButtonConfig& withSize(float w, float h) { size = ImVec2(w, h); return *this; }
+        ButtonConfig& withSize(ImVec2 s) { size = s; return *this; }
+        ButtonConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        ButtonConfig& withPadding(float horizontal) { padding = EdgeInsets::Horizontal(horizontal); return *this; }
+        ButtonConfig& withRounding(float r) { rounding = r; return *this; }
+        ButtonConfig& withMinWidth(float w) { minWidth = w; return *this; }
+        ButtonConfig& withBgColor(ImU32 c) { bgColor = c; return *this; }
+        ButtonConfig& withBgHoverColor(ImU32 c) { bgHoverColor = c; return *this; }
+        ButtonConfig& withBgActiveColor(ImU32 c) { bgActiveColor = c; return *this; }
+        ButtonConfig& withTextColor(ImU32 c) { textColor = c; return *this; }
+        ButtonConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        ButtonConfig& withBgAlpha(uint8_t a) { bgAlpha = a; return *this; }
+        ButtonConfig& withGlowLayers(int n) { glowLayers = n; return *this; }
+        ButtonConfig& withGlowExpand(float e) { glowExpand = e; return *this; }
+        ButtonConfig& withGlowIntensity(float i) { glowIntensity = i; return *this; }
+        ButtonConfig& withForceHover(bool f) { forceHover = f; return *this; }
+        ButtonConfig& withLayer(Layer l) { layer = l; return *this; }
+
+        static ButtonConfig FromTheme();
     };
 
     // === WindowConfig ===
@@ -299,10 +456,28 @@ namespace EFIGUI
         std::optional<float> titleButtonSize = std::nullopt;
         std::optional<float> rounding = std::nullopt;
 
+        // Padding
+        std::optional<EdgeInsets> padding = std::nullopt;
+        std::optional<EdgeInsets> titleBarPadding = std::nullopt;
+
         // Colors
         std::optional<ImU32> titleBarLeftColor = std::nullopt;
         std::optional<ImU32> titleBarRightColor = std::nullopt;
+        std::optional<ImU32> titleTextColor = std::nullopt;
+        std::optional<ImU32> overlayColor = std::nullopt;
         std::optional<uint8_t> overlayAlpha = std::nullopt;
+
+        // Builder pattern methods
+        WindowConfig& withTitleBarHeight(float h) { titleBarHeight = h; return *this; }
+        WindowConfig& withRounding(float r) { rounding = r; return *this; }
+        WindowConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        WindowConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        WindowConfig& withTitleBarPadding(EdgeInsets p) { titleBarPadding = p; return *this; }
+        WindowConfig& withTitleBarLeftColor(ImU32 c) { titleBarLeftColor = c; return *this; }
+        WindowConfig& withTitleBarRightColor(ImU32 c) { titleBarRightColor = c; return *this; }
+        WindowConfig& withTitleTextColor(ImU32 c) { titleTextColor = c; return *this; }
+        WindowConfig& withOverlayColor(ImU32 c) { overlayColor = c; return *this; }
+        WindowConfig& withOverlayAlpha(uint8_t a) { overlayAlpha = a; return *this; }
 
         static WindowConfig FromTheme();
     };
@@ -311,10 +486,22 @@ namespace EFIGUI
     struct PanelConfig
     {
         std::optional<float> rounding = std::nullopt;
+        std::optional<EdgeInsets> padding = std::nullopt;
         std::optional<uint8_t> bgAlpha = std::nullopt;
+        std::optional<ImU32> bgColor = std::nullopt;
         std::optional<ImU32> borderColor = std::nullopt;
         std::optional<ImU32> glowColor = std::nullopt;
         bool showBorder = true;
+
+        // Builder pattern methods
+        PanelConfig& withRounding(float r) { rounding = r; return *this; }
+        PanelConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        PanelConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        PanelConfig& withBgAlpha(uint8_t a) { bgAlpha = a; return *this; }
+        PanelConfig& withBgColor(ImU32 c) { bgColor = c; return *this; }
+        PanelConfig& withBorderColor(ImU32 c) { borderColor = c; return *this; }
+        PanelConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        PanelConfig& withShowBorder(bool show) { showBorder = show; return *this; }
 
         static PanelConfig FromTheme();
     };
@@ -324,11 +511,25 @@ namespace EFIGUI
     {
         std::optional<float> height = std::nullopt;
         std::optional<float> rounding = std::nullopt;
+        std::optional<EdgeInsets> margin = std::nullopt;
         std::optional<ImU32> trackColor = std::nullopt;
         std::optional<ImU32> fillColor = std::nullopt;
+        std::optional<ImU32> fillColorEnd = std::nullopt;  // For gradient
         std::optional<ImU32> glowColor = std::nullopt;
         std::optional<int> glowLayers = std::nullopt;
         std::optional<Layer> layer = std::nullopt;
+
+        // Builder pattern methods
+        ProgressConfig& withHeight(float h) { height = h; return *this; }
+        ProgressConfig& withRounding(float r) { rounding = r; return *this; }
+        ProgressConfig& withMargin(EdgeInsets m) { margin = m; return *this; }
+        ProgressConfig& withMargin(float all) { margin = EdgeInsets::All(all); return *this; }
+        ProgressConfig& withTrackColor(ImU32 c) { trackColor = c; return *this; }
+        ProgressConfig& withFillColor(ImU32 c) { fillColor = c; return *this; }
+        ProgressConfig& withFillColorEnd(ImU32 c) { fillColorEnd = c; return *this; }
+        ProgressConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        ProgressConfig& withGlowLayers(int n) { glowLayers = n; return *this; }
+        ProgressConfig& withLayer(Layer l) { layer = l; return *this; }
 
         static ProgressConfig FromTheme();
     };
@@ -337,10 +538,22 @@ namespace EFIGUI
     struct InputConfig
     {
         std::optional<float> rounding = std::nullopt;
+        std::optional<EdgeInsets> padding = std::nullopt;
         std::optional<ImU32> bgColor = std::nullopt;
         std::optional<ImU32> borderColor = std::nullopt;
         std::optional<ImU32> focusBorderColor = std::nullopt;
         std::optional<ImU32> textColor = std::nullopt;
+        std::optional<ImU32> placeholderColor = std::nullopt;
+
+        // Builder pattern methods
+        InputConfig& withRounding(float r) { rounding = r; return *this; }
+        InputConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        InputConfig& withPadding(float all) { padding = EdgeInsets::All(all); return *this; }
+        InputConfig& withBgColor(ImU32 c) { bgColor = c; return *this; }
+        InputConfig& withBorderColor(ImU32 c) { borderColor = c; return *this; }
+        InputConfig& withFocusBorderColor(ImU32 c) { focusBorderColor = c; return *this; }
+        InputConfig& withTextColor(ImU32 c) { textColor = c; return *this; }
+        InputConfig& withPlaceholderColor(ImU32 c) { placeholderColor = c; return *this; }
 
         static InputConfig FromTheme();
     };

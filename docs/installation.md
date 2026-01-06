@@ -131,6 +131,7 @@ target_link_libraries(EFIGUI PUBLIC imgui)
 | Option | Default | Description |
 |--------|---------|-------------|
 | `EFIGUI_BUILD_EXAMPLES` | OFF | Build example applications |
+| `EFIGUI_BUILD_TESTS` | OFF | Build unit tests (requires doctest) |
 | `EFIGUI_ENABLE_DX11` | ON | Enable DirectX 11 blur backend |
 | `EFIGUI_ENABLE_DX12` | OFF | Enable DirectX 12 (future) |
 | `EFIGUI_ENABLE_VULKAN` | OFF | Enable Vulkan (future) |

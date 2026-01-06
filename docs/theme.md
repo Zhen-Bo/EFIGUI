@@ -17,6 +17,54 @@ config.animation.hoverSpeed = 15.0f;
 
 ---
 
+## Core Layout Types (v0.4.0+)
+
+v0.4.0 introduces unified layout types for consistent padding, margin, and spacing:
+
+### EdgeInsets
+
+Represents padding or margin on all four edges:
+
+```cpp
+// Named constructors
+EdgeInsets::All(16.0f)                    // {16, 16, 16, 16}
+EdgeInsets::Symmetric(8.0f, 16.0f)        // vertical=8, horizontal=16
+EdgeInsets::Horizontal(24.0f)             // {0, 24, 0, 24}
+EdgeInsets::Vertical(8.0f)                // {8, 0, 8, 0}
+EdgeInsets::Only(10, 20, 10, 20)          // top, right, bottom, left
+
+// Utility methods
+EdgeInsets padding(10, 20, 10, 20);
+float h = padding.horizontal();      // left + right = 40
+float v = padding.vertical();        // top + bottom = 20
+ImVec2 tl = padding.topLeft();       // {20, 10}
+ImVec2 sz = padding.size();          // {40, 20}
+```
+
+### Spacing
+
+Represents spacing between elements:
+
+```cpp
+Spacing::Both(8.0f)                       // {8, 8}
+Spacing(12.0f, 8.0f)                      // x=12, y=8
+ImVec2 v = spacing.toVec2();              // Convert to ImVec2
+```
+
+### CornerRadius
+
+Represents corner rounding for rounded rectangles:
+
+```cpp
+CornerRadius::All(8.0f)                   // All corners
+CornerRadius::Top(12.0f)                  // Top corners only
+CornerRadius::Bottom(12.0f)               // Bottom corners only
+CornerRadius::None()                      // No rounding
+CornerRadius::Pill()                      // Maximum rounding
+```
+
+---
+
 ## Component Theme Accessors (v0.3.1+)
 
 Access component-specific theme configurations directly:
@@ -31,6 +79,11 @@ float navAccentBar = EFIGUI::Theme::Nav().accentBarWidth;   // 3.0f
 // Modify component themes at runtime
 EFIGUI::Theme::SliderMut().height = 32.0f;
 EFIGUI::Theme::ToggleMut().width = 56.0f;
+
+// v0.4.0+: Use EdgeInsets for padding/margin
+EFIGUI::Theme::ButtonMut().padding = EFIGUI::EdgeInsets::Symmetric(8, 24);
+EFIGUI::Theme::CardMut().padding = EFIGUI::EdgeInsets(12, 16, 12, 16);
+EFIGUI::Theme::NavMut().itemPadding = EFIGUI::EdgeInsets::Horizontal(16);
 ```
 
 **Available Component Accessors:**
@@ -77,49 +130,6 @@ EFIGUI::Theme::LoadPreset(EFIGUI::ThemePreset::Cyberpunk);
 
 // Reset to default
 EFIGUI::Theme::ResetToDefault();
-```
-
----
-
-## Quick Styling Helpers
-
-### Rounding Styles
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Sharp corners (0 rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Sharp);
-
-// Subtle rounding (4px)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Subtle);
-
-// Rounded (8px) - default
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Rounded);
-
-// Pill shape (maximum rounding)
-config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
-```
-
-### Animation Speed Presets
-
-```cpp
-auto& config = EFIGUI::Theme::GetConfig();
-
-// Instant transitions (no animation)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Instant);
-
-// Fast (2x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
-
-// Normal - default
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Normal);
-
-// Slow (0.5x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Slow);
-
-// Relaxed (0.25x speed)
-config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Relaxed);
 ```
 
 ---
@@ -235,8 +245,6 @@ struct ThemeDimensions
     float toggleLabelGap;
     float itemSpacing;
     // ... more dimensions
-
-    void ApplyRoundingStyle(RoundingStyle style);
 };
 ```
 
@@ -266,8 +274,6 @@ struct ThemeAnimation
     float pulseFrequency;
     float sweepDuration;
     float breatheFrequency;
-
-    void ApplySpeedPreset(AnimSpeed speed);
 };
 ```
 
@@ -301,29 +307,36 @@ void InitializeCustomTheme()
     config.colors.accentSecondary = IM_COL32(255, 50, 100, 255);  // Red-pink
     config.colors.backgroundDark = IM_COL32(20, 15, 15, 255);     // Warm dark
 
-    // Rounder UI elements
-    config.dimensions.ApplyRoundingStyle(EFIGUI::RoundingStyle::Pill);
+    // Rounder UI elements - manually set rounding values
+    config.dimensions.windowRounding = 999.0f;  // Pill shape
+    config.dimensions.frameRounding = 999.0f;
+    config.dimensions.buttonRounding = 999.0f;
+    config.dimensions.navItemRounding = 999.0f;
 
     // Stronger glow effects
     config.effects.glowIntensity = 0.8f;
     config.effects.glowRadius = 12.0f;
 
-    // Snappy animations
-    config.animation.ApplySpeedPreset(EFIGUI::AnimSpeed::Fast);
+    // Snappy animations - adjust speed values directly
+    config.animation.defaultSpeed = 16.0f;  // 2x faster
 }
 ```
 
 ---
 
-## Migration from v0.2.x
+## Migration from v0.2.x / v0.3.x
 
-See [Migration Guide](migration-0.3.0.md) for detailed instructions on updating from v0.2.x.
+See [Migration Guide v0.3.0](migration-0.3.0.md) for migrating from v0.2.x.
+See [Migration Guide v0.4.0](migration-0.4.0.md) for migrating from v0.3.x.
 
 **Quick reference:**
 ```cpp
 // Old (v0.2.x)
 ImU32 color = Theme::AccentCyan;
 
-// New (v0.3.0)
+// v0.3.0+
 ImU32 color = Theme::AccentCyan();
+
+// v0.4.0+ (using EdgeInsets)
+Theme::ButtonMut().padding = EdgeInsets::Symmetric(8, 24);
 ```
