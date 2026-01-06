@@ -90,6 +90,8 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h")
     target_include_directories(EFIGUI PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/imgui>
     )
+else()
+    message(WARNING "EFIGUI: ImGui not found. Set IMGUI_INCLUDE_DIR or place imgui/ folder in project root.")
 endif()
 
 # Windows-specific libraries

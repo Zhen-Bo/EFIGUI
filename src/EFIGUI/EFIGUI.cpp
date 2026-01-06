@@ -8,6 +8,7 @@
 #endif
 
 #include <memory>
+#include <cstdio>
 
 namespace EFIGUI
 {
@@ -51,9 +52,12 @@ namespace EFIGUI
         {
             IM_ASSERT(device != nullptr && "EFIGUI: Device pointer cannot be null for hardware backend");
 
-            // Graceful fallback in Release builds
+            // Graceful fallback in Release builds with error logging
             if (device == nullptr)
+            {
+                fprintf(stderr, "[EFIGUI Error] Initialize() failed: device pointer is null for hardware backend\n");
                 return false;
+            }
         }
 
         // Create blur backend based on type
@@ -113,6 +117,7 @@ namespace EFIGUI
         // Debug validation: warn if EndFrame was not called last frame
         if (s_lastBeginFrameCount >= 0 && s_lastEndFrameCount < s_lastBeginFrameCount)
         {
+            fprintf(stderr, "[EFIGUI Error] EndFrame() was not called! Layer commands from previous frame were lost.\n");
             IM_ASSERT(false && "EFIGUI::EndFrame() was not called! Layer commands from previous frame were lost.");
         }
 
@@ -138,6 +143,7 @@ namespace EFIGUI
         // Debug validation: warn if BeginFrame was not called this frame
         if (s_lastBeginFrameCount != currentFrame)
         {
+            fprintf(stderr, "[EFIGUI Error] BeginFrame() was not called this frame!\n");
             IM_ASSERT(false && "EFIGUI::BeginFrame() was not called this frame!");
         }
 
