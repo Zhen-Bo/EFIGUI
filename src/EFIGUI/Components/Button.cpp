@@ -241,8 +241,13 @@ namespace EFIGUI
         // Resolve size from config
         ImVec2 size = config.size;
         float paddingX = config.padding.has_value() ? config.padding->horizontal() : t.padding.horizontal();
+        float height = config.size.y > 0 ? config.size.y : t.height;
         if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + paddingX;
-        if (size.y <= 0) size.y = t.height;
+        if (size.y <= 0) size.y = height;
+
+        // Apply min width if specified
+        float minWidth = config.minWidth.value_or(t.minWidth);
+        if (minWidth > 0 && size.x < minWidth) size.x = minWidth;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -312,27 +317,30 @@ namespace EFIGUI
 
     bool CooldownButton(const char* label, const CooldownButtonConfig& config)
     {
-        return CooldownButton(label, config.size, config.glowColor, config.cooldownProgress, config.layer, config.bgAlpha);
-    }
-
-    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
-    {
-        // Resolve values from ButtonTheme
+        // Use CooldownButtonConfig with full customization support
         const auto& t = Theme::Button();
-        const float defaultPaddingX = t.paddingX;
         const float defaultHeight = t.height;
         const float cooldownThreshold = t.cooldownThreshold;
 
         ImGuiID id = ImGui::GetID(label);
         Animation::WidgetState& state = Animation::GetState(id);
 
-        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + defaultPaddingX;
-        if (size.y <= 0) size.y = defaultHeight;
+        // Resolve size
+        ImVec2 size = config.size;
+        float paddingX = config.padding.has_value() ? config.padding->horizontal() : t.padding.horizontal();
+        float height = config.size.y > 0 ? config.size.y : defaultHeight;
+        
+        if (size.x <= 0) size.x = ImGui::CalcTextSize(label).x + paddingX;
+        if (size.y <= 0) size.y = height;
+
+        // Apply min width if specified
+        float minWidth = config.minWidth.value_or(t.minWidth);
+        if (minWidth > 0 && size.x < minWidth) size.x = minWidth;
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
         // Button is disabled during cooldown
-        bool isOnCooldown = cooldownProgress > cooldownThreshold;
+        bool isOnCooldown = config.cooldownProgress > cooldownThreshold;
         if (isOnCooldown) ImGui::BeginDisabled();
 
         ImGui::InvisibleButton(label, size);
@@ -350,26 +358,26 @@ namespace EFIGUI
         }
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
-        float rounding = Theme::ButtonRounding();
+        float rounding = config.rounding.value_or(t.rounding);
 
         // Glow effect (outer glow when hovered, NOT on cooldown)
         if (!isOnCooldown)
         {
-            Draw::GlowLayers(pos, size, glowColor, state.hoverAnim, Theme::ButtonGlowLayers(), Theme::ButtonGlowExpand(), rounding, layer);
+            Draw::GlowLayers(pos, size, config.glowColor, state.hoverAnim, Theme::ButtonGlowLayers(), Theme::ButtonGlowExpand(), rounding, config.layer);
         }
 
         // Glassmorphism background (skip when on cooldown for simpler look)
         if (!isOnCooldown)
         {
-            Draw::GlassmorphismBg(pos, size, rounding, state.hoverAnim, active, bgAlpha);
+            Draw::GlassmorphismBg(pos, size, rounding, state.hoverAnim, active, config.bgAlpha);
         }
         else
         {
             // Fallback: solid background when on cooldown
             ImU32 cooldownBg = Theme::ButtonDefault();
-            if (bgAlpha.has_value())
+            if (config.bgAlpha.has_value())
             {
-                cooldownBg = Theme::ApplyAlpha(cooldownBg, bgAlpha.value());
+                cooldownBg = Theme::ApplyAlpha(cooldownBg, config.bgAlpha.value());
             }
             draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), cooldownBg, rounding);
         }
@@ -378,14 +386,14 @@ namespace EFIGUI
         if (isOnCooldown)
         {
             float sweepPos = Animation::Sweep(0.5f);
-            DrawCooldownOverlay(draw, pos, size, cooldownProgress, rounding, glowColor, sweepPos);
+            DrawCooldownOverlay(draw, pos, size, config.cooldownProgress, rounding, config.glowColor, sweepPos);
         }
 
         // Marquee border (only when not on cooldown)
         if (!isOnCooldown)
         {
             float sweepPos = Animation::Sweep(0.12f);
-            Draw::MarqueeBorder(pos, size, glowColor, sweepPos, 0.22f, rounding, 1.5f, state.hoverAnim, layer);
+            Draw::MarqueeBorder(pos, size, config.glowColor, sweepPos, 0.22f, rounding, 1.5f, state.hoverAnim, config.layer);
         }
 
         // Text
@@ -394,9 +402,22 @@ namespace EFIGUI
             pos.x + (size.x - textSize.x) * 0.5f,
             pos.y + (size.y - textSize.y) * 0.5f
         );
-        ImU32 textColor = isOnCooldown ? Theme::TextMuted() : Theme::TextPrimary();
+        ImU32 defaultTextColor = isOnCooldown ? Theme::TextMuted() : Theme::TextPrimary();
+        ImU32 textColor = config.textColor.value_or(defaultTextColor);
         draw->AddText(textPos, textColor, label);
 
         return clicked && !isOnCooldown;
+    }
+
+    bool CooldownButton(const char* label, ImVec2 size, ImU32 glowColor, float cooldownProgress, std::optional<Layer> layer, std::optional<uint8_t> bgAlpha)
+    {
+        // Delegate to Config version
+        CooldownButtonConfig config;
+        config.size = size;
+        config.glowColor = glowColor;
+        config.cooldownProgress = cooldownProgress;
+        config.layer = layer;
+        config.bgAlpha = bgAlpha;
+        return CooldownButton(label, config);
     }
 }

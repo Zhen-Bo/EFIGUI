@@ -159,11 +159,29 @@ namespace EFIGUI
     // Configuration for CooldownButton
     struct CooldownButtonConfig
     {
+        // Layout
         ImVec2 size = ImVec2(0, 0);                           // Button size (0 = auto-size)
+        std::optional<EdgeInsets> padding = std::nullopt;     // Padding (omit = Theme default)
+        std::optional<float> rounding = std::nullopt;         // Rounding (omit = Theme default)
+        std::optional<float> minWidth = std::nullopt;         // Min width (omit = Theme default)
+
+        // Colors & Effects
         ImU32 glowColor = IM_COL32(0, 245, 255, 255);         // Glow color (default = cyan)
+        std::optional<ImU32> textColor = std::nullopt;        // Text color (omit = Theme default)
         float cooldownProgress = 0.0f;                        // 0.0 = no cooldown, 1.0 = full cooldown
         std::optional<Layer> layer = std::nullopt;            // Rendering layer (omit = default)
         std::optional<uint8_t> bgAlpha = std::nullopt;        // Background alpha (omit = default)
+
+        // Builder pattern methods
+        CooldownButtonConfig& withSize(ImVec2 s) { size = s; return *this; }
+        CooldownButtonConfig& withPadding(EdgeInsets p) { padding = p; return *this; }
+        CooldownButtonConfig& withRounding(float r) { rounding = r; return *this; }
+        CooldownButtonConfig& withMinWidth(float w) { minWidth = w; return *this; }
+        CooldownButtonConfig& withGlowColor(ImU32 c) { glowColor = c; return *this; }
+        CooldownButtonConfig& withTextColor(ImU32 c) { textColor = c; return *this; }
+        CooldownButtonConfig& withProgress(float p) { cooldownProgress = p; return *this; }
+        CooldownButtonConfig& withLayer(Layer l) { layer = l; return *this; }
+        CooldownButtonConfig& withBgAlpha(uint8_t a) { bgAlpha = a; return *this; }
     };
 
     // Cooldown button - shows a cooldown progress overlay (Config struct version - recommended)

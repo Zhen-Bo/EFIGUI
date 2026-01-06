@@ -6,6 +6,7 @@ project(EFIGUI VERSION 0.4.0 LANGUAGES CXX)
 # =============================================
 
 option(EFIGUI_BUILD_EXAMPLES "Build EFIGUI examples" OFF)
+option(EFIGUI_BUILD_TESTS "Build unit tests" OFF)
 option(EFIGUI_ENABLE_DX11 "Enable DirectX 11 blur backend" ON)
 option(EFIGUI_ENABLE_DX12 "Enable DirectX 12 blur backend (future)" OFF)
 option(EFIGUI_ENABLE_VULKAN "Enable Vulkan blur backend (future)" OFF)
@@ -161,8 +162,6 @@ install(FILES
 # =============================================
 # Unit Tests
 # =============================================
-
-option(EFIGUI_BUILD_TESTS "Build unit tests" OFF)
 
 if(EFIGUI_BUILD_TESTS)
     enable_testing()

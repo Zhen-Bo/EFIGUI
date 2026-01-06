@@ -28,11 +28,29 @@ v0.4.0 is a **major refactoring release** that introduces unified layout types a
 
 ---
 
+## Breaking Changes
+
+While mostly backward compatible, v0.4.0 introduces the following breaking changes for users who heavily customize `ThemeConfig`:
+
+### Theme Customization
+- **Legacy Padding Fields Ignored**: The following legacy fields in `ThemeConfig` are now **ignored** by modern components. If you customized these, your UI spacing may reset to defaults:
+    - `Theme::Button().paddingX` (Ignored by `GlowButton`, `ColoredButton`, `CooldownButton`) -> Use `Theme::Button().padding`
+    - `Theme::Nav().iconPadding` -> Use `Theme::Nav().itemPadding`
+    - `Theme::Nav().sectionPaddingX/Y` -> Use `Theme::Nav().sectionPadding`
+    - `Theme::Window().titleTextPadding` -> Use `Theme::Window().titleBarPadding`
+    - `Theme::Layout().tooltipPaddingX/Y` -> Use `Theme::Layout().tooltipPadding`
+
+### Button Behavior
+- **Consistent Rounding**: `CooldownButton` now respects `Theme::Button().rounding` instead of falling back to global `Theme::ButtonRounding()`.
+- **Consistent MinWidth**: `ColoredButton` and `CooldownButton` now respect `Theme::Button().minWidth`. If you had a large global minWidth set, these buttons may now appear wider than before (previously they ignored it).
+
+---
+
 ## Step-by-Step Migration
 
-### Step 1: No Breaking Changes Required
+### Step 1: Compatibility Check
 
-v0.4.0 maintains full backward compatibility. Existing code will continue to work:
+v0.4.0 maintains full backward compatibility for API calls. Existing code will continue to work:
 
 ```cpp
 // This v0.3.x code still works in v0.4.0

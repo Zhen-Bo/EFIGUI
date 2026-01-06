@@ -1,0 +1,3 @@
+* text=auto eol=lf
+*.{cpp,h,hpp,c,cc} text eol=lf
+*.{md,txt,cmake,in} text eol=lf

@@ -386,11 +386,16 @@ namespace EFIGUI
         float minTextWidth = 50.0f;         // Minimum width for text
 
         // Legacy parameters (deprecated, kept for backward compatibility)
-        float topPadding = 10.0f;           // deprecated: use padding.top
-        float bottomPadding = 12.0f;        // deprecated: use padding.bottom
-        float baseHeight = 0.0f;            // deprecated: set to 0 to use dynamic calculation
-        float nameOffsetY = 10.0f;          // deprecated: used when baseHeight > 0
-        float descOffsetY = 28.0f;          // deprecated: used when baseHeight > 0
+        // [DEPRECATED] use padding.top
+        float topPadding = 10.0f;
+        // [DEPRECATED] use padding.bottom
+        float bottomPadding = 12.0f;
+        // [DEPRECATED] set to 0 to use dynamic calculation
+        float baseHeight = 0.0f;
+        // [DEPRECATED] used when baseHeight > 0
+        float nameOffsetY = 10.0f;
+        // [DEPRECATED] used when baseHeight > 0
+        float descOffsetY = 28.0f;
 
         // Inline toggle dimensions
         float toggleWidth = 40.0f;          // Toggle track width
@@ -413,7 +418,8 @@ namespace EFIGUI
         EdgeInsets itemPadding = EdgeInsets::Symmetric(0, 12.0f);  // Vertical, horizontal padding
         float itemHeight = 40.0f;           // Nav item height
         float itemRounding = 10.0f;         // Nav item corner rounding
-        float iconPadding = 12.0f;          // Horizontal icon padding (legacy)
+        // [DEPRECATED] use itemPadding
+        float iconPadding = 12.0f;
         float labelSpacing = 12.0f;         // Spacing between icon and label
         float collapsedIconScale = 1.25f;   // Icon scale when collapsed
 
@@ -440,7 +446,9 @@ namespace EFIGUI
         int hoverBgAlpha = 30;              // Alpha for hover background
 
         // Legacy accessors (deprecated)
+        // [DEPRECATED] use sectionPadding
         float sectionPaddingX = 12.0f;
+        // [DEPRECATED] use sectionPadding
         float sectionPaddingY = 4.0f;
     };
 
@@ -453,7 +461,8 @@ namespace EFIGUI
         float minWidth = 0.0f;              // Minimum button width (0 = auto)
 
         // Legacy accessor for backward compatibility
-        float paddingX = 32.0f;             // Horizontal padding for auto-sized (deprecated, use padding)
+        // [DEPRECATED] use padding
+        float paddingX = 32.0f;
 
         // Colors
         ImU32 bgDefault = IM_COL32(40, 40, 60, 200);
@@ -509,8 +518,10 @@ namespace EFIGUI
         ImU32 overlayColor = IM_COL32(20, 20, 35, 200);
 
         // Legacy accessors (deprecated)
+        // [DEPRECATED] use titleBarPadding
         float titleTextPadding = 16.0f;
-        float contentSpacingY = 8.0f;       // Vertical spacing after elements
+        // [DEPRECATED] use itemSpacing
+        float contentSpacingY = 8.0f;
 
         // Navbar header
         float navbarButtonSize = 20.0f;     // Navbar collapse button size
@@ -573,7 +584,9 @@ namespace EFIGUI
         EdgeInsets contentPadding = EdgeInsets::All(18.0f);
 
         // Legacy accessors (deprecated)
+        // [DEPRECATED] use tooltipPadding
         float tooltipPaddingX = 8.0f;
+        // [DEPRECATED] use tooltipPadding
         float tooltipPaddingY = 6.0f;
     };
 
