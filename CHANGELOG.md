@@ -63,6 +63,7 @@ ModernSliderFloat("Value", &val, 0, 100, "%.0f", std::nullopt,
 ### Changed
 - Theme structs now use `EdgeInsets` for padding/margin instead of separate float values (legacy accessors preserved for backward compatibility)
 - `ButtonTheme.paddingX` deprecated in favor of `ButtonTheme.padding`
+- **Button API unification**: Legacy `GlowButton`, `ColoredButton`, and `GlowButtonConfig` overloads now delegate to `ButtonConfig` version, eliminating code duplication and ensuring consistent behavior
 
 ### Removed
 - **Empty local namespaces**: Removed unused `ButtonLocal` and `WindowLocal` namespaces from Button.cpp and Window.cpp
