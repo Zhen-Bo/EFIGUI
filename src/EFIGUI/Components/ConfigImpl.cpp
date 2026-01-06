@@ -64,6 +64,12 @@ namespace EFIGUI
         CardConfig cfg;
         const auto& t = Theme::Card();
 
+        // Layout with new padding
+        cfg.padding = t.padding;
+        cfg.margin = t.margin;
+        cfg.rounding = t.rounding;
+        cfg.titleDescGap = t.titleDescGap;
+
         // Layout dimensions
         cfg.height = t.baseHeight;
         cfg.iconSize = t.iconSize;
@@ -72,6 +78,10 @@ namespace EFIGUI
         cfg.minTextWidth = t.minTextWidth;
         cfg.nameOffsetY = t.nameOffsetY;
         cfg.descOffsetY = t.descOffsetY;
+
+        // Legacy
+        cfg.topPadding = t.topPadding;
+        cfg.bottomPadding = t.bottomPadding;
 
         // Inline toggle dimensions
         cfg.toggleWidth = t.toggleWidth;
@@ -88,7 +98,10 @@ namespace EFIGUI
         cfg.sectionSpacing = t.sectionSpacing;
 
         // Colors
-        cfg.bgColor = Theme::BackgroundPanel();
+        cfg.bgColor = t.bgColor;
+        cfg.borderColor = t.borderColor;
+        cfg.titleColor = t.titleColor;
+        cfg.descColor = t.descColor;
 
         return cfg;
     }
@@ -103,16 +116,18 @@ namespace EFIGUI
         const auto& t = Theme::Nav();
 
         // Dimensions
-        cfg.height = Theme::NavItemHeight();
+        cfg.height = t.itemHeight;
         cfg.iconPadding = t.iconPadding;
         cfg.labelSpacing = t.labelSpacing;
         cfg.accentBarWidth = t.accentBarWidth;
         cfg.accentBarHeightRatio = t.accentBarHeightRatio;
         cfg.accentBarGlowRadius = t.accentBarGlowRadius;
-        cfg.rounding = Theme::NavItemRounding();
+        cfg.rounding = t.itemRounding;
         cfg.collapsedIconScale = t.collapsedIconScale;
 
-        // Section header
+        // Padding
+        cfg.padding = t.itemPadding;
+        cfg.sectionPadding = t.sectionPadding;
         cfg.sectionPaddingX = t.sectionPaddingX;
         cfg.sectionPaddingY = t.sectionPaddingY;
         cfg.sectionHeight = t.sectionHeight;
@@ -124,6 +139,35 @@ namespace EFIGUI
         cfg.accentGlowAlpha = t.accentGlowAlpha;
         cfg.bgAlphaMultiplier = t.bgAlphaMultiplier;
         cfg.hoverBgAlpha = t.hoverBgAlpha;
+
+        return cfg;
+    }
+
+    // =============================================
+    // ButtonConfig::FromTheme
+    // =============================================
+
+    ButtonConfig ButtonConfig::FromTheme()
+    {
+        ButtonConfig cfg;
+        const auto& t = Theme::Button();
+
+        // Layout
+        cfg.padding = t.padding;
+        cfg.rounding = t.rounding;
+        cfg.minWidth = t.minWidth;
+
+        // Colors
+        cfg.bgColor = t.bgDefault;
+        cfg.bgHoverColor = t.bgHover;
+        cfg.bgActiveColor = t.bgActive;
+        cfg.textColor = t.textColor;
+        cfg.glowColor = t.glowColor;
+
+        // Effects
+        cfg.glowLayers = t.glowLayers;
+        cfg.glowExpand = t.glowExpand;
+        cfg.glowIntensity = t.glowIntensityBase;
 
         return cfg;
     }

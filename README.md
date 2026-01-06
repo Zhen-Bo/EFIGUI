@@ -13,29 +13,37 @@ A modern, cyberpunk-themed UI framework built on top of [Dear ImGui](https://git
 - **Flexible Customization**: Optional parameters for per-instance styling without breaking defaults
 - **Per-Instance Config** (v0.3.1+): Full control over individual widget appearance with Config structs
 - **Semantic Card Layout** (v0.3.2+): Consistent card heights at all DPI scales with semantic padding parameters
+- **Core Layout Types** (v0.4.0): Unified `EdgeInsets`, `Spacing`, `CornerRadius` for padding/margin control
+- **Builder Pattern** (v0.4.0): Fluent API for Config structs (`.withHeight()`, `.withGlowColor()`, etc.)
 
 ---
 
-## What's New in v0.3.2
+## What's New in v0.4.0
 
-**FeatureCard Height Fix**: Cards now render with consistent bottom margins at 150%/200% UI scale:
+**Core Layout Types & Builder Pattern**: v0.4.0 introduces unified layout types and fluent builder patterns for easier customization:
 
 ```cpp
-// New semantic padding parameters in CardTheme
-EFIGUI::Theme::CardMut().topPadding = 10.0f;
-EFIGUI::Theme::CardMut().bottomPadding = 12.0f;
-EFIGUI::Theme::CardMut().titleDescGap = 2.0f;
+// New fluent builder pattern for inline customization
+EFIGUI::ModernSliderFloat("Volume", &volume, 0, 100, "%.0f", std::nullopt,
+    EFIGUI::SliderConfig()
+        .withHeight(32.0f)
+        .withKnobRadius(12.0f)
+        .withGlowColor(EFIGUI::Theme::AccentPurple()));
 
-// Per-instance override via CardConfig
-EFIGUI::CardConfig config;
-config.topPadding = 15.0f;
-config.bottomPadding = 15.0f;
-EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection mode", &enabled, config);
+// EdgeInsets for precise padding control
+EFIGUI::GlowButton("Confirm", EFIGUI::ButtonConfig()
+    .withSize(150, 40)
+    .withPadding(EFIGUI::EdgeInsets::Symmetric(8, 24))
+    .withGlowColor(EFIGUI::Theme::StatusSuccess()));
 ```
 
-The fix uses `CalcWordWrapPositionA` for consistent line counting instead of `CalcTextSize`, ensuring accurate height calculation across all DPI scales.
+**New Layout Types**:
+- `EdgeInsets` - Unified padding/margin with named constructors (`All`, `Symmetric`, `Horizontal`, `Vertical`)
+- `Spacing` - Element spacing (horizontal and vertical)
+- `CornerRadius` - Per-corner rounding with presets (`All`, `Top`, `Bottom`, `Pill`)
+- `ButtonConfig` - Full button customization (size, padding, colors, glow effects)
 
-See [CHANGELOG.md](CHANGELOG.md) for complete details.
+See [Migration Guide](docs/migration-0.4.0.md) and [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ---
 

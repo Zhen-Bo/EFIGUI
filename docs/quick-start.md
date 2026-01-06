@@ -115,14 +115,19 @@ Every widget supports a Config struct for individual customization. This lets yo
 ### Basic Example: Custom Slider Size
 
 ```cpp
-// Create a config and set what you want to change
+// v0.4.0+ Builder pattern (recommended)
+static float volume = 0.5f;
+EFIGUI::ModernSliderFloat("Volume", &volume, 0.0f, 1.0f, "%.0f%%", std::nullopt,
+    EFIGUI::SliderConfig()
+        .withHeight(32.0f)
+        .withKnobRadius(12.0f));
+
+// Legacy style (still works)
 EFIGUI::SliderConfig config;
 config.height = 32.0f;      // Taller slider (default is 24)
 config.knobRadius = 12.0f;  // Bigger knob (default is 8)
 
-// Use the config with your slider
-static float volume = 0.5f;
-EFIGUI::ModernSliderFloat("Volume", &volume, 0.0f, 1.0f, "%.0f%%", config);
+EFIGUI::ModernSliderFloat("Volume", &volume, 0.0f, 1.0f, "%.0f%%", std::nullopt, config);
 
 // Another slider with default settings (no config needed)
 static float brightness = 0.5f;
@@ -132,23 +137,46 @@ EFIGUI::ModernSliderFloat("Brightness", &brightness, 0.0f, 1.0f);
 ### Custom Colors
 
 ```cpp
-// Purple glow instead of default cyan
-EFIGUI::SliderConfig purpleSlider;
-purpleSlider.glowColor = EFIGUI::Theme::AccentPurple();
-
+// Builder pattern with color
 static float val = 0.5f;
-EFIGUI::ModernSliderFloat("Purple", &val, 0.0f, 1.0f, "%.1f", purpleSlider);
+EFIGUI::ModernSliderFloat("Purple", &val, 0.0f, 1.0f, "%.1f", std::nullopt,
+    EFIGUI::SliderConfig()
+        .withGlowColor(EFIGUI::Theme::AccentPurple()));
+```
+
+### Builder Pattern (v0.4.0+)
+
+v0.4.0 introduced fluent builder methods for all Config structs:
+
+```cpp
+// Chain multiple customizations
+EFIGUI::GlowButton("Confirm", EFIGUI::ButtonConfig()
+    .withSize(150, 40)
+    .withGlowColor(EFIGUI::Theme::StatusSuccess())
+    .withRounding(12.0f)
+    .withGlowLayers(6));
+
+// Toggle with custom colors
+EFIGUI::ModernToggle("Feature", &enabled, EFIGUI::ToggleConfig()
+    .withWidth(56.0f)
+    .withTrackOnColor(EFIGUI::Theme::StatusSuccess()));
+
+// Card with EdgeInsets padding
+EFIGUI::FeatureCard(Icons::Shield, "Shield", "Protection", &enabled,
+    EFIGUI::CardConfig()
+        .withPadding(EFIGUI::EdgeInsets::Symmetric(12, 16))
+        .withRounding(12.0f));
 ```
 
 ### Available Config Structs
 
-| Widget | Config Struct | Common Fields |
-|--------|---------------|---------------|
-| `ModernSliderFloat/Int` | `SliderConfig` | height, knobRadius, glowColor |
-| `ModernToggle` | `ToggleConfig` | width, height, glowColor |
-| `FeatureCard` | `CardConfig` | height, iconSize, bgAlpha |
-| `NavItem` | `NavItemConfig` | height, accentColor, rounding |
-| `GlowButton` | `GlowButtonConfig` | size, glowColor |
+| Widget | Config Struct | Common Builder Methods |
+|--------|---------------|------------------------|
+| `ModernSliderFloat/Int` | `SliderConfig` | `withHeight()`, `withKnobRadius()`, `withGlowColor()` |
+| `ModernToggle` | `ToggleConfig` | `withWidth()`, `withHeight()`, `withMargin()` |
+| `FeatureCard` | `CardConfig` | `withPadding()`, `withRounding()`, `withBgAlpha()` |
+| `NavItem` | `NavItemConfig` | `withHeight()`, `withAccentColor()`, `withPadding()` |
+| `GlowButton` | `ButtonConfig` | `withSize()`, `withGlowColor()`, `withRounding()` |
 
 See [Components Reference](components.md) for complete field lists.
 

@@ -183,16 +183,9 @@ namespace EFIGUI
         {
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
-            if (rounding > 0)
-            {
-                // ImGui doesn't support gradient with rounding directly,
-                // so we approximate with AddRectFilledMultiColor
-                draw->AddRectFilledMultiColor(min, max, left, right, right, left);
-            }
-            else
-            {
-                draw->AddRectFilledMultiColor(min, max, left, right, right, left);
-            }
+            // ImGui doesn't support gradient with rounding directly,
+            // so we use AddRectFilledMultiColor for both cases
+            draw->AddRectFilledMultiColor(min, max, left, right, right, left);
         }
 
         void RectGradientV(ImVec2 min, ImVec2 max, ImU32 top, ImU32 bottom, float rounding)
