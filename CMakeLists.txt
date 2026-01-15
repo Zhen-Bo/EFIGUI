@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.4.0 LANGUAGES CXX)
+project(EFIGUI VERSION 0.5.0 LANGUAGES CXX)
 
 # =============================================
 # Options
