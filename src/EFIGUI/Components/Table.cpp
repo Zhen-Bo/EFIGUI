@@ -6,7 +6,10 @@
 
 namespace EFIGUI {
 
-// Storage for current table style
+// Storage for current table style during Begin/End scope.
+// Note: Using thread_local here instead of StyleSystem::GetComponentState<> is intentional.
+// Table/Menu styles are short-lived (Begin to End), not persistent across frames like Drag state.
+// thread_local is simpler and sufficient for this use case.
 static thread_local TableStyle s_currentTableStyle;
 
 bool BeginTableEx(const char* str_id, int columns, ImGuiTableFlags flags,

@@ -6,7 +6,10 @@
 
 namespace EFIGUI {
 
-// Storage for current menu style
+// Storage for current menu style during Begin/End scope.
+// Note: Using thread_local here instead of StyleSystem::GetComponentState<> is intentional.
+// Menu styles are short-lived (Begin to End), not persistent across frames like Drag state.
+// thread_local is simpler and sufficient for this use case.
 static thread_local MenuStyle s_currentMenuStyle;
 
 static void PushMenuStyle(const MenuStyle& style) {

@@ -10,6 +10,8 @@
 #include "../Styles/VSliderStyle.h"
 #include "../Styles/PlotStyle.h"
 #include "../Styles/VectorInputStyle.h"
+#include "../Styles/VectorSliderStyle.h"
+#include "../Styles/ImageButtonStyle.h"
 #include "imgui.h"
 #include <any>
 #include <atomic>
