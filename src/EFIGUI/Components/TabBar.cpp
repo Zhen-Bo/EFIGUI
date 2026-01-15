@@ -6,7 +6,10 @@
 
 namespace EFIGUI {
 
-// Thread-local storage for current tab bar style
+// Storage for current tab bar style during Begin/End scope.
+// Note: Using thread_local here instead of StyleSystem::GetComponentState<> is intentional.
+// TabBar styles are short-lived (Begin to End), not persistent across frames like Drag state.
+// thread_local is simpler and sufficient for this use case.
 static thread_local TabBarStyle s_currentTabBarStyle;
 
 bool BeginTabBarEx(const char* str_id, ImGuiTabBarFlags flags, const TabBarStyle& style) {

@@ -7,7 +7,10 @@
 
 namespace EFIGUI {
 
-// Storage for current listbox style
+// Storage for current listbox style during Begin/End scope.
+// Note: Using thread_local here instead of StyleSystem::GetComponentState<> is intentional.
+// ListBox styles are short-lived (Begin to End), not persistent across frames like Drag state.
+// thread_local is simpler and sufficient for this use case.
 static thread_local ListBoxStyle s_currentListBoxStyle;
 
 bool BeginListBoxEx(const char* label, ImVec2 size, const ListBoxStyle& style) {
