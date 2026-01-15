@@ -16,7 +16,30 @@ bool BeginPopup(const char* str_id, ImGuiWindowFlags flags = 0);
 bool BeginPopupEx(const char* str_id, ImGuiWindowFlags flags, const PopupStyle& style);
 
 /// End popup - must be called after BeginPopup() returns true
-/// WARNING: Do not use ImGui::EndPopup() - it will cause style stack imbalance
+///
+/// @warning MUST be paired with EFIGUI::BeginPopup(), NOT ImGui::BeginPopup().
+///          Mixing EFIGUI and ImGui popup calls will cause style stack corruption.
+///
+/// @note This function pops 3 style vars and 2 style colors that were pushed
+///       by BeginPopup(). The push/pop counts are:
+///       - BeginPopup:  Push 2 colors, 3 vars
+///       - EndPopup:    Pop  3 vars,  2 colors (LIFO order)
+///
+/// @example Correct usage:
+/// @code
+///     if (EFIGUI::BeginPopup("MyPopup")) {
+///         // ... popup content ...
+///         EFIGUI::EndPopup();  // Correct
+///     }
+/// @endcode
+///
+/// @example WRONG usage (will crash):
+/// @code
+///     if (EFIGUI::BeginPopup("MyPopup")) {
+///         // ... popup content ...
+///         ImGui::EndPopup();  // WRONG! Style stack corruption!
+///     }
+/// @endcode
 void EndPopup();
 
 /// Begin modal popup - matches ImGui::BeginPopupModal API
@@ -27,7 +50,13 @@ bool BeginPopupModal(const char* name, bool* p_open = nullptr, ImGuiWindowFlags 
 bool BeginPopupModalEx(const char* name, bool* p_open, ImGuiWindowFlags flags, const PopupStyle& style);
 
 /// End modal popup - must be called after BeginPopupModal() returns true
-/// WARNING: Do not use ImGui::EndPopup() - it will cause style stack imbalance
+///
+/// @warning MUST be paired with EFIGUI::BeginPopupModal(), NOT ImGui::BeginPopupModal().
+///          Modal pops 3 colors (includes ModalWindowDimBg) vs regular popup's 2 colors.
+///
+/// @note Push/pop counts for modal:
+///       - BeginPopupModal:  Push 3 colors, 3 vars
+///       - EndPopupModal:    Pop  3 vars,  3 colors (LIFO order)
 void EndPopupModal();
 
 /// Close current popup

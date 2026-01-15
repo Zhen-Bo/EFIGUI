@@ -22,6 +22,9 @@ struct PopupStyle {
     // Effects
     bool showGlow = true;
     float glowIntensity = 0.3f;
+
+    // Animation
+    float animSpeed = 0.15f;
 };
 
 } // namespace EFIGUI

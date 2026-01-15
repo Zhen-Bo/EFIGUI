@@ -104,6 +104,9 @@ bool MenuItemEx(const char* label, const char* shortcut, bool selected, bool ena
     const ImGuiID id = window->GetID(label);
     Animation::WidgetState& state = Animation::GetState(id);
 
+    // Hide ImGui's default checkmark (we draw our own glow dot)
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, IM_COL32(0, 0, 0, 0));
+
     // Push hover color
     ImGui::PushStyleColor(ImGuiCol_Text,
         state.hoverAnim > 0.5f ? style.itemTextHoverColor :
@@ -114,7 +117,7 @@ bool MenuItemEx(const char* label, const char* shortcut, bool selected, bool ena
     bool hovered = ImGui::IsItemHovered();
     Animation::UpdateWidgetState(state, hovered, false, selected);
 
-    ImGui::PopStyleColor(1);
+    ImGui::PopStyleColor(2);
 
     // Draw checkmark glow if selected
     if (selected && state.hoverAnim > 0.01f) {

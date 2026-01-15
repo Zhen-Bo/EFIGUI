@@ -18,6 +18,7 @@ struct ListBoxStyle {
     ImU32 itemTextColor = CyberpunkTheme::Colors::TextPrimary;
     ImU32 itemTextSelectedColor = CyberpunkTheme::Colors::AccentCyan;
     ImU32 accentColor = CyberpunkTheme::Colors::AccentCyan;
+    ImU32 glowColor = CyberpunkTheme::Colors::AccentCyanGlow;
 
     // Scrollbar
     ImU32 scrollbarBgColor = IM_COL32(25, 28, 38, 100);
@@ -30,8 +31,13 @@ struct ListBoxStyle {
 
     // Dimensions
     float rounding = CyberpunkTheme::Dimensions::Rounding;
+    float borderWidth = CyberpunkTheme::Dimensions::BorderWidth;
     float itemPadding = 4.0f;
     float accentBarWidth = 3.0f;
+
+    // Animation
+    float animSpeed = 0.15f;
+    float glowIntensity = CyberpunkTheme::Dimensions::GlowIntensity;
 };
 
 } // namespace EFIGUI

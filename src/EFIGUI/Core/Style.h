@@ -5,13 +5,21 @@
 #include "../Styles/RadioStyle.h"
 #include "../Styles/SelectableStyle.h"
 #include "../Styles/PopupStyle.h"
+#include "../Styles/ColorEditStyle.h"
+#include "../Styles/DragStyle.h"
+#include "../Styles/VSliderStyle.h"
+#include "../Styles/PlotStyle.h"
+#include "../Styles/VectorInputStyle.h"
 #include "imgui.h"
+#include <any>
+#include <atomic>
 #include <functional>
+#include <mutex>
+#include <shared_mutex>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <any>
 
 namespace EFIGUI {
 
@@ -73,6 +81,11 @@ public:
     /// Check if initialized
     static bool IsInitialized() { return s_initialized; }
 
+    /// Clean up storage for a destroyed ImGuiContext.
+    /// Call this when an ImGuiContext is about to be destroyed to prevent memory leak.
+    /// @param ctx The context to clean up, or nullptr for current context.
+    static void CleanupContext(ImGuiContext* ctx = nullptr);
+
 private:
     /// Per-context storage for style stacks
     struct ContextStorage {
@@ -81,14 +94,28 @@ private:
 
     /// Get storage for current ImGuiContext
     static ContextStorage& GetContextStorage() {
-        // Use global map keyed by ImGuiContext pointer
-        // This supports single-thread multi-context scenarios
-        static std::unordered_map<ImGuiContext*, ContextStorage> s_contextStorageMap;
         ImGuiContext* ctx = ImGui::GetCurrentContext();
+
+        // Fast path: read lock for existing context
+        {
+            std::shared_lock lock(s_mutex);
+            auto it = s_contextStorageMap.find(ctx);
+            if (it != s_contextStorageMap.end())
+                return it->second;
+        }
+
+        // Slow path: write lock for new context
+        std::unique_lock lock(s_mutex);
+        // Double-check after acquiring write lock (another thread may have inserted)
+        auto it = s_contextStorageMap.find(ctx);
+        if (it != s_contextStorageMap.end())
+            return it->second;
         return s_contextStorageMap[ctx];
     }
 
-    static bool s_initialized;
+    static std::atomic<bool> s_initialized;
+    static std::shared_mutex s_mutex;
+    static std::unordered_map<ImGuiContext*, ContextStorage> s_contextStorageMap;
 };
 
 // =============================================

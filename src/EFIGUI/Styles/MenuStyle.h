@@ -41,8 +41,12 @@ struct MenuStyle {
 
     // Dimensions
     float rounding = CyberpunkTheme::Dimensions::Rounding;
+    float borderWidth = CyberpunkTheme::Dimensions::BorderWidth;
     float itemPadding = 8.0f;
     float minWidth = 150.0f;
+
+    // Animation
+    float animSpeed = 0.15f;
 };
 
 } // namespace EFIGUI

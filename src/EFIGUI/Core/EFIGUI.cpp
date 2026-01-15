@@ -2,6 +2,7 @@
 #include "Layer.h"
 #include "../Backend/IBlurBackend.h"
 #include "../Components/Internal.h"
+#include "../Components/Drag.h"
 
 #ifdef _WIN32
 #include "../Backend/BlurBackendDX11.h"
@@ -133,6 +134,7 @@ namespace EFIGUI
             s_pruneCounter = 0;
             Animation::PruneStaleStates(60);
             PruneSliderInputBuffers(60);
+            PruneDragValueStates(2.0f);
         }
     }
 

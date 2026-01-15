@@ -30,8 +30,13 @@ struct TreeNodeStyle {
 
     // Dimensions
     float rounding = CyberpunkTheme::Dimensions::Rounding;
+    float borderWidth = CyberpunkTheme::Dimensions::BorderWidth;
+    float padding = 4.0f;
     float indentWidth = 20.0f;
     float arrowSize = 12.0f;
+
+    // Animation
+    float animSpeed = 0.15f;
 };
 
 } // namespace EFIGUI

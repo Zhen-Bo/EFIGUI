@@ -36,6 +36,11 @@ struct TableStyle {
     float headerPadding = 8.0f;
     float cellPadding = 6.0f;
     float rounding = CyberpunkTheme::Dimensions::Rounding;
+    float borderWidth = CyberpunkTheme::Dimensions::BorderWidth;
+
+    // Animation
+    float animSpeed = 0.15f;
+    float glowIntensity = CyberpunkTheme::Dimensions::GlowIntensity;
 };
 
 } // namespace EFIGUI

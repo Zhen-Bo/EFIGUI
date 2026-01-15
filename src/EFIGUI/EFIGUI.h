@@ -20,6 +20,11 @@
 #include "Styles/TableStyle.h"
 #include "Styles/ListBoxStyle.h"
 #include "Styles/MenuStyle.h"
+#include "Styles/ColorEditStyle.h"
+#include "Styles/DragStyle.h"
+#include "Styles/VSliderStyle.h"
+#include "Styles/PlotStyle.h"
+#include "Styles/VectorInputStyle.h"
 
 // Themes
 #include "Themes/CyberpunkTheme.h"
@@ -35,6 +40,12 @@
 #include "Components/Table.h"
 #include "Components/ListBox.h"
 #include "Components/Menu.h"
+// Phase 3 Specialized Widgets
+#include "Components/ColorEdit.h"
+#include "Components/Drag.h"
+#include "Components/VSlider.h"
+#include "Components/Plot.h"
+#include "Components/VectorInput.h"
 
 // Legacy support (deprecated in v0.5.0)
 #include "Theme.h"

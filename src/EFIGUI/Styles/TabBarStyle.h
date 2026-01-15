@@ -26,8 +26,12 @@ struct TabBarStyle {
 
     // Dimensions
     float rounding = CyberpunkTheme::Dimensions::Rounding;
+    float borderWidth = CyberpunkTheme::Dimensions::BorderWidth;
     float tabPadding = 12.0f;
     float spacing = 4.0f;
+
+    // Animation
+    float animSpeed = 0.15f;
 };
 
 } // namespace EFIGUI

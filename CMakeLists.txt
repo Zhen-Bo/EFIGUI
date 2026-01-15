@@ -48,6 +48,12 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Table.cpp
     src/EFIGUI/Components/ListBox.cpp
     src/EFIGUI/Components/Menu.cpp
+    # Phase 3 Specialized Widgets
+    src/EFIGUI/Components/ColorEdit.cpp
+    src/EFIGUI/Components/Drag.cpp
+    src/EFIGUI/Components/VSlider.cpp
+    src/EFIGUI/Components/Plot.cpp
+    src/EFIGUI/Components/VectorInput.cpp
 )
 
 set(EFIGUI_HEADERS
@@ -78,6 +84,17 @@ set(EFIGUI_HEADERS
     src/EFIGUI/Components/Table.h
     src/EFIGUI/Components/ListBox.h
     src/EFIGUI/Components/Menu.h
+    # Phase 3 Specialized Widgets
+    src/EFIGUI/Styles/ColorEditStyle.h
+    src/EFIGUI/Components/ColorEdit.h
+    src/EFIGUI/Styles/DragStyle.h
+    src/EFIGUI/Styles/VSliderStyle.h
+    src/EFIGUI/Components/Drag.h
+    src/EFIGUI/Components/VSlider.h
+    src/EFIGUI/Styles/PlotStyle.h
+    src/EFIGUI/Components/Plot.h
+    src/EFIGUI/Styles/VectorInputStyle.h
+    src/EFIGUI/Components/VectorInput.h
     src/EFIGUI/Components.h
     src/EFIGUI/Theme.h
     src/EFIGUI/ThemeConfig.h

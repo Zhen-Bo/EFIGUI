@@ -2,14 +2,30 @@
 #include "Popup.h"
 #include "../Core/Draw.h"
 #include "../Core/Style.h"
+#include "imgui_internal.h"
 
 namespace EFIGUI {
+
+#ifdef IMGUI_DEBUG_PARANOID
+namespace {
+    // Track style stack depths for debug assertions
+    thread_local int s_popupColorStackDepth = 0;
+    thread_local int s_popupVarStackDepth = 0;
+    thread_local int s_modalColorStackDepth = 0;
+    thread_local int s_modalVarStackDepth = 0;
+}
+#endif
 
 void OpenPopup(const char* str_id, ImGuiPopupFlags popup_flags) {
     ImGui::OpenPopup(str_id, popup_flags);
 }
 
 bool BeginPopupEx(const char* str_id, ImGuiWindowFlags flags, const PopupStyle& style) {
+#ifdef IMGUI_DEBUG_PARANOID
+    s_popupColorStackDepth = GImGui->ColorStack.Size;
+    s_popupVarStackDepth = GImGui->StyleVarStack.Size;
+#endif
+
     // Apply themed style
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (style.bgColor & 0x00FFFFFF) | ((ImU32)style.bgAlpha << 24));
     ImGui::PushStyleColor(ImGuiCol_Border, style.borderColor);
@@ -47,14 +63,19 @@ void EndPopup() {
     ImGui::PopStyleColor(2);
 
 #ifdef IMGUI_DEBUG_PARANOID
-    // In debug builds, verify style stack balance
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.ColorStack.Size == 0 && "EFIGUI::EndPopup() style stack imbalance - did you mix with ImGui calls?");
-    IM_ASSERT(g.StyleVarStack.Size == 0 && "EFIGUI::EndPopup() style stack imbalance - did you mix with ImGui calls?");
+    IM_ASSERT(GImGui->ColorStack.Size == s_popupColorStackDepth &&
+              "EFIGUI::EndPopup() color stack imbalance - did you mix with ImGui calls?");
+    IM_ASSERT(GImGui->StyleVarStack.Size == s_popupVarStackDepth &&
+              "EFIGUI::EndPopup() style var stack imbalance - did you mix with ImGui calls?");
 #endif
 }
 
 bool BeginPopupModalEx(const char* name, bool* p_open, ImGuiWindowFlags flags, const PopupStyle& style) {
+#ifdef IMGUI_DEBUG_PARANOID
+    s_modalColorStackDepth = GImGui->ColorStack.Size;
+    s_modalVarStackDepth = GImGui->StyleVarStack.Size;
+#endif
+
     // Apply themed style
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (style.bgColor & 0x00FFFFFF) | ((ImU32)style.bgAlpha << 24));
     ImGui::PushStyleColor(ImGuiCol_Border, style.borderColor);
@@ -93,10 +114,10 @@ void EndPopupModal() {
     ImGui::PopStyleColor(3);
 
 #ifdef IMGUI_DEBUG_PARANOID
-    // In debug builds, verify style stack balance
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.ColorStack.Size == 0 && "EFIGUI::EndPopupModal() style stack imbalance - did you mix with ImGui calls?");
-    IM_ASSERT(g.StyleVarStack.Size == 0 && "EFIGUI::EndPopupModal() style stack imbalance - did you mix with ImGui calls?");
+    IM_ASSERT(GImGui->ColorStack.Size == s_modalColorStackDepth &&
+              "EFIGUI::EndPopupModal() color stack imbalance - did you mix with ImGui calls?");
+    IM_ASSERT(GImGui->StyleVarStack.Size == s_modalVarStackDepth &&
+              "EFIGUI::EndPopupModal() style var stack imbalance - did you mix with ImGui calls?");
 #endif
 }
 
