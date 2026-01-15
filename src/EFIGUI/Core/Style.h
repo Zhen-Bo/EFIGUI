@@ -110,13 +110,17 @@ private:
     /// Get storage for current ImGuiContext (with thread_local caching + epoch invalidation)
     static ContextStorage& GetContextStorage() {
         ImGuiContext* ctx = ImGui::GetCurrentContext();
+        IM_ASSERT(ctx != nullptr && "EFIGUI: No active ImGui context. Call ImGui::CreateContext() first.");
 
         // Thread-local cache to avoid mutex on hot path
         static thread_local ImGuiContext* t_lastCtx = nullptr;
         static thread_local ContextStorage* t_lastStorage = nullptr;
         static thread_local uint64_t t_lastEpoch = 0;
 
-        // Read global epoch (relaxed is sufficient for cache validity check)
+        // Read global epoch with relaxed ordering.
+        // Note: relaxed is intentional - stale reads may cause one extra mutex lock
+        // but never correctness issues. Using acquire would add unnecessary overhead
+        // on every widget call.
         uint64_t currentEpoch = s_contextEpoch.load(std::memory_order_relaxed);
 
         // Fast path: cache hit with valid epoch

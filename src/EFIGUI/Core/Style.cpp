@@ -18,8 +18,9 @@ void StyleSystem::CleanupContext(ImGuiContext* ctx) {
     if (target)
         s_contextStorageMap.erase(target);
 
-    // Advance epoch to invalidate all thread-local caches
-    // This prevents dangling pointer issues when a context is destroyed
+    // Advance epoch with release ordering to ensure all prior writes are visible
+    // before other threads see the new epoch value. Paired with relaxed loads
+    // in GetContextStorage() - see comment there for rationale.
     s_contextEpoch.fetch_add(1, std::memory_order_release);
 }
 
