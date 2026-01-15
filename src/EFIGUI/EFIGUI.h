@@ -15,6 +15,11 @@
 #include "Styles/RadioStyle.h"
 #include "Styles/SelectableStyle.h"
 #include "Styles/PopupStyle.h"
+#include "Styles/TabBarStyle.h"
+#include "Styles/TreeNodeStyle.h"
+#include "Styles/TableStyle.h"
+#include "Styles/ListBoxStyle.h"
+#include "Styles/MenuStyle.h"
 
 // Themes
 #include "Themes/CyberpunkTheme.h"
@@ -24,6 +29,12 @@
 #include "Components/Radio.h"
 #include "Components/Selectable.h"
 #include "Components/Popup.h"
+// Phase 2 Advanced Components
+#include "Components/TabBar.h"
+#include "Components/TreeNode.h"
+#include "Components/Table.h"
+#include "Components/ListBox.h"
+#include "Components/Menu.h"
 
 // Legacy support (deprecated in v0.5.0)
 #include "Theme.h"

@@ -42,6 +42,12 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Radio.cpp
     src/EFIGUI/Components/Selectable.cpp
     src/EFIGUI/Components/Popup.cpp
+    # Phase 2 Advanced Components
+    src/EFIGUI/Components/TabBar.cpp
+    src/EFIGUI/Components/TreeNode.cpp
+    src/EFIGUI/Components/Table.cpp
+    src/EFIGUI/Components/ListBox.cpp
+    src/EFIGUI/Components/Menu.cpp
 )
 
 set(EFIGUI_HEADERS
@@ -61,6 +67,17 @@ set(EFIGUI_HEADERS
     src/EFIGUI/Components/Radio.h
     src/EFIGUI/Components/Selectable.h
     src/EFIGUI/Components/Popup.h
+    # Phase 2 Advanced Components
+    src/EFIGUI/Styles/TabBarStyle.h
+    src/EFIGUI/Styles/TreeNodeStyle.h
+    src/EFIGUI/Styles/TableStyle.h
+    src/EFIGUI/Styles/ListBoxStyle.h
+    src/EFIGUI/Styles/MenuStyle.h
+    src/EFIGUI/Components/TabBar.h
+    src/EFIGUI/Components/TreeNode.h
+    src/EFIGUI/Components/Table.h
+    src/EFIGUI/Components/ListBox.h
+    src/EFIGUI/Components/Menu.h
     src/EFIGUI/Components.h
     src/EFIGUI/Theme.h
     src/EFIGUI/ThemeConfig.h
