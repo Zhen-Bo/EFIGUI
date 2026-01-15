@@ -7,79 +7,85 @@ A modern, cyberpunk-themed UI framework built on top of [Dear ImGui](https://git
 - **Cyberpunk Theme**: Dark backgrounds with neon cyan/purple accents
 - **Glassmorphism Effects**: Real-time blur with DX11 backend (DX12/Vulkan/OpenGL planned)
 - **Animated Components**: Smooth hover transitions, marquee borders, pulsing glows
-- **Complete Widget Set**: Buttons, toggles, sliders, inputs, combos, progress bars, and more
+- **Complete Widget Set**: Full ImGui component coverage with consistent styling
+- **StyleSystem** (v0.5.0): Unified style management with per-component customization
 - **Font Awesome Icons**: Pre-defined icon constants for easy use
 - **Cross-Platform Backend**: Abstract blur interface for multiple graphics APIs
-- **Flexible Customization**: Optional parameters for per-instance styling without breaking defaults
-- **Per-Instance Config** (v0.3.1+): Full control over individual widget appearance with Config structs
-- **Semantic Card Layout** (v0.3.2+): Consistent card heights at all DPI scales with semantic padding parameters
-- **Core Layout Types** (v0.4.0): Unified `EdgeInsets`, `Spacing`, `CornerRadius` for padding/margin control
-- **Builder Pattern** (v0.4.0): Fluent API for Config structs (`.withHeight()`, `.withGlowColor()`, etc.)
 
 ---
 
-## What's New in v0.4.0
+## What's New in v0.5.0
 
-**Core Layout Types & Builder Pattern**: v0.4.0 introduces unified layout types and fluent builder patterns for easier customization:
+**Complete Component Coverage & StyleSystem**: v0.5.0 brings full ImGui component coverage with a new unified styling system.
 
-```cpp
-// New fluent builder pattern for inline customization
-EFIGUI::ModernSliderFloat("Volume", &volume, 0, 100, "%.0f", std::nullopt,
-    EFIGUI::SliderConfig()
-        .withHeight(32.0f)
-        .withKnobRadius(12.0f)
-        .withGlowColor(EFIGUI::Theme::AccentPurple()));
-
-// EdgeInsets for precise padding control
-EFIGUI::GlowButton("Confirm", EFIGUI::ButtonConfig()
-    .withSize(150, 40)
-    .withPadding(EFIGUI::EdgeInsets::Symmetric(8, 24))
-    .withGlowColor(EFIGUI::Theme::StatusSuccess()));
-```
-
-**New Layout Types**:
-- `EdgeInsets` - Unified padding/margin with named constructors (`All`, `Symmetric`, `Horizontal`, `Vertical`)
-- `Spacing` - Element spacing (horizontal and vertical)
-- `CornerRadius` - Per-corner rounding with presets (`All`, `Top`, `Bottom`, `Pill`)
-- `ButtonConfig` - Full button customization (size, padding, colors, glow effects)
-
-See [Migration Guide](docs/migration-0.4.0.md) and [CHANGELOG.md](CHANGELOG.md) for complete details.
-
----
-
-## What's New in v0.3.1
-
-**Per-Instance Configuration**: Every widget now supports a Config struct for granular customization:
+### New Components
 
 ```cpp
-// Customize individual sliders
-EFIGUI::SliderConfig config;
-config.height = 32.0f;              // Taller slider
-config.knobRadius = 12.0f;          // Larger knob
-config.glowColor = Theme::AccentPurple();
+// Checkbox, RadioButton, Selectable
+EFIGUI::Checkbox("Enable Feature", &enabled);
+EFIGUI::RadioButton("Option A", &selected, 0);
+EFIGUI::Selectable("Item", isSelected);
 
-EFIGUI::ModernSliderFloat("Custom", &val, 0.0f, 1.0f, "%.2f", config);
+// TabBar
+if (EFIGUI::BeginTabBar("tabs")) {
+    if (EFIGUI::BeginTabItem("Settings")) {
+        // Tab content...
+        EFIGUI::EndTabItem();
+    }
+    EFIGUI::EndTabBar();
+}
+
+// ColorEdit with glow effects
+static float color[4] = {1, 0, 0, 1};
+EFIGUI::ColorEdit4("Color", color);
+
+// DragFloat/Int with visual feedback
+EFIGUI::DragFloat("Speed", &speed, 0.1f, 0.0f, 100.0f);
+
+// Vector inputs with X/Y/Z/W color coding
+static float pos[3] = {0, 0, 0};
+EFIGUI::InputFloat3("Position", pos);
+EFIGUI::SliderFloat3("Scale", scale, 0.0f, 10.0f);
+
+// Vertical sliders
+EFIGUI::VSliderFloat("##v", ImVec2(30, 150), &value, 0.0f, 1.0f);
+
+// Plot with grid and glow
+EFIGUI::PlotLines("Signal", data, 100);
 ```
 
-**Component Theme Accessors**: Direct access to component-specific theme values:
+### StyleSystem
 
 ```cpp
-float sliderHeight = EFIGUI::Theme::Slider().height;  // Read
-EFIGUI::Theme::SliderMut().height = 32.0f;            // Modify at runtime
+// Default style - zero configuration
+EFIGUI::Checkbox("Option", &val);
+
+// Custom style for single widget
+CheckboxStyle style;
+style.checkColor = CyberpunkTheme::Colors::AccentPurple;
+EFIGUI::CheckboxEx("Special", &val, style);
+
+// Scoped style override
+EFIGUI::WithStyle(style, [&] {
+    EFIGUI::Checkbox("A", &a);
+    EFIGUI::Checkbox("B", &b);
+    EFIGUI::Checkbox("C", &c);
+});
 ```
 
-**Smooth Animation Helpers**: New utilities for dynamic UI transitions:
+### C++23 Upgrade
+
+v0.5.0 requires C++23 for modern features including designated initializers:
 
 ```cpp
-static EFIGUI::Animation::SmoothFloat scale;
-scale.SetTarget(isHovered ? 1.2f : 1.0f);
-
-EFIGUI::GlowButtonConfig btnConfig;
-btnConfig.size = ImVec2(100 * scale.Update(), 36);
-EFIGUI::GlowButton("Dynamic", btnConfig);
+CheckboxStyle style{
+    .checkColor = CyberpunkTheme::Colors::AccentCyan,
+    .size = 20.0f,
+    .rounding = 4.0f
+};
 ```
 
-See [CHANGELOG.md](CHANGELOG.md) for complete details.
+See [Migration Guide](docs/migration-0.5.0.md) and [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ---
 
@@ -102,10 +108,13 @@ if (EFIGUI::BeginCustomWindow("My Window", nullptr))
     }
 
     static bool enabled = false;
-    EFIGUI::ModernToggle("Enable Feature", &enabled);
+    EFIGUI::Checkbox("Enable Feature", &enabled);
 
     static float value = 0.5f;
     EFIGUI::ModernSliderFloat("Value", &value, 0.0f, 1.0f);
+
+    static float color[3] = {0.0f, 0.8f, 1.0f};
+    EFIGUI::ColorEdit3("Accent", color);
 }
 EFIGUI::EndCustomWindow();
 
@@ -119,9 +128,9 @@ EFIGUI::Shutdown();
 
 ## Requirements
 
-- **C++17** or later
+- **C++23** or later
 - **Dear ImGui** (linked separately)
-- **Visual Studio 2019+** or compatible C++17 compiler
+- **Visual Studio 2022+** or compatible C++23 compiler
 
 ---
 
@@ -132,12 +141,12 @@ EFIGUI::Shutdown();
 | [Installation](docs/installation.md) | Setup guide for Visual Studio and CMake |
 | [Quick Start](docs/quick-start.md) | Basic usage examples |
 | [Components](docs/components.md) | Full component reference |
-| [Optional Parameters](docs/optional-parameters.md) | Understanding `std::optional` usage |
 | [Theme](docs/theme.md) | Color and style customization |
 | [Animation](docs/animation.md) | Animation system reference |
 | [Layer System](docs/layer-system.md) | Z-order control for rendering |
 | [Blur Backend](docs/blur-backend.md) | Glassmorphism blur effects |
 | [Icons](docs/icons.md) | Icon customization and Font Awesome |
+| [Migration Guide](docs/migration-0.5.0.md) | Upgrading from v0.4.x |
 
 ---
 
@@ -153,14 +162,35 @@ EFIGUI::Shutdown();
 
 ### Buttons
 - `GlowButton`, `IconButton`, `DangerButton`, `ColoredButton`, `CooldownButton`
+- `ImageButton`
+
+### Selection
+- `Checkbox`, `RadioButton`, `Selectable`
 
 ### Input
-- `ModernToggle`, `ModernInputText`, `ModernSliderFloat`, `ModernSliderInt`, `ModernCombo`, `NumericInput`
+- `ModernToggle`, `ModernInputText`, `ModernSliderFloat/Int`, `ModernCombo`
+- `NumericInput`, `DragFloat/Int`, `InputFloat2/3/4`, `InputInt2/3/4`
+- `SliderFloat2/3/4`, `SliderInt2/3/4`, `VSliderFloat/Int`
 
-### Display
-- `ModernProgressBar`, `StatusIndicator`, `FeatureCard`, `SectionHeader`, `ModernTooltip`, `HelpMarker`
+### Color
+- `ColorEdit3/4`, `ColorPicker3/4`, `ColorButton`
 
 ### Layout
+- `BeginTabBar` / `EndTabBar`, `BeginTabItem` / `EndTabItem`
+- `TreeNode` / `TreePop`, `CollapsingHeader`
+- `BeginTable` / `EndTable`, `BeginListBox` / `EndListBox`
+- `BeginMenu` / `EndMenu`, `MenuItem`
+
+### Popup
+- `OpenPopup`, `BeginPopup` / `EndPopup`
+- `BeginPopupModal` / `EndPopupModal`
+
+### Display
+- `ModernProgressBar`, `StatusIndicator`, `FeatureCard`, `SectionHeader`
+- `PlotLines`, `PlotHistogram`
+- `ModernTooltip`, `HelpMarker`
+
+### Layout Helpers
 - `Spacing`, `Separator`, `SameLine`
 
 ---
