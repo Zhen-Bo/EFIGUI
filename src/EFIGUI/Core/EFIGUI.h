@@ -13,11 +13,11 @@
 #define EFIGUI_VERSION_STRING "0.5.0"
 
 // Core headers
-#include "Theme.h"
+#include "../Theme.h"
 #include "Animation.h"
 #include "Layer.h"
 #include "Draw.h"
-#include "Components.h"
+#include "../Components.h"
 
 // Icons are configurable via EFIGUI::Icons namespace in Theme.h
 // Users can override the default icons before calling EFIGUI functions:

@@ -1,10 +1,10 @@
 #include "EFIGUI.h"
 #include "Layer.h"
-#include "Backend/IBlurBackend.h"
-#include "Components/Internal.h"
+#include "../Backend/IBlurBackend.h"
+#include "../Components/Internal.h"
 
 #ifdef _WIN32
-#include "Backend/BlurBackendDX11.h"
+#include "../Backend/BlurBackendDX11.h"
 #endif
 
 #include <memory>
