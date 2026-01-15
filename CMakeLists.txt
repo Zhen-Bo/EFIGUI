@@ -60,8 +60,8 @@ endif()
 # Create library
 add_library(EFIGUI STATIC ${EFIGUI_SOURCES} ${EFIGUI_HEADERS})
 
-# C++17 standard
-target_compile_features(EFIGUI PUBLIC cxx_std_17)
+# C++23 standard
+target_compile_features(EFIGUI PUBLIC cxx_std_23)
 
 # MSVC-specific options
 if(MSVC)
