@@ -211,7 +211,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.6] - 2025-12-27 [`2e31a04`]
+## [0.2.6] - 2025-12-27
 
 ### Fixed
 - **Glassmorphism alpha stacking**: Changed `GlassOverlay*` alpha values from 250-255 to 200 and `GlassBaseLayer` to transparent (alpha 0) to prevent transparency stacking issues where multiple layers would accumulate incorrectly.
@@ -231,7 +231,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.5] - 2025-12-27 [`211bee3`]
+## [0.2.5] - 2025-12-27
 
 ### Fixed
 - **Button transparency stacking**: Fixed issue where multiple semi-transparent layers would accumulate, causing buttons to appear more transparent than intended. Added opaque base layer (`GlassBaseLayer`) to ensure consistent alpha 200 appearance.
@@ -254,7 +254,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.4] - 2025-12-27 [`daaec1c`]
+## [0.2.4] - 2025-12-27
 
 ### Fixed
 - **Slider input state machine**: Replaced implicit state tracking with explicit three-state enum (`Idle → WaitingForFocus → Editing`) for reliable focus management.
@@ -284,7 +284,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.3] - 2025-12-26 [`856db2e`]
+## [0.2.3] - 2025-12-26
 
 ### Fixed
 - **Slider input focus issue**: Fixed bug where clicking the value input box next to a slider would briefly enter edit mode but immediately exit, making it impossible to type values manually.
@@ -296,7 +296,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.2] - 2025-12-26 [`791f03a`]
+## [0.2.2] - 2025-12-26
 
 ### Changed
 - **Refactored Components.cpp**: Split monolithic 1800+ line file into modular component files for better maintainability.
@@ -319,7 +319,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.1] - 2025-12-26 [`32555c4`]
+## [0.2.1] - 2025-12-26
 
 ### Added
 - **Layer System**: Fine-grained z-order control for rendering.
@@ -333,7 +333,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.2.0] - 2025-12-26 [`c43228a`]
+## [0.2.0] - 2025-12-26
 
 ### Added
 - **Flexible customization system**: `std::optional<T>` parameters for per-instance styling without breaking defaults.
@@ -347,7 +347,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.1.1] - 2025-12-26 [`151b13f`]
+## [0.1.1] - 2025-12-26
 
 ### Removed
 - Removed `Icons.h` dependency.
@@ -357,14 +357,7 @@ To migrate from v0.2.x:
 
 ---
 
-## [0.1.0] - 2025-12-25 [`44890e3`]
-
-### Changed
-- Initial release with Polyform Noncommercial License 1.0.0.
-
----
-
-## [0.0.1] - 2025-12-24 [`50b422e`]
+## [0.1.0] - 2025-12-24
 
 ### Added
 - Initial release of EFIGUI framework.
