@@ -4,6 +4,7 @@
 namespace EFIGUI {
 
 std::atomic<bool> StyleSystem::s_initialized{false};
+std::atomic<uint64_t> StyleSystem::s_contextEpoch{1};  // Start at 1 so 0 is always invalid
 std::shared_mutex StyleSystem::s_mutex;
 std::unordered_map<ImGuiContext*, StyleSystem::ContextStorage> StyleSystem::s_contextStorageMap;
 
@@ -16,6 +17,10 @@ void StyleSystem::CleanupContext(ImGuiContext* ctx) {
     ImGuiContext* target = ctx ? ctx : ImGui::GetCurrentContext();
     if (target)
         s_contextStorageMap.erase(target);
+
+    // Advance epoch to invalidate all thread-local caches
+    // This prevents dangling pointer issues when a context is destroyed
+    s_contextEpoch.fetch_add(1, std::memory_order_release);
 }
 
 } // namespace EFIGUI

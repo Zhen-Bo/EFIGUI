@@ -21,9 +21,13 @@ struct DragValueState {
     float lastTimeUsed = 0.0f;  // Track last usage time
 };
 
-static std::unordered_map<ImGuiID, DragValueState>& GetDragValueStates() {
-    static std::unordered_map<ImGuiID, DragValueState> states;
-    return states;
+// Type alias for per-context drag state storage
+using DragValueStateMap = std::unordered_map<ImGuiID, DragValueState>;
+
+static DragValueStateMap& GetDragValueStates() {
+    // Use StyleSystem's per-context storage instead of global static
+    // This ensures proper isolation in multi-context scenarios
+    return StyleSystem::GetComponentState<DragValueStateMap>();
 }
 
 void PruneDragValueStates(float maxIdleSeconds) {

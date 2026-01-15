@@ -152,6 +152,10 @@ static bool DrawVectorSliderComponentInt(const char* id, int* v, int v_min, int 
 // SliderFloat2/3/4 Implementation
 // =============================================
 
+// Note: Width division in all SliderFloat/Int functions below is safe.
+// ImGui handles narrow/zero width sliders gracefully by clipping or not rendering.
+// No explicit guards needed - this matches ImGui's own DragFloatN/SliderFloatN patterns.
+
 bool SliderFloat2Ex(const char* label, float v[2], float v_min, float v_max,
                     const char* format, ImGuiSliderFlags flags,
                     const VectorSliderStyle& style) {

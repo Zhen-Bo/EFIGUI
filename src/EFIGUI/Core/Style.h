@@ -86,34 +86,75 @@ public:
     /// @param ctx The context to clean up, or nullptr for current context.
     static void CleanupContext(ImGuiContext* ctx = nullptr);
 
+    /// Get per-context component state storage (for internal use by components)
+    /// @tparam StateT The state type (e.g., std::unordered_map<ImGuiID, DragValueState>)
+    /// @return Reference to the state, default-constructed if not exists
+    template<typename StateT>
+    static StateT& GetComponentState() {
+        auto& storage = GetContextStorage();
+        auto key = std::type_index(typeid(StateT));
+        auto it = storage.componentStates.find(key);
+        if (it == storage.componentStates.end()) {
+            it = storage.componentStates.emplace(key, StateT{}).first;
+        }
+        return std::any_cast<StateT&>(it->second);
+    }
+
 private:
-    /// Per-context storage for style stacks
+    /// Per-context storage for style stacks and component states
     struct ContextStorage {
         std::unordered_map<std::type_index, std::vector<std::any>> styleStacks;
+        std::unordered_map<std::type_index, std::any> componentStates;  // For per-context component state
     };
 
-    /// Get storage for current ImGuiContext
+    /// Get storage for current ImGuiContext (with thread_local caching + epoch invalidation)
     static ContextStorage& GetContextStorage() {
         ImGuiContext* ctx = ImGui::GetCurrentContext();
 
-        // Fast path: read lock for existing context
+        // Thread-local cache to avoid mutex on hot path
+        static thread_local ImGuiContext* t_lastCtx = nullptr;
+        static thread_local ContextStorage* t_lastStorage = nullptr;
+        static thread_local uint64_t t_lastEpoch = 0;
+
+        // Read global epoch (relaxed is sufficient for cache validity check)
+        uint64_t currentEpoch = s_contextEpoch.load(std::memory_order_relaxed);
+
+        // Fast path: cache hit with valid epoch
+        if (t_lastCtx == ctx && t_lastStorage && t_lastEpoch == currentEpoch) {
+            return *t_lastStorage;
+        }
+
+        // Slow path: look up or create storage
         {
             std::shared_lock lock(s_mutex);
             auto it = s_contextStorageMap.find(ctx);
-            if (it != s_contextStorageMap.end())
+            if (it != s_contextStorageMap.end()) {
+                t_lastCtx = ctx;
+                t_lastStorage = &it->second;
+                t_lastEpoch = currentEpoch;
                 return it->second;
+            }
         }
 
-        // Slow path: write lock for new context
+        // Create new storage (write lock)
         std::unique_lock lock(s_mutex);
         // Double-check after acquiring write lock (another thread may have inserted)
         auto it = s_contextStorageMap.find(ctx);
-        if (it != s_contextStorageMap.end())
+        if (it != s_contextStorageMap.end()) {
+            t_lastCtx = ctx;
+            t_lastStorage = &it->second;
+            t_lastEpoch = currentEpoch;
             return it->second;
-        return s_contextStorageMap[ctx];
+        }
+        auto& storage = s_contextStorageMap[ctx];
+        t_lastCtx = ctx;
+        t_lastStorage = &storage;
+        t_lastEpoch = currentEpoch;
+        return storage;
     }
 
     static std::atomic<bool> s_initialized;
+    static std::atomic<uint64_t> s_contextEpoch;  // Epoch counter for cache invalidation
     static std::shared_mutex s_mutex;
     static std::unordered_map<ImGuiContext*, ContextStorage> s_contextStorageMap;
 };
