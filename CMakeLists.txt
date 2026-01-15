@@ -54,6 +54,8 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/VSlider.cpp
     src/EFIGUI/Components/Plot.cpp
     src/EFIGUI/Components/VectorInput.cpp
+    src/EFIGUI/Components/VectorSlider.cpp
+    src/EFIGUI/Components/ImageButton.cpp
 )
 
 set(EFIGUI_HEADERS
@@ -95,6 +97,10 @@ set(EFIGUI_HEADERS
     src/EFIGUI/Components/Plot.h
     src/EFIGUI/Styles/VectorInputStyle.h
     src/EFIGUI/Components/VectorInput.h
+    src/EFIGUI/Styles/VectorSliderStyle.h
+    src/EFIGUI/Components/VectorSlider.h
+    src/EFIGUI/Styles/ImageButtonStyle.h
+    src/EFIGUI/Components/ImageButton.h
     src/EFIGUI/Components.h
     src/EFIGUI/Theme.h
     src/EFIGUI/ThemeConfig.h

@@ -25,6 +25,8 @@
 #include "Styles/VSliderStyle.h"
 #include "Styles/PlotStyle.h"
 #include "Styles/VectorInputStyle.h"
+#include "Styles/VectorSliderStyle.h"
+#include "Styles/ImageButtonStyle.h"
 
 // Themes
 #include "Themes/CyberpunkTheme.h"
@@ -46,6 +48,8 @@
 #include "Components/VSlider.h"
 #include "Components/Plot.h"
 #include "Components/VectorInput.h"
+#include "Components/VectorSlider.h"
+#include "Components/ImageButton.h"
 
 // Legacy support (deprecated in v0.5.0)
 #include "Theme.h"
