@@ -17,11 +17,12 @@ option(EFIGUI_ENABLE_OPENGL "Enable OpenGL blur backend (future)" OFF)
 # =============================================
 
 set(EFIGUI_SOURCES
-    src/EFIGUI/EFIGUI.cpp
+    src/EFIGUI/Core/EFIGUI.cpp
+    src/EFIGUI/Core/Animation.cpp
+    src/EFIGUI/Core/Layer.cpp
+    src/EFIGUI/Core/Draw.cpp
+    src/EFIGUI/Core/Style.cpp
     src/EFIGUI/Theme.cpp
-    src/EFIGUI/Animation.cpp
-    src/EFIGUI/Layer.cpp
-    src/EFIGUI/Draw.cpp
     # Components (split into separate files for maintainability)
     src/EFIGUI/Components/Window.cpp
     src/EFIGUI/Components/Panel.cpp
@@ -41,12 +42,17 @@ set(EFIGUI_SOURCES
 
 set(EFIGUI_HEADERS
     src/EFIGUI/EFIGUI.h
-    src/EFIGUI/ThemeConfig.h
-    src/EFIGUI/Theme.h
-    src/EFIGUI/Animation.h
-    src/EFIGUI/Layer.h
-    src/EFIGUI/Draw.h
+    src/EFIGUI/Core/EFIGUI.h
+    src/EFIGUI/Core/Animation.h
+    src/EFIGUI/Core/Layer.h
+    src/EFIGUI/Core/Draw.h
+    src/EFIGUI/Core/Style.h
+    src/EFIGUI/Styles/StyleTypes.h
+    src/EFIGUI/Styles/CheckboxStyle.h
+    src/EFIGUI/Themes/CyberpunkTheme.h
     src/EFIGUI/Components.h
+    src/EFIGUI/Theme.h
+    src/EFIGUI/ThemeConfig.h
     src/EFIGUI/Components/Internal.h
     src/EFIGUI/Backend/IBlurBackend.h
 )
