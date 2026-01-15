@@ -1,6 +1,7 @@
 // src/EFIGUI/Components/Selectable.cpp
 #include "Selectable.h"
 #include "../Core/Animation.h"
+#include "../Core/Style.h"
 #include "imgui_internal.h"
 
 namespace EFIGUI {
@@ -57,7 +58,7 @@ bool SelectableEx(const char* label, bool selected,
 
 bool Selectable(const char* label, bool selected,
                 ImGuiSelectableFlags flags, ImVec2 size) {
-    return SelectableEx(label, selected, flags, size, SelectableStyle{});
+    return SelectableEx(label, selected, flags, size, StyleSystem::GetCurrentStyle<SelectableStyle>());
 }
 
 bool SelectableEx(const char* label, bool* p_selected,
@@ -72,7 +73,7 @@ bool SelectableEx(const char* label, bool* p_selected,
 
 bool Selectable(const char* label, bool* p_selected,
                 ImGuiSelectableFlags flags, ImVec2 size) {
-    return SelectableEx(label, p_selected, flags, size, SelectableStyle{});
+    return SelectableEx(label, p_selected, flags, size, StyleSystem::GetCurrentStyle<SelectableStyle>());
 }
 
 } // namespace EFIGUI

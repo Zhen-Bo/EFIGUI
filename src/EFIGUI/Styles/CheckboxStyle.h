@@ -9,6 +9,7 @@ namespace EFIGUI {
 struct CheckboxStyle {
     // Colors
     ImU32 checkColor = CyberpunkTheme::Colors::AccentCyan;
+    ImU32 textColor = CyberpunkTheme::Colors::TextPrimary;
     ImU32 boxColor = CyberpunkTheme::Colors::Surface;
     ImU32 boxHoverColor = CyberpunkTheme::Colors::SurfaceHover;
     ImU32 boxActiveColor = CyberpunkTheme::Colors::SurfaceActive;

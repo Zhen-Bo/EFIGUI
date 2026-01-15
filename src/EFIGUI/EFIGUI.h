@@ -12,9 +12,18 @@
 // Styles
 #include "Styles/StyleTypes.h"
 #include "Styles/CheckboxStyle.h"
+#include "Styles/RadioStyle.h"
+#include "Styles/SelectableStyle.h"
+#include "Styles/PopupStyle.h"
 
 // Themes
 #include "Themes/CyberpunkTheme.h"
+
+// New v0.5.0 Components
+#include "Components/Checkbox.h"
+#include "Components/Radio.h"
+#include "Components/Selectable.h"
+#include "Components/Popup.h"
 
 // Legacy support (deprecated in v0.5.0)
 #include "Theme.h"

@@ -9,6 +9,7 @@ namespace EFIGUI {
 struct RadioStyle {
     // Colors
     ImU32 dotColor = CyberpunkTheme::Colors::AccentCyan;
+    ImU32 textColor = CyberpunkTheme::Colors::TextPrimary;
     ImU32 circleColor = CyberpunkTheme::Colors::Surface;
     ImU32 circleHoverColor = CyberpunkTheme::Colors::SurfaceHover;
     ImU32 circleActiveColor = CyberpunkTheme::Colors::SurfaceActive;

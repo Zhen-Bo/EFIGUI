@@ -3,6 +3,7 @@
 #include "../Core/Animation.h"
 #include "../Core/Draw.h"
 #include "../Core/Layer.h"
+#include "../Core/Style.h"
 #include "imgui_internal.h"
 #include <algorithm>
 
@@ -48,8 +49,8 @@ bool CheckboxEx(const char* label, bool* v, const CheckboxStyle& style) {
     ImU32 borderColor = (hovered || *v) ? style.borderHoverColor : style.borderColor;
     draw->AddRect(check_bb.Min, check_bb.Max, borderColor, style.rounding, 0, style.borderWidth);
 
-    // Draw glow when checked
-    if (*v && state.selectedAnim > 0.1f) {
+    // Draw glow (animate smoothly on both check and uncheck)
+    if (state.selectedAnim > 0.01f) {
         Draw::RectGlow(check_bb.Min, check_bb.Max, style.glowColor,
                        style.glowIntensity * state.selectedAnim, 4.0f);
     }
@@ -68,14 +69,14 @@ bool CheckboxEx(const char* label, bool* v, const CheckboxStyle& style) {
     // Draw label
     if (label_size.x > 0.0f) {
         ImVec2 label_pos(check_bb.Max.x + style.checkPadding, pos.y + (square_sz - label_size.y) * 0.5f);
-        draw->AddText(label_pos, CyberpunkTheme::Colors::TextPrimary, label);
+        draw->AddText(label_pos, style.textColor, label);
     }
 
     return pressed;
 }
 
 bool Checkbox(const char* label, bool* v) {
-    return CheckboxEx(label, v, CheckboxStyle{});
+    return CheckboxEx(label, v, StyleSystem::GetCurrentStyle<CheckboxStyle>());
 }
 
 } // namespace EFIGUI

@@ -2,6 +2,7 @@
 #include "Radio.h"
 #include "../Core/Animation.h"
 #include "../Core/Draw.h"
+#include "../Core/Style.h"
 #include "imgui_internal.h"
 #include <algorithm>
 
@@ -43,10 +44,10 @@ bool RadioButtonEx(const char* label, bool active, const RadioStyle& style) {
     ImU32 borderColor = (hovered || active) ? style.borderHoverColor : style.borderColor;
     draw->AddCircle(center, style.radius, borderColor, 0, style.borderWidth);
 
-    // Draw glow when active
-    if (active) {
+    // Draw glow (animate smoothly)
+    if (state.selectedAnim > 0.01f) {
         Draw::GlowLayersCircle(center, style.radius, style.glowColor,
-                               style.glowIntensity, style.glowLayers, 2.0f);
+                               style.glowIntensity * state.selectedAnim, style.glowLayers, 2.0f);
     }
 
     // Draw dot when active
@@ -57,14 +58,14 @@ bool RadioButtonEx(const char* label, bool active, const RadioStyle& style) {
     // Draw label
     if (label_size.x > 0.0f) {
         ImVec2 label_pos(pos.x + diameter + style.labelGap, pos.y + (diameter - label_size.y) * 0.5f);
-        draw->AddText(label_pos, CyberpunkTheme::Colors::TextPrimary, label);
+        draw->AddText(label_pos, style.textColor, label);
     }
 
     return pressed;
 }
 
 bool RadioButton(const char* label, bool active) {
-    return RadioButtonEx(label, active, RadioStyle{});
+    return RadioButtonEx(label, active, StyleSystem::GetCurrentStyle<RadioStyle>());
 }
 
 bool RadioButtonEx(const char* label, int* v, int v_button, const RadioStyle& style) {
@@ -75,7 +76,7 @@ bool RadioButtonEx(const char* label, int* v, int v_button, const RadioStyle& st
 }
 
 bool RadioButton(const char* label, int* v, int v_button) {
-    return RadioButtonEx(label, v, v_button, RadioStyle{});
+    return RadioButtonEx(label, v, v_button, StyleSystem::GetCurrentStyle<RadioStyle>());
 }
 
 } // namespace EFIGUI

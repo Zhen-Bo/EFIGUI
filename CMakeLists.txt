@@ -38,6 +38,10 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Tooltip.cpp
     src/EFIGUI/Components/Layout.cpp
     src/EFIGUI/Components/ConfigImpl.cpp
+    src/EFIGUI/Components/Checkbox.cpp
+    src/EFIGUI/Components/Radio.cpp
+    src/EFIGUI/Components/Selectable.cpp
+    src/EFIGUI/Components/Popup.cpp
 )
 
 set(EFIGUI_HEADERS
@@ -49,7 +53,14 @@ set(EFIGUI_HEADERS
     src/EFIGUI/Core/Style.h
     src/EFIGUI/Styles/StyleTypes.h
     src/EFIGUI/Styles/CheckboxStyle.h
+    src/EFIGUI/Styles/RadioStyle.h
+    src/EFIGUI/Styles/SelectableStyle.h
+    src/EFIGUI/Styles/PopupStyle.h
     src/EFIGUI/Themes/CyberpunkTheme.h
+    src/EFIGUI/Components/Checkbox.h
+    src/EFIGUI/Components/Radio.h
+    src/EFIGUI/Components/Selectable.h
+    src/EFIGUI/Components/Popup.h
     src/EFIGUI/Components.h
     src/EFIGUI/Theme.h
     src/EFIGUI/ThemeConfig.h
