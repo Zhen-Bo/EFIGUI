@@ -7,6 +7,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-01-16
+
+### Added
+
+#### C++23 Upgrade
+- Upgraded to C++23 standard for modern features including designated initializers
+
+#### Style System
+- **StyleSystem** - New unified style management with per-ImGuiContext storage
+- `PushStyle<T>()` / `PopStyle<T>()` for style stack manipulation
+- `WithStyle<T>(style, fn)` for scoped style overrides
+- `GetCurrentStyle<T>()` for accessing current active style
+
+#### Phase 1: Basic Components
+- **Checkbox** - Traditional checkbox with glow effects and smooth animation
+- **RadioButton** - Single-select option with circular glow and dot animation
+- **Selectable** - List item with accent bar and hover states
+- **Popup/Modal** - Themed popup windows with proper style cleanup
+
+#### Phase 2: Advanced Components
+- **TabBar/TabItem** - Tab navigation with animated underline indicator
+  - `BeginTabBar`, `EndTabBar` - Container functions
+  - `TabItem` - Simple click-to-select tab button
+  - `BeginTabItem`, `EndTabItem` - Content container pattern
+- **TreeNode/CollapsingHeader** - Tree view with glow effects
+  - `TreeNode` - Expandable tree node with arrow glow
+  - `TreePop` - End tree node scope
+  - `CollapsingHeader` - Collapsible section header
+- **Table** - Full table styling with header and row customization
+  - `BeginTable`, `EndTable`, `TableSetupColumn`, `TableHeadersRow`
+  - `TableNextRow`, `TableNextColumn`, `TableSetColumnIndex`
+- **ListBox** - Selection list with accent bar
+  - `BeginListBox`, `EndListBox` - Manual item rendering
+  - `ListBox` - Simple array or callback-based item list
+- **Menu** - Complete menu system
+  - `BeginMainMenuBar`, `EndMainMenuBar`
+  - `BeginMenuBar`, `EndMenuBar`
+  - `BeginMenu`, `EndMenu`
+  - `MenuItem` - With shortcut and toggle variants
+  - `MenuSeparator`, `MenuHeader`
+
+#### Phase 3: Specialized Widgets
+- **ColorEdit/ColorPicker** - Color editing with preview swatch glow
+  - `ColorEdit3`, `ColorEdit4` - Inline color editing
+  - `ColorPicker3`, `ColorPicker4` - Full color picker
+  - `ColorButton` - Clickable color swatch with alpha checkerboard
+- **DragFloat/DragInt** - Hold-to-drag value editing
+  - `DragFloat`, `DragFloat2/3/4`, `DragFloatRange2`
+  - `DragInt`, `DragInt2/3/4`, `DragIntRange2`
+  - Purple glow pulse on value change, drag indicator on hover
+- **VSliderFloat/VSliderInt** - Vertical slider variant
+  - Gradient fill (purple to cyan)
+  - Animated knob glow on hover/active
+  - Value tooltip on hover
+- **PlotLines/PlotHistogram** - Data visualization
+  - Configurable grid overlay
+  - Line glow on hover
+  - Bar highlighting with value tooltip
+- **InputFloat2/3/4, InputInt2/3/4** - Multi-component vector inputs
+  - X/Y/Z/W color-coded labels (Red/Green/Blue/Yellow)
+  - Colored accent bars for each component
+- **SliderFloat2/3/4, SliderInt2/3/4** - Multi-component horizontal sliders
+  - VectorSliderStyle with X/Y/Z/W color coding
+  - Colored accent bars for visual distinction
+- **ImageButton** - Image-based button with glow effects
+  - ImageButtonStyle with tint and glow configuration
+  - Support for custom background colors
+
+#### Style Structs
+- `CheckboxStyle`, `RadioStyle`, `SelectableStyle`, `PopupStyle`
+- `TabBarStyle`, `TreeNodeStyle`, `TableStyle`, `ListBoxStyle`, `MenuStyle`
+- `ColorEditStyle`, `DragStyle`, `VSliderStyle`, `PlotStyle`, `VectorInputStyle`
+- `VectorSliderStyle`, `ImageButtonStyle`
+- All styles use CyberpunkTheme defaults with full customization support
+
+#### Themes
+- **CyberpunkTheme** - Refactored theme as static constexpr struct
+
+#### Directory Restructure
+- `Core/` - EFIGUI.h/cpp, Animation, Layer, Draw, Style
+- `Styles/` - Per-component style structs
+- `Themes/` - Theme definitions (CyberpunkTheme)
+- `Components/` - Widget implementations
+
+### Changed
+- Moved core modules to `Core/` subdirectory
+- Components now use StyleSystem for default styling
+
+---
+
 ## [0.4.0] - 2026-01-05
 
 ### Added

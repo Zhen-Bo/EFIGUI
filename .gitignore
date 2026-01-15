@@ -81,3 +81,6 @@ desktop.ini
 
 # Dependencies
 imgui/
+
+# Git worktrees
+.worktrees/

@@ -10,8 +10,8 @@
 // Theme::Card(), Theme::Nav(), etc.). See Theme.h for full list.
 
 #include "../Components.h"
-#include "../Draw.h"
-#include "../EFIGUI.h"
+#include "../Core/Draw.h"
+#include "../Core/EFIGUI.h"
 #include "imgui_internal.h"
 #include <algorithm>
 #include <cmath>

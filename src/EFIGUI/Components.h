@@ -1,8 +1,8 @@
 #pragma once
 #include "imgui.h"
 #include "Theme.h"
-#include "Animation.h"
-#include "Layer.h"
+#include "Core/Animation.h"
+#include "Core/Layer.h"
 #include <string>
 #include <cstdint>
 #include <optional>

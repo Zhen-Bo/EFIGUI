@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(EFIGUI VERSION 0.4.0 LANGUAGES CXX)
+project(EFIGUI VERSION 0.5.0 LANGUAGES CXX)
 
 # =============================================
 # Options
@@ -17,11 +17,12 @@ option(EFIGUI_ENABLE_OPENGL "Enable OpenGL blur backend (future)" OFF)
 # =============================================
 
 set(EFIGUI_SOURCES
-    src/EFIGUI/EFIGUI.cpp
+    src/EFIGUI/Core/EFIGUI.cpp
+    src/EFIGUI/Core/Animation.cpp
+    src/EFIGUI/Core/Layer.cpp
+    src/EFIGUI/Core/Draw.cpp
+    src/EFIGUI/Core/Style.cpp
     src/EFIGUI/Theme.cpp
-    src/EFIGUI/Animation.cpp
-    src/EFIGUI/Layer.cpp
-    src/EFIGUI/Draw.cpp
     # Components (split into separate files for maintainability)
     src/EFIGUI/Components/Window.cpp
     src/EFIGUI/Components/Panel.cpp
@@ -37,16 +38,72 @@ set(EFIGUI_SOURCES
     src/EFIGUI/Components/Tooltip.cpp
     src/EFIGUI/Components/Layout.cpp
     src/EFIGUI/Components/ConfigImpl.cpp
+    src/EFIGUI/Components/Checkbox.cpp
+    src/EFIGUI/Components/Radio.cpp
+    src/EFIGUI/Components/Selectable.cpp
+    src/EFIGUI/Components/Popup.cpp
+    # Phase 2 Advanced Components
+    src/EFIGUI/Components/TabBar.cpp
+    src/EFIGUI/Components/TreeNode.cpp
+    src/EFIGUI/Components/Table.cpp
+    src/EFIGUI/Components/ListBox.cpp
+    src/EFIGUI/Components/Menu.cpp
+    # Phase 3 Specialized Widgets
+    src/EFIGUI/Components/ColorEdit.cpp
+    src/EFIGUI/Components/Drag.cpp
+    src/EFIGUI/Components/VSlider.cpp
+    src/EFIGUI/Components/Plot.cpp
+    src/EFIGUI/Components/VectorInput.cpp
+    src/EFIGUI/Components/VectorSlider.cpp
+    src/EFIGUI/Components/ImageButton.cpp
 )
 
 set(EFIGUI_HEADERS
     src/EFIGUI/EFIGUI.h
-    src/EFIGUI/ThemeConfig.h
-    src/EFIGUI/Theme.h
-    src/EFIGUI/Animation.h
-    src/EFIGUI/Layer.h
-    src/EFIGUI/Draw.h
+    src/EFIGUI/Core/EFIGUI.h
+    src/EFIGUI/Core/Animation.h
+    src/EFIGUI/Core/Layer.h
+    src/EFIGUI/Core/Draw.h
+    src/EFIGUI/Core/Style.h
+    src/EFIGUI/Styles/StyleTypes.h
+    src/EFIGUI/Styles/CheckboxStyle.h
+    src/EFIGUI/Styles/RadioStyle.h
+    src/EFIGUI/Styles/SelectableStyle.h
+    src/EFIGUI/Styles/PopupStyle.h
+    src/EFIGUI/Themes/CyberpunkTheme.h
+    src/EFIGUI/Components/Checkbox.h
+    src/EFIGUI/Components/Radio.h
+    src/EFIGUI/Components/Selectable.h
+    src/EFIGUI/Components/Popup.h
+    # Phase 2 Advanced Components
+    src/EFIGUI/Styles/TabBarStyle.h
+    src/EFIGUI/Styles/TreeNodeStyle.h
+    src/EFIGUI/Styles/TableStyle.h
+    src/EFIGUI/Styles/ListBoxStyle.h
+    src/EFIGUI/Styles/MenuStyle.h
+    src/EFIGUI/Components/TabBar.h
+    src/EFIGUI/Components/TreeNode.h
+    src/EFIGUI/Components/Table.h
+    src/EFIGUI/Components/ListBox.h
+    src/EFIGUI/Components/Menu.h
+    # Phase 3 Specialized Widgets
+    src/EFIGUI/Styles/ColorEditStyle.h
+    src/EFIGUI/Components/ColorEdit.h
+    src/EFIGUI/Styles/DragStyle.h
+    src/EFIGUI/Styles/VSliderStyle.h
+    src/EFIGUI/Components/Drag.h
+    src/EFIGUI/Components/VSlider.h
+    src/EFIGUI/Styles/PlotStyle.h
+    src/EFIGUI/Components/Plot.h
+    src/EFIGUI/Styles/VectorInputStyle.h
+    src/EFIGUI/Components/VectorInput.h
+    src/EFIGUI/Styles/VectorSliderStyle.h
+    src/EFIGUI/Components/VectorSlider.h
+    src/EFIGUI/Styles/ImageButtonStyle.h
+    src/EFIGUI/Components/ImageButton.h
     src/EFIGUI/Components.h
+    src/EFIGUI/Theme.h
+    src/EFIGUI/ThemeConfig.h
     src/EFIGUI/Components/Internal.h
     src/EFIGUI/Backend/IBlurBackend.h
 )
@@ -60,8 +117,8 @@ endif()
 # Create library
 add_library(EFIGUI STATIC ${EFIGUI_SOURCES} ${EFIGUI_HEADERS})
 
-# C++17 standard
-target_compile_features(EFIGUI PUBLIC cxx_std_17)
+# C++23 standard
+target_compile_features(EFIGUI PUBLIC cxx_std_23)
 
 # MSVC-specific options
 if(MSVC)
